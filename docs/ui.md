@@ -5,6 +5,10 @@
 **phase 3**（#18）交付主题 / 资源系统：语义颜色角色、文本度量、间距与圆角刻度、纹理引用、JSON 资源加载、主题注册表与切换；
 **phase 4**（#19）交付容器数据同步：类型编解码的数据槽布局、服务端写 / 客户端读、变更监听与控件绑定层，含游戏内演示菜单与自动测试。
 
+> 机器状态桥接（#22，方案 A：只读数据通道 + 自带 UI 组件）：把 GTCEu 机器状态读进本框架的组件
+> （能量条 / 流体罐 / 进度箭头 / 槽位面板 / 状态面板）与 `MachineStatusScreen`，不接管 GT 的 LDLib 界面。
+> 用法、只读边界与客户端同步语义见 `docs/gt-machine-bridge.md`。
+
 ## 包结构
 
 | 包 | 内容 | MC 依赖 |
@@ -133,6 +137,9 @@
 .\gradlew.bat runClient          # 端到端：$env:GTSNLIB_UI_AUTOTEST=1 自动打开 + 交互 + 逐主题截图 + 退出
 .\gradlew.bat runClient          # 数据同步端到端：$env:GTSNLIB_UI_AUTOTEST=sync 创建/载入存档、游戏内打开演示菜单、
                                  #   验证客户端值=服务端值且数值推进、抓图 run/screenshots/gtsnlib-ui-sync-demo.png、退出
+.\gradlew.bat runClient          # 机器状态端到端：$env:GTSNLIB_UI_AUTOTEST=machine 创建/载入存档、放置 test_machine、
+                                 #   打开机器状态界面、校验快照并抓图 run/screenshots/gtsnlib-ui-machine-status.png、退出
+                                 #   （#22，见 docs/gt-machine-bridge.md）
 ```
 
 上述两种自动测试的结果、截图与判定见 `docs/acceptance.md`（#20 集成验收，证据留档于 `docs/acceptance/`）。

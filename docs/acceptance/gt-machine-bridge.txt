@@ -1,0 +1,78 @@
+# GT 机器界面桥接（#22）验收证据
+
+> 固定点：采集时 HEAD ≈ `fb0dd9b`（后续为文档提交）。命令均在仓库根、PowerShell 下、`--offline` 执行。
+> 规格/交付见 `docs/gt-machine-bridge.md`。
+
+## 1. 单测（`.\gradlew.bat clean build`）
+
+```
+BUILD SUCCESSFUL
+suites=63 tests=435 failures=0 errors=0 skipped=0
+```
+
+新增测试套件（headless，无游戏环境；`ItemStack`/`FluidStack` 经 `MinecraftTestBootstrap` 引导注册表）：
+
+- `GtMachineSnapshotTest`：默认值、能量/进度比例钳制、负值归一、列表不可变、流体容量回退。
+- `EnergyBarWidgetTest` / `TankWidgetTest` / `ProgressArrowWidgetTest`：存量与容量钳制、比例映射、填充宽度 / 自底向上填充 / 裁剪。
+- `MachineSlotsPanelTest`：图标→槽位映射、列/行数、空槽。
+- `MachineStatusPanelTest`：从快照装配、能量 / 进度 / 槽位 / 状态文本、流体罐映射。
+
+## 2. GameTest（`.\gradlew.bat runGameTestServer`）
+
+```
+All 40 required tests passed :)
+```
+
+新增 `GtsnMachineBridgeGameTests`（2 项）：
+
+- `snapshotReadsPlacedGtMachine`：在结构内放置 `gtsnlib:test_machine`，经 `GtMachineSnapshots.at` 取快照，
+  断言机器 id = `gtsnlib:test_machine`、tier = 1、`energyCapacity() > 0`（机器继承 `TieredEnergyMachine`）、
+  `progress`/`maxProgress` 字段存在且非负、`status` 文本存在。
+- `snapshotAbsentForNonMachineBlock`：石头方块不产生快照、不被判定为 GT 机器。
+
+## 3. 专职服务端类加载纪律（`.\gradlew.bat runServer`）
+
+```
+Done (19.504s)! For help, type "help"
+[GTSNLib] integrations detected: 0/6
+[GTSNLib] GT adapter probe: material iron present @ gtceu:iron | tag prefixes: 95
+```
+
+- 客户端类加载扫描（`GtsnUiClient` / `GtsnScreen` / `MachineStatusScreen` / `GtsnUiTestScreen` /
+  `ItemStackIcon` / `GuiGraphicsRenderContext` / `DemoMenuScreen` / `MachineStatusPanel`）：**无命中**。
+- `NoClassDefFoundError` / `ClassNotFoundException` / `LinkageError`：**无**。
+
+## 4. 端到端客户端截图（`$env:GTSNLIB_UI_AUTOTEST="machine"; .\gradlew.bat runClient`）
+
+```
+[GTSNLib] machine autotest: placing gtsnlib:test_machine at BlockPos{x=-4, y=78, z=5}
+[GTSNLib] machine autotest: client snapshot id=gtsnlib:test_machine tier=1 energy=0/2048 status=UNKNOWN
+[GTSNLib] machine autotest PASS: screen shows gtsnlib:test_machine tier=1 energy=0/2048 status=UNKNOWN
+[GTSNLib] machine autotest grabbing screenshot gtsnlib-ui-machine-status.png (window=1280x720 target=1280x720)
+[GTSNLib] machine autotest finished (DONE), stopping client
+```
+
+截图：`docs/acceptance/screenshots/gtsnlib-ui-machine-status.png`。
+
+**肉眼确认**：世界背景之上居中渲染一块暗色 GTSN 面板——标题 `gtsnlib:test_machine`、状态 `UNKNOWN`、
+带边框的能量条居中标签 `0/2048 EU`、灰色进度箭头旁 `0 / 0`、底部说明
+`GTSN UI · 只读机器状态 · -4, 78, 5`。即：GT 机器状态（id / tier 体现为容量 2048 / 状态 / 能量 / 进度）
+经**自研 GTSN UI** 渲染，未触碰 GT 的 LDLib 界面。
+
+## 5. 边界检查
+
+```
+grep -rn "import com.gregtechceu" src/main/java
+  → 仅 6 文件，全部在 com/gtsn/lib/gt/adapter（含新增 GtMachineSnapshots）
+grep -rn "lowdragmc|ldlib" src/main/java
+  → 无命中（不依赖 LDLib）
+```
+
+## 6. 复现命令
+
+```powershell
+.\gradlew.bat clean build
+.\gradlew.bat runGameTestServer
+.\gradlew.bat runServer
+$env:GTSNLIB_UI_AUTOTEST="machine"; .\gradlew.bat runClient; Remove-Item Env:\GTSNLIB_UI_AUTOTEST
+```

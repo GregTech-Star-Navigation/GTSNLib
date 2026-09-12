@@ -133,6 +133,21 @@ public final class MachineStatusPanel extends AbstractWidget {
         return slotsPanel;
     }
 
+    public MachineStatusPanel fixedSize(int width, int height) {
+        node().params().size(Sizing.fixed(width), Sizing.fixed(height));
+        return this;
+    }
+
+    public MachineStatusPanel size(Sizing width, Sizing height) {
+        node().params().size(width, height);
+        return this;
+    }
+
+    public MachineStatusPanel fill() {
+        node().params().fill();
+        return this;
+    }
+
     private String progressLabel() {
         return snapshot.progress() + " / " + snapshot.maxProgress();
     }

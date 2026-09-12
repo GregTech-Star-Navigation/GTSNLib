@@ -1,9 +1,11 @@
 package com.gtsn.lib.ui.client;
 
 import com.gtsn.lib.GTSNLib;
+import com.gtsn.lib.gt.adapter.GtMachineSnapshots;
 import com.gtsn.lib.ui.demo.DemoContent;
 import com.gtsn.lib.ui.layout.Rect;
 import com.gtsn.lib.ui.screen.GtsnUiTestScreen;
+import com.gtsn.lib.ui.screen.MachineStatusScreen;
 import com.gtsn.lib.ui.theme.ThemeContext;
 import com.gtsn.lib.ui.widget.Widget;
 import com.mojang.logging.LogUtils;
@@ -11,6 +13,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.event.TickEvent;
@@ -56,17 +63,57 @@ public final class GtsnUiClient {
 
     @SubscribeEvent
     public static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
-        event.getDispatcher().register(Commands.literal("gtsnui").executes(context -> {
-            openTestScreen();
-            return 1;
-        }));
-        LOGGER.info("[GTSNLib] client command /gtsnui registered");
+        event.getDispatcher().register(Commands.literal("gtsnui")
+                .executes(context -> {
+                    openTestScreen();
+                    return 1;
+                })
+                .then(Commands.literal("machine").executes(context -> {
+                    openMachineScreen();
+                    return 1;
+                })));
+        LOGGER.info("[GTSNLib] client command /gtsnui registered (subcommand: machine)");
     }
 
     /** 打开开发测试界面（可在任意客户端线程调用）。 */
     public static void openTestScreen() {
         Minecraft minecraft = Minecraft.getInstance();
         minecraft.execute(() -> minecraft.setScreen(new GtsnUiTestScreen()));
+    }
+
+    /**
+     * {@code /gtsnui machine}：对玩家注视的 GT 机器打开只读机器状态界面（本地执行、不发往服务器）。
+     * 客户端从镜像机器的 {@code @DescSynced} 同步值读取，无需网络包。
+     */
+    public static void openMachineScreen() {
+        Minecraft minecraft = Minecraft.getInstance();
+        minecraft.execute(() -> {
+            Minecraft client = Minecraft.getInstance();
+            if (client.player == null || client.level == null) {
+                return;
+            }
+            BlockPos pos = lookedAtGtMachine(client);
+            if (pos == null) {
+                client.player.displayClientMessage(
+                        Component.literal("[GTSNLib] 请面向一台 GT 机器（8 格内）再执行 /gtsnui machine"), false);
+                return;
+            }
+            client.setScreen(new MachineStatusScreen(pos));
+        });
+    }
+
+    /** 玩家注视的方块坐标；非 GT 机器时返回 {@code null}。 */
+    private static BlockPos lookedAtGtMachine(Minecraft minecraft) {
+        Player player = minecraft.player;
+        if (player == null || minecraft.level == null) {
+            return null;
+        }
+        HitResult hit = player.pick(8.0, 0.0F, false);
+        if (hit instanceof BlockHitResult blockHit && blockHit.getType() == HitResult.Type.BLOCK
+                && GtMachineSnapshots.isGtMachine(minecraft.level, blockHit.getBlockPos())) {
+            return blockHit.getBlockPos();
+        }
+        return null;
     }
 
     @SubscribeEvent
@@ -76,6 +123,10 @@ public final class GtsnUiClient {
         }
         String mode = System.getenv(AUTOTEST_ENV);
         Minecraft minecraft = Minecraft.getInstance();
+        if (GtsnUiMachineAutotest.MODE.equals(mode)) {
+            GtsnUiMachineAutotest.tick(minecraft);
+            return;
+        }
         if (GtsnUiSyncAutotest.MODE.equals(mode)) {
             GtsnUiSyncAutotest.tick(minecraft);
             return;

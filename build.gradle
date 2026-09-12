@@ -17,6 +17,13 @@ repositories {
     maven { url = "https://maven.gtceu.com" }
     maven { url = "https://maven.firstdark.dev/snapshots/" }
     maven { url = "https://maven.tterrag.com/" }
+
+    // Optional integration targets (#5–#10); project-level repos override settings-level ones.
+    maven { url = "https://modmaven.dev" }
+    maven { url = "https://maven.blamejared.com/" }
+    maven { url = "https://maven.createmod.net" }
+    maven { url = "https://maven.rover656.dev/releases" }
+    maven { url = "https://api.modrinth.com/maven" }
 }
 
 java {
@@ -35,6 +42,17 @@ dependencies {
     modImplementation("com.lowdragmc.ldlib:ldlib-forge-1.20.1:${forge.versions.ldlib.get()}") { transitive = false }
     modImplementation("com.tterrag.registrate:Registrate:${forge.versions.registrate.get()}")
     modImplementation("dev.toma.configuration:configuration-forge-1.20.1:${forge.versions.configuration.get()}")
+
+    // Soft optional integration targets (#5–#10). Compile-only and non-transitive: available while
+    // compiling the isolated skeletons, never on the runtime classpath and never shipped.
+    // mods.toml declares all six mandatory=false with AFTER ordering.
+    modCompileOnly("mekanism:Mekanism:1.20.1-10.4.16.80") { transitive = false }
+    modCompileOnly("blusunrize.immersiveengineering:ImmersiveEngineering:1.20.1-10.2.0-182") { transitive = false }
+    // Create publishes no plain jar on maven.createmod.net; only the :slim classifier exists.
+    modCompileOnly("com.simibubi.create:create-1.20.1:6.0.8-291:slim") { transitive = false }
+    modCompileOnly("appeng:appliedenergistics2-forge:15.4.10") { transitive = false }
+    modCompileOnly("com.enderio:EnderIO:1.20.1-6.2.18-beta") { transitive = false }
+    modCompileOnly("maven.modrinth:ad-astra:1.15.21") { transitive = false }
 }
 
 test {

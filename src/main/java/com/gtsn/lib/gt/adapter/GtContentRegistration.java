@@ -86,25 +86,58 @@ public final class GtContentRegistration {
     /**
      * GTCEu 机器注册窗口：{@code gtceu:machine} 未冻结时（GTCEu 自身机器注册期间）声明演示机器。
      *
-     * <p>防御性守卫：仅当 {@code GTRegistries.MACHINES} 未冻结且尚未登记该机器时执行，避免在其它
-     * {@code RegisterEvent} 或重复触发时误注册。</p>
+     * <p>防御性守卫：仅当尚未登记该机器时执行，避免在其它 {@code RegisterEvent} 或重复触发时误注册。
+     * 若窗口已错过（注册表已冻结），{@link #registerDemoMachine(GtAdapter)} 抛出可操作的错误，此处记录为
+     * ERROR，避免静默失败或仅暴露 GTCEu 原始 {@code "frozen"} 拒绝。</p>
      */
     static void onMachineRegister(
             GTCEuAPI.RegisterEvent<ResourceLocation, MachineDefinition> event) {
         if (!DemoContentRuntime.enabled()) {
             return;
         }
-        if (GTRegistries.MACHINES.isFrozen()) {
-            return;
-        }
         GtAdapter adapter = GtAdapter.get();
         if (adapter.isRegistered(RegistrationKind.MACHINE, GtAdapter.DEMO_MACHINE)) {
             return;
         }
-        MachineRegistration machine = adapter.registerMachine(MachineSpec.builder(NAMESPACE, GtAdapter.DEMO_MACHINE_ID)
-                .tier(1)
-                .displayName("Test Machine")
-                .build());
-        LOGGER.info("[GTSNLib] registered demo machine {} via registration helper", machine.resourceLocation());
+        try {
+            MachineRegistration machine = registerDemoMachine(adapter);
+            LOGGER.info("[GTSNLib] registered demo machine {} via registration helper", machine.resourceLocation());
+        } catch (IllegalStateException failure) {
+            LOGGER.error("[GTSNLib] demo machine registration failed: {}", failure.getMessage(), failure);
+        }
+    }
+
+    /**
+     * 在 GTCEu 机器注册窗口内注册演示机器。
+     *
+     * <p>{@code GTRegistries.MACHINES} 的 {@code frozen} 初值为 {@code true}；GTCEu 仅在自身机器注册期
+     * （发出 {@link GTCEuAPI.RegisterEvent} 时）解冻，并在事件之后立即冻结。窗口一旦关闭，任何
+     * {@code registerMachine(...)} 都会被拒绝——本方法把该情形翻译成可操作的错误（说明窗口与文档位置），
+     * 而不是只抛出 GTCEu 原始的 {@code "[register] registry gtceu:machine has been frozen"}。</p>
+     *
+     * @throws IllegalStateException 机器注册窗口已关闭，或 GTCEu 拒绝注册（均附带可操作说明）
+     */
+    static MachineRegistration registerDemoMachine(GtAdapter adapter) {
+        if (GTRegistries.MACHINES.isFrozen()) {
+            throw new IllegalStateException(frozenWindowMessage(NAMESPACE));
+        }
+        try {
+            return adapter.registerMachine(MachineSpec.builder(NAMESPACE, GtAdapter.DEMO_MACHINE_ID)
+                    .tier(1)
+                    .displayName("Test Machine")
+                    .build());
+        } catch (RuntimeException failure) {
+            throw new IllegalStateException(frozenWindowMessage(NAMESPACE), failure);
+        }
+    }
+
+    /** 机器注册窗口已关闭时的可操作错误说明。 */
+    private static String frozenWindowMessage(String namespace) {
+        return "GTCEu machine registration window is closed for '" + namespace
+                + "': GTRegistries.MACHINES is frozen. GTCEu only unfreezes gtceu:machine while it fires "
+                + "GTCEuAPI.RegisterEvent<MachineDefinition> (during GTMachines initialisation) and freezes it "
+                + "immediately afterwards. Register machines from a listener added via "
+                + "IEventBus#addGenericListener(MachineDefinition.class, ...); later calls are rejected by GTCEu "
+                + "with '[register] registry gtceu:machine has been frozen'. See docs/registration.md.";
     }
 }

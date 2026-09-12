@@ -3,7 +3,7 @@ package com.gtsn.lib.ui.demo;
 import java.util.Objects;
 
 /**
- * 开发测试界面的可观察状态：点击计数、开关、最近按键与已输入字符。
+ * 开发测试界面的可观察状态：点击计数、开关、最近按键、已输入字符与进度值。
  */
 public final class DemoState {
 
@@ -11,6 +11,7 @@ public final class DemoState {
     private boolean toggled;
     private String lastKey = "(none)";
     private String typed = "";
+    private double progress;
 
     public int clicks() {
         return clicks;
@@ -48,5 +49,18 @@ public final class DemoState {
 
     public void clearTyped() {
         typed = "";
+    }
+
+    /** 归一化进度 [0, 1]。 */
+    public double progress() {
+        return progress;
+    }
+
+    public void progress(double value) {
+        this.progress = Math.max(0, Math.min(1, value));
+    }
+
+    public void advanceProgress(double delta) {
+        progress(progress + delta);
     }
 }

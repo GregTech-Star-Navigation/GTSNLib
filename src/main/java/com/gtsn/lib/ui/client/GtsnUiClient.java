@@ -74,6 +74,7 @@ public final class GtsnUiClient {
         if (!autoOpened && minecraft.isRunning() && minecraft.screen instanceof TitleScreen
                 && minecraft.getOverlay() == null) {
             autoOpened = true;
+            prepareWindow(minecraft);
             LOGGER.info("[GTSNLib] {}={} -> opening UI dev test screen", AUTOTEST_ENV, System.getenv(AUTOTEST_ENV));
             minecraft.setScreen(new GtsnUiTestScreen());
         }
@@ -100,15 +101,48 @@ public final class GtsnUiClient {
         }
     }
 
-    /** 通过 {@link GtsnUiTestScreen} 的真实输入入口注入合成事件，覆盖 点击 → 状态更新 与 聚焦 → 键盘/字符输入 链路。 */
+    /**
+     * 固定自动测试窗口为 1280x720 + GUI 缩放 2（640x360 GUI 空间），保证组件库完整可见、文字清晰。
+     */
+    private static void prepareWindow(Minecraft minecraft) {
+        minecraft.getWindow().setWindowed(1280, 720);
+        minecraft.options.guiScale().set(2);
+        minecraft.resizeDisplay();
+        LOGGER.info("[GTSNLib] autotest window prepared: {}x{} guiScale=2",
+                minecraft.getWindow().getWidth(), minecraft.getWindow().getHeight());
+    }
+
+    /**
+     * 通过 {@link GtsnUiTestScreen} 的真实输入入口注入合成事件，覆盖全部组件交互：
+     * 按钮点击 / 复选框与开关切换 / 进度推进 / 物品槽选择 / 滚轮滚动 / 键盘输入 / 禁用控件 / 工具提示悬停。
+     */
     private static void injectSyntheticInput(GtsnUiTestScreen screen) {
         DemoContent demo = screen.demo();
         click(screen, demo.clickButton());
+        click(screen, demo.checkbox());
+        click(screen, demo.toggleSwitch());
+        click(screen, demo.progressUpButton());
+        click(screen, demo.progressUpButton());
+        click(screen, demo.progressUpButton());
+        click(screen, demo.itemSlot1());
+        click(screen, demo.disabledButton());
+
+        Rect viewport = demo.scrollPanel().viewportBounds();
+        screen.mouseScrolled(viewport.x() + 8, viewport.y() + 8, -2.0);
+
         click(screen, demo.keypad());
         screen.keyPressed('K', 0, 0);
         screen.charTyped('A', 0);
-        LOGGER.info("[GTSNLib] autotest synthetic input: clicks={} lastKey={} typed={}",
-                demo.state().clicks(), demo.state().lastKey(), demo.state().typed());
+
+        // 最后悬停物品槽，让工具提示出现在截图中。
+        Rect slot = demo.itemSlot1().bounds();
+        screen.mouseMoved(slot.x() + slot.width() / 2.0, slot.y() + slot.height() / 2.0);
+
+        LOGGER.info("[GTSNLib] autotest synthetic input: clicks={} toggled={} checkbox={} switch={} progress={} "
+                        + "slot1={} scrollY={} lastKey={} typed={}",
+                demo.state().clicks(), demo.state().toggled(), demo.checkbox().checked(),
+                demo.toggleSwitch().checked(), demo.state().progress(), demo.itemSlot1().isSelected(),
+                demo.scrollPanel().scrollY(), demo.state().lastKey(), demo.state().typed());
     }
 
     private static void click(GtsnUiTestScreen screen, Widget widget) {

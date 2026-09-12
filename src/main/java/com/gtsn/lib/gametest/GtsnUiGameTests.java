@@ -25,8 +25,8 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class GtsnUiGameTests {
 
-    private static final int SCREEN_WIDTH = 320;
-    private static final int SCREEN_HEIGHT = 240;
+    private static final int SCREEN_WIDTH = 640;
+    private static final int SCREEN_HEIGHT = 360;
 
     private GtsnUiGameTests() {
     }
@@ -228,7 +228,7 @@ public final class GtsnUiGameTests {
             helper.fail("render produced fills=" + context.fills + " texts=" + context.texts);
             return;
         }
-        if (context.clipsPushed != 1 || context.clipsPopped != 1) {
+        if (context.clipsPushed < 2 || context.clipsPushed != context.clipsPopped) {
             helper.fail("clip ops were pushed=" + context.clipsPushed + " popped=" + context.clipsPopped);
             return;
         }

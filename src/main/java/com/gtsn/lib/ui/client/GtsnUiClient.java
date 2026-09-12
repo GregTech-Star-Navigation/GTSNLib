@@ -1,0 +1,120 @@
+package com.gtsn.lib.ui.client;
+
+import com.gtsn.lib.GTSNLib;
+import com.gtsn.lib.ui.demo.DemoContent;
+import com.gtsn.lib.ui.layout.Rect;
+import com.gtsn.lib.ui.screen.GtsnUiTestScreen;
+import com.gtsn.lib.ui.widget.Widget;
+import com.mojang.logging.LogUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Screenshot;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.commands.Commands;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterClientCommandsEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
+import org.slf4j.Logger;
+
+/**
+ * UI 内核的客户端接线（仅客户端加载，由 {@code @EventBusSubscriber(Dist.CLIENT)} 保证专职服务端不加载本类）：
+ *
+ * <ul>
+ *   <li>注册客户端命令 {@code /gtsnui}（经 Forge {@link RegisterClientCommandsEvent}，本地执行、不发往服务器）。</li>
+ *   <li>开发自动测试：设置环境变量 {@code GTSNLIB_UI_AUTOTEST=1} 后，客户端进入标题界面时自动打开
+ *       开发测试界面，注入合成点击/字符输入，抓取截图 {@code run/screenshots/gtsnlib-ui-autotest.png} 后退出。</li>
+ * </ul>
+ */
+@Mod.EventBusSubscriber(modid = GTSNLib.MOD_ID, bus = Bus.FORGE, value = Dist.CLIENT)
+public final class GtsnUiClient {
+
+    /** 自动测试开关：环境变量值为 {@code 1} 时启用（runClient 继承进程环境变量）。 */
+    public static final String AUTOTEST_ENV = "GTSNLIB_UI_AUTOTEST";
+
+    private static final String SCREENSHOT_NAME = "gtsnlib-ui-autotest.png";
+
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    private static boolean autoOpened;
+    private static int screenTicks;
+    private static boolean inputInjected;
+    private static boolean screenshotTaken;
+    private static boolean stopRequested;
+
+    private GtsnUiClient() {
+    }
+
+    @SubscribeEvent
+    public static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
+        event.getDispatcher().register(Commands.literal("gtsnui").executes(context -> {
+            openTestScreen();
+            return 1;
+        }));
+        LOGGER.info("[GTSNLib] client command /gtsnui registered");
+    }
+
+    /** 打开开发测试界面（可在任意客户端线程调用）。 */
+    public static void openTestScreen() {
+        Minecraft minecraft = Minecraft.getInstance();
+        minecraft.execute(() -> minecraft.setScreen(new GtsnUiTestScreen()));
+    }
+
+    @SubscribeEvent
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !"1".equals(System.getenv(AUTOTEST_ENV))) {
+            return;
+        }
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.screen instanceof GtsnUiTestScreen testScreen) {
+            tickAutotest(minecraft, testScreen);
+            return;
+        }
+        if (!autoOpened && minecraft.isRunning() && minecraft.screen instanceof TitleScreen
+                && minecraft.getOverlay() == null) {
+            autoOpened = true;
+            LOGGER.info("[GTSNLib] {}={} -> opening UI dev test screen", AUTOTEST_ENV, System.getenv(AUTOTEST_ENV));
+            minecraft.setScreen(new GtsnUiTestScreen());
+        }
+    }
+
+    private static void tickAutotest(Minecraft minecraft, GtsnUiTestScreen screen) {
+        screenTicks++;
+        if (screenTicks >= 40 && !inputInjected) {
+            inputInjected = true;
+            injectSyntheticInput(screen);
+            return;
+        }
+        if (screenTicks >= 60 && !screenshotTaken) {
+            screenshotTaken = true;
+            LOGGER.info("[GTSNLib] autotest grabbing screenshot {}", SCREENSHOT_NAME);
+            Screenshot.grab(minecraft.gameDirectory, SCREENSHOT_NAME, minecraft.getMainRenderTarget(),
+                    message -> LOGGER.info("[GTSNLib] autotest screenshot: {}", message.getString()));
+            return;
+        }
+        if (screenTicks >= 140 && !stopRequested) {
+            stopRequested = true;
+            LOGGER.info("[GTSNLib] autotest complete, stopping client");
+            minecraft.stop();
+        }
+    }
+
+    /** 通过 {@link GtsnUiTestScreen} 的真实输入入口注入合成事件，覆盖 点击 → 状态更新 与 聚焦 → 字符输入 链路。 */
+    private static void injectSyntheticInput(GtsnUiTestScreen screen) {
+        DemoContent demo = screen.demo();
+        click(screen, demo.clickButton());
+        click(screen, demo.keypad());
+        screen.charTyped('A', 0);
+        LOGGER.info("[GTSNLib] autotest synthetic input: clicks={} lastKey={} typed={}",
+                demo.state().clicks(), demo.state().lastKey(), demo.state().typed());
+    }
+
+    private static void click(GtsnUiTestScreen screen, Widget widget) {
+        Rect bounds = widget.bounds();
+        double x = bounds.x() + bounds.width() / 2.0;
+        double y = bounds.y() + bounds.height() / 2.0;
+        screen.mouseClicked(x, y, 0);
+        screen.mouseReleased(x, y, 0);
+    }
+}

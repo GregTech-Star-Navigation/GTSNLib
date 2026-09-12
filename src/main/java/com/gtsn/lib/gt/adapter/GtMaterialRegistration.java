@@ -1,6 +1,7 @@
 package com.gtsn.lib.gt.adapter;
 
 import com.gtsn.lib.GTSNLib;
+import com.gtsn.lib.core.DemoContentRuntime;
 import com.gtsn.lib.gt.registration.FluidRegistration;
 import com.gtsn.lib.gt.registration.FluidSpec;
 import com.gtsn.lib.gt.registration.FluidState;
@@ -36,9 +37,18 @@ public final class GtMaterialRegistration {
     private GtMaterialRegistration() {
     }
 
-    /** 为 GTSNLib 自身 namespace 建立 GTCEu 材料注册表（仅 PRE 阶段可建）。 */
+    /**
+     * 为 GTSNLib 自身 namespace 建立 GTCEu 材料注册表（仅 PRE 阶段可建）。
+     *
+     * <p>演示门控（{@link DemoContentRuntime}）：生产安装默认不登记演示内容，因此也不建立仅为演示服务的
+     * {@code gtsnlib} 材料注册表，避免污染；开发态恒登记。</p>
+     */
     @SubscribeEvent
     public static void onMaterialRegistry(MaterialRegistryEvent event) {
+        if (!DemoContentRuntime.enabled()) {
+            LOGGER.info("[GTSNLib] demo content disabled; skipping GTCEu material registry for {}", NAMESPACE);
+            return;
+        }
         if (GTCEuAPI.materialManager == null) {
             return;
         }
@@ -52,6 +62,9 @@ public final class GtMaterialRegistration {
      */
     @SubscribeEvent
     public static void onMaterial(MaterialEvent event) {
+        if (!DemoContentRuntime.enabled()) {
+            return;
+        }
         GtAdapter adapter = GtAdapter.get();
 
         MaterialSpec spec = MaterialSpec.builder(NAMESPACE, GtAdapter.DEMO_MATERIAL_ID)

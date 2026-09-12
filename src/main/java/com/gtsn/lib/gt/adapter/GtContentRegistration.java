@@ -1,6 +1,7 @@
 package com.gtsn.lib.gt.adapter;
 
 import com.gtsn.lib.GTSNLib;
+import com.gtsn.lib.core.DemoContentRuntime;
 import com.gtsn.lib.gt.registration.BlockRegistration;
 import com.gtsn.lib.gt.registration.BlockSpec;
 import com.gtsn.lib.gt.registration.ItemRegistration;
@@ -63,6 +64,9 @@ public final class GtContentRegistration {
     /** addon 材料注册时机：声明演示方块（含方块物品）与演示物品（不涉及 GTRegistry 冻结窗口）。 */
     @SubscribeEvent
     public static void onMaterial(MaterialEvent event) {
+        if (!DemoContentRuntime.enabled()) {
+            return;
+        }
         GtAdapter adapter = GtAdapter.get();
 
         BlockRegistration block = adapter.registerBlock(BlockSpec.builder(NAMESPACE, GtAdapter.DEMO_BLOCK_ID)
@@ -87,6 +91,9 @@ public final class GtContentRegistration {
      */
     static void onMachineRegister(
             GTCEuAPI.RegisterEvent<ResourceLocation, MachineDefinition> event) {
+        if (!DemoContentRuntime.enabled()) {
+            return;
+        }
         if (GTRegistries.MACHINES.isFrozen()) {
             return;
         }

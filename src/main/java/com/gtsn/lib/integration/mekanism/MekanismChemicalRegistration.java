@@ -5,6 +5,7 @@ import com.gtsn.lib.compat.mekanism.ChemicalKind;
 import com.gtsn.lib.compat.mekanism.ChemicalRegistration;
 import com.gtsn.lib.compat.mekanism.ChemicalSpec;
 import com.gtsn.lib.compat.mekanism.MekanismChemicals;
+import com.gtsn.lib.core.DemoContentRuntime;
 import com.mojang.logging.LogUtils;
 import net.minecraftforge.eventbus.api.IEventBus;
 import org.slf4j.Logger;
@@ -36,6 +37,13 @@ public final class MekanismChemicalRegistration {
         MekanismChemicalBackend backend = new MekanismChemicalBackend(GTSNLib.MOD_ID);
         backend.registerTo(modEventBus);
         MekanismChemicals.install(backend);
+
+        // 演示门控：后端恒安装（供附属 mod 消费），仅演示化学物质的登记受门控约束。
+        if (!DemoContentRuntime.enabled()) {
+            LOGGER.info("[GTSNLib] demo content disabled; skipping Mekanism demo chemical {}", 
+                    MekanismChemicals.DEMO_CHEMICAL_ID);
+            return;
+        }
 
         ChemicalRegistration registration = MekanismChemicals.register(
                 ChemicalSpec.builder(GTSNLib.MOD_ID, MekanismChemicals.DEMO_CHEMICAL_ID)

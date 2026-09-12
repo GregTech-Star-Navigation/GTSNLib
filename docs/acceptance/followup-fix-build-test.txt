@@ -1,0 +1,17 @@
+GTSNLib 跟单修复 pass — clean build / test 原始结论（#21 跟单）
+
+命令：
+  .\gradlew.bat clean build --console=plain
+  .\gradlew.bat test --console=plain
+
+结果：
+  clean build: BUILD SUCCESSFUL in 24s（9 actionable tasks: 9 executed，含 :test / :jar / :reobfJar / :sourcesJar）
+  单测汇总（build/test-results/test/TEST-*.xml）: suites=57 tests=406 failures=0 errors=0 skipped=0
+    （406 = 加固 pass 后的 405 + 新增 IntegrationRegistryTest.fatalJvmErrorPropagatesAndIsNotRecordedAsFailure）
+  plain test: BUILD SUCCESSFUL in 12s（5 actionable tasks: 5 up-to-date）
+
+修复 1 TDD（RED → GREEN）：
+  RED  : .\gradlew.bat test --tests "com.gtsn.lib.api.IntegrationRegistryTest"
+         → :test FAILED，fatalJvmErrorPropagatesAndIsNotRecordedAsFailure() 报
+           org.opentest4j.AssertionFailedError（旧实现把 AssertionError 吞进 failures()，assertThrows 捕获不到）。
+  GREEN: 实现「记录 ERROR 后重新抛出」后同命令 → BUILD SUCCESSFUL（类内 7 tests 全过）。

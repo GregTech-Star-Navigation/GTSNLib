@@ -1,0 +1,16 @@
+GTSNLib 跟单修复 pass — GTSNLIB_UI_AUTOTEST=sync 客户端自动测试（修复 3 回归证据）
+
+命令：$env:GTSNLIB_UI_AUTOTEST="sync"; .\gradlew.bat runClient --console=plain; Remove-Item Env:\GTSNLIB_UI_AUTOTEST
+结果：BUILD SUCCESSFUL in 56s
+
+[04:01:21] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiScreens]: [GTSNLib] sync demo menu screen registered
+[04:01:41] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiSyncAutotest]: [GTSNLib] sync autotest: world ready, opening demo menu
+[04:01:41] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiSyncAutotest]: [GTSNLib] sync autotest: demo screen open (slots=5)
+[04:01:42] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiSyncAutotest]: [GTSNLib] sync autotest sample A: client=5 server=5 display='进度 5 / 100'
+[04:01:44] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiSyncAutotest]: [GTSNLib] sync autotest sample B: client=25 server=25 display='进度 25 / 100'
+[04:01:44] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiSyncAutotest]: [GTSNLib] sync autotest PASS: client value advanced 5 -> 25; equals server 25
+[04:01:44] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiSyncAutotest]: [GTSNLib] sync autotest finished (DONE), stopping client
+
+判定：
+- 客户端屏幕绑定照常执行（dev 门控恒开，SYNC_DEMO.isPresent()==true），菜单打开、值同步、
+  两次采样客户端=服务端，PASS。

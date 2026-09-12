@@ -1,0 +1,14 @@
+GTSNLib 跟单修复 pass — runGameTestServer 原始关键行
+
+命令：.\gradlew.bat runGameTestServer --console=plain
+结果：BUILD SUCCESSFUL in 44s
+
+[03:59:07] [Server thread/INFO] [minecraft/GameTestServer]: Running test batch 'defaultBatch:1' (38 tests)...
+[03:59:07] [Server thread/INFO] [minecraft/GameTestServer]: 38 tests are now running!
+[03:59:07] [Server thread/INFO] [minecraft/GameTestServer]: ========= 38 GAME TESTS COMPLETE ======================
+[03:59:07] [Server thread/INFO] [minecraft/GameTestServer]: All 38 required tests passed :)
+[03:59:07] [Server thread/INFO] [minecraft/GameTestServer]: ====================================================
+
+判定：
+- 38/38 通过；其中 GtsnUiSyncGameTests 直接使用 DemoMenus.SYNC_DEMO.get()，证明修复 3 之后
+  dev（production=false）门控下菜单类型照常登记，GameTest 路径保持绿。

@@ -1,0 +1,24 @@
+GTSNLib 跟单修复 pass — runServer 原始关键行（未装态，全新世界）
+
+命令：.\gradlew.bat runServer --console=plain
+采集：先删除 run/server/world 与 run/server/logs/latest.log（避免读到旧证据），轮询到
+      `integrations detected: 0/6` 且 `Done (` 即停止进程树并抓取关键行。
+
+[03:59:45] [GTSNLib] Loading GTSNLib 0.1.0
+[03:59:45] [Configuration/FileWatching]: Registered gtsnlib config for auto-sync function
+[03:59:45] [Configuration/FileWatching]: Registered gtsnlib-server config for auto-sync function
+[03:59:45] [GTSNLib] created GTCEu material registry for gtsnlib
+[03:59:46] [GTSNLib] registered demo block gtsnlib:test_block (item gtsnlib:test_block) and item gtsnlib:test_item via registration helper
+[03:59:46] [GTSNLib] recipe hook invoked for gtsnlib:star_alloy (parts: [dust, plate, ingot, rod])
+[03:59:46] [GTSNLib] registered GTCEu material gtsnlib:star_alloy | derived parts: {dust=star_alloy_dust, plate=star_alloy_plate, ingot=star_alloy_ingot, rod=star_alloy_rod} | ore tags: [forge:ingots/star_alloy, forge:plates/star_alloy, forge:dusts/star_alloy, forge:rods/star_alloy] | fluids: {liquid=gtsnlib:star_alloy, gas=gtsnlib:star_alloy_gas, plasma=gtsnlib:star_alloy_plasma}
+[03:59:46] [GTSNLib] registered standalone GTCEu fluid gtsnlib:stellar_air | state: gas | bucket: true
+[03:59:47] [GTSNLib] registered demo machine gtsnlib:test_machine via registration helper
+[03:59:48] [GTSNLib] integrations detected: 0/6
+[04:00:17] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer]: Done (19.639s)! For help, type "help"
+[04:00:17] [GTSNLib] GT adapter probe: material iron present @ gtceu:iron | tag prefixes: 95
+
+判定：
+- `integrations detected: 0/6`（未装态，与加固 pass 一致）。
+- 无 NoClassDefFoundError / ClassNotFoundException / LinkageError / Unidentified mapping / GTSNLib ERROR。
+- dev 运行 production=false，演示门控恒开，演示内容（含演示菜单类型 gtsnlib:sync_demo）照常登记；
+  生产安装默认不登记（修复 3：DemoMenus 注册受 DemoContentRuntime.enabled() 门控）。

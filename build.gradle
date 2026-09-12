@@ -1,0 +1,166 @@
+plugins {
+    id 'java-library'
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    alias forge.plugins.modDevGradle
+}
+
+group = maven_group
+version = "${mod_version}"
+
+// ModDevGradle declares project-level repositories, which override the settings-level ones.
+// Declare the additional hard-dependency repositories here so they actually participate.
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven { url = "https://maven.gtceu.com" }
+    maven { url = "https://maven.firstdark.dev/snapshots/" }
+    maven { url = "https://maven.tterrag.com/" }
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Mixin annotation processor — generates the SRG refmap consumed at runtime.
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+
+    // Hard dependencies (non-transitive: consumers must declare them explicitly).
+    modImplementation("com.gregtechceu.gtceu:gtceu-1.20.1:${forge.versions.gtceu.get()}:slim") { transitive = false }
+    modImplementation("com.lowdragmc.ldlib:ldlib-forge-1.20.1:${forge.versions.ldlib.get()}") { transitive = false }
+    modImplementation("com.tterrag.registrate:Registrate:${forge.versions.registrate.get()}")
+    modImplementation("dev.toma.configuration:configuration-forge-1.20.1:${forge.versions.configuration.get()}")
+}
+
+test {
+    useJUnitPlatform()
+}
+
+sourceSets {
+    main.resources {
+        srcDir 'src/generated/resources'
+    }
+}
+
+legacyForge {
+    version = forge.versions.minecraftForge.get()
+
+    parchment {
+        minecraftVersion = forge.versions.minecraft.get()
+        mappingsVersion = forge.versions.parchment.get()
+    }
+
+    addModdingDependenciesTo(sourceSets.test)
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+
+    runs {
+        client {
+            client()
+            ideName = "Client"
+
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        server {
+            server()
+            ideName = "Server"
+
+            gameDirectory.set(file('run/server'))
+            programArgument '--nogui'
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        data {
+            data()
+            ideName = "Data Generation"
+
+            gameDirectory.set(file('run/data'))
+            programArguments.addAll('--mod', project.mod_id)
+            programArguments.addAll('--all')
+            programArguments.addAll('--output', file('src/generated/resources/').getAbsolutePath())
+            programArguments.addAll('--existing', file('src/main/resources/').getAbsolutePath())
+            programArguments.addAll('--existing-mod', 'gtceu')
+        }
+
+        gameTestServer {
+            type = "gameTestServer"
+            ideName = "Game Tests"
+
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.INFO
+        }
+    }
+}
+
+// Mixin infrastructure: refmap generated for sourcesets.main, config registered for dev runs.
+// The config is also declared in the META-INF/MANIFEST.MF MixinConfigs attribute so the reobf jar
+// loads it in production.
+mixin {
+    add sourceSets.main, 'mixins.gtsnlib.refmap.json'
+    config 'mixins.gtsnlib.json'
+}
+
+// Dev runs load the mod as a folder (-Dfml.modFolders). ModLauncher's union filesystem indexes
+// classpath jars but not directory entries, so Mixin cannot resolve the mod's own config via
+// --mixin.config at launch. Repackage the config into a small jar and add it to every run's
+// additional runtime classpath, where Mixin can read it. Production is unaffected (the reobf jar
+// carries the config + MixinConfigs manifest attribute).
+def mixinConfigJar = tasks.register('mixinConfigJar', Jar) {
+    archiveClassifier = 'mixins'
+    destinationDirectory = layout.buildDirectory.dir('mixinjar')
+    from('src/main/resources/mixins.gtsnlib.json')
+    from(layout.buildDirectory.dir('mixin')) {
+        include 'mixins.gtsnlib.refmap.json'
+    }
+    dependsOn tasks.named('compileJava')
+}
+
+legacyForge.runs.configureEach { run ->
+    project.dependencies.add(
+        run.getAdditionalRuntimeClasspathConfiguration().name,
+        project.files(mixinConfigJar)
+    )
+    run.taskBefore(mixinConfigJar)
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.compilerArgs << "-Xlint:-removal"
+}
+
+jar {
+    manifest {
+        attributes([
+            'Specification-Title'   : 'GTSNLib',
+            'Specification-Vendor'  : 'GTSN',
+            'Specification-Version' : '1',
+            'Implementation-Title'  : 'GTSNLib',
+            'Implementation-Version': project.version,
+            'Implementation-Vendor' : 'GTSN',
+            'MixinConfigs'          : 'mixins.gtsnlib.json'
+        ])
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}

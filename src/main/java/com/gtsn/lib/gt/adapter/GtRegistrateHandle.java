@@ -7,9 +7,10 @@ import java.util.Objects;
 /**
  * GT 注册入口句柄：库内对 GTCEu {@code GTRegistrate} 的稳定包装。
  *
- * <p>这是 #12（材料注册简化）与 #13（流体/气体/等离子体注册）将要使用的注册入口。
- * 本票只提供入口访问，**不实现**注册便捷 DSL；后续票在同一适配层内为本类补充材料/流体注册方法，
- * 从而保证 GTCEu 类型始终不越过 {@code com.gtsn.lib.gt.adapter} 边界。</p>
+ * <p>这是 #13（流体 / 气体 / 等离子体注册）将使用的注册入口。材料注册（#12）已落地，经
+ * {@link GtAdapter#registerMaterial} 翻译并由 {@code GTCEuAPI.materialManager} 提供材料注册表，
+ * 因此本类当前服务于后续流体类注册。本类只提供入口访问，**不实现**注册便捷 DSL；后续票在同一适配层内
+ * 为本类补充注册方法，从而保证 GTCEu 类型始终不越过 {@code com.gtsn.lib.gt.adapter} 边界。</p>
  *
  * <p>上游迁移点（ADR-0005）：GTCEu 8.0 移除 {@code GTRegistrate#registerRegistrate}，
  * 届时只需改本类的包装实现。</p>

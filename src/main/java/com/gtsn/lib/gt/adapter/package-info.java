@@ -22,9 +22,12 @@
  *   <li>{@link com.gtsn.lib.gt.adapter.GtBackend} — 可注入后端端口；查询逻辑据此纯单测。</li>
  *   <li>{@link com.gtsn.lib.gt.adapter.GtceBackend} — 唯一直接接触 GTCEu 的生产实现。</li>
  *   <li>{@link com.gtsn.lib.gt.adapter.GtNames} — 纯映射逻辑（归一化 / 资源位置 / tag prefix）。</li>
- *   <li>{@link com.gtsn.lib.gt.adapter.GtRegistrateHandle} — #12/#13 将使用的 GT 注册入口。</li>
+ *   <li>{@link com.gtsn.lib.gt.adapter.GtRegistrateHandle} — #13（流体/气体/等离子体）使用的 GT 注册入口。</li>
+ *   <li>{@link com.gtsn.lib.gt.adapter.GtMaterialRegistration} — #12 材料注册的 GTCEu 事件接线（上游事件类型入口）。</li>
+ *   <li>{@link com.gtsn.lib.gt.adapter.GtPartStatus} — 声明部件在 GTCEu 中的实时生成状态视图。</li>
  * </ul>
  *
- * <p>本票仅集中“访问”，不实现注册便捷 DSL（#12/#13）。</p>
+ * <p>#12 已在本层实现声明式材料注册的翻译（{@link com.gtsn.lib.gt.adapter.GtAdapter#registerMaterial}）；
+ * #13 的流体 / 气体 / 等离子体注册仍待实现。</p>
  */
 package com.gtsn.lib.gt.adapter;

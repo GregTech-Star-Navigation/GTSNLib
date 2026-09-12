@@ -1,9 +1,15 @@
 package com.gtsn.lib.gt.adapter;
 
+import com.gtsn.lib.gt.registration.MaterialPart;
+import com.gtsn.lib.gt.registration.MaterialRegistration;
+import com.gtsn.lib.gt.registration.MaterialRegistrar;
+import com.gtsn.lib.gt.registration.MaterialSpec;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * GTCEu 适配层门面：库内查询 GTCEu 材料 / tag prefix 与获取 GT 注册入口的唯一入口。
@@ -28,10 +34,18 @@ public final class GtAdapter {
     /** 运行时探针使用的已知 GT 材料（GTCEu 7.5.3 内置 Iron）。 */
     public static final String DEFAULT_PROBE_MATERIAL = "iron";
 
+    /** 材料注册简化层在游戏内注册的演示材料路径（#12 证据）。 */
+    public static final String DEMO_MATERIAL_ID = "star_alloy";
+
+    /** 演示材料完整键 {@code gtsnlib:star_alloy}。 */
+    public static final String DEMO_MATERIAL = "gtsnlib:" + DEMO_MATERIAL_ID;
+
     private final GtBackend backend;
+    private final MaterialRegistrar registrar;
 
     GtAdapter(GtBackend backend) {
         this.backend = Objects.requireNonNull(backend, "backend");
+        this.registrar = new MaterialRegistrar(backend::registerMaterial);
     }
 
     /** 生产门面单例（惰性建立 {@link GtceBackend}）。 */
@@ -116,11 +130,44 @@ public final class GtAdapter {
     }
 
     /**
-     * 获取给定 ModID 的 GT 注册入口（{@link GtRegistrateHandle}），供 #12/#13 使用。
-     * 本票不实现注册便捷 DSL。
+     * 获取给定 ModID 的 GT 注册入口（{@link GtRegistrateHandle}），供 #13（流体/气体/等离子体）使用。
+     * 材料注册（#12）已由 {@link #registerMaterial(MaterialSpec)} 提供，材料注册表另行经
+     * {@code GTCEuAPI.materialManager} 建立。
      */
     public GtRegistrateHandle registrate(String modId) {
         return backend.registrate(modId);
+    }
+
+    /**
+     * 注册一种声明式材料：翻译为 GTCEu 注册、记录结果并回调配方钩子（材料注册简化层入口）。
+     *
+     * <p>同一 {@code namespace:id} 重复注册会被拒绝；GTCEu 注册失败时不会记录、也不会回调钩子。</p>
+     *
+     * @return 已生成材料的稳定结果视图（id、资源位置、衍生件、矿词）
+     */
+    public MaterialRegistration registerMaterial(MaterialSpec spec) {
+        return registrar.register(spec);
+    }
+
+    /** 给定 {@code namespace:id} 是否已经本适配层注册。 */
+    public boolean isMaterialRegistered(String key) {
+        return registrar.isRegistered(key);
+    }
+
+    /** 按 {@code namespace:id} 查询已注册材料的结果视图。 */
+    public Optional<MaterialRegistration> registeredMaterial(String key) {
+        return registrar.registration(key);
+    }
+
+    /** 已注册材料的只读快照（按注册顺序）。 */
+    public List<MaterialRegistration> registrations() {
+        return registrar.registrations();
+    }
+
+    /** 实时查询给定材料各声明部件在 GTCEu 中的生成状态与矿词。 */
+    public List<GtPartStatus> partStatus(String materialId, Set<MaterialPart> parts) {
+        Objects.requireNonNull(parts, "parts");
+        return backend.partStatus(materialId, parts);
     }
 
     private static final class Holder {

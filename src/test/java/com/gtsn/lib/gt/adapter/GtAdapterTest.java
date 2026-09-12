@@ -1,10 +1,15 @@
 package com.gtsn.lib.gt.adapter;
 
+import com.gtsn.lib.gt.registration.MaterialPart;
+import com.gtsn.lib.gt.registration.MaterialRegistration;
+import com.gtsn.lib.gt.registration.MaterialSpec;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -44,6 +49,16 @@ class GtAdapterTest {
 
             @Override
             public GtRegistrateHandle registrate(String modId) {
+                throw new UnsupportedOperationException("not needed for lookup tests");
+            }
+
+            @Override
+            public MaterialRegistration registerMaterial(MaterialSpec spec) {
+                throw new UnsupportedOperationException("not needed for lookup tests");
+            }
+
+            @Override
+            public List<GtPartStatus> partStatus(String materialId, Set<MaterialPart> parts) {
                 throw new UnsupportedOperationException("not needed for lookup tests");
             }
         };

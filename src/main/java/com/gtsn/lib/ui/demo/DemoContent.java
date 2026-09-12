@@ -323,6 +323,7 @@ public final class DemoContent {
 
             selectionStatus = new TextWidget("已选槽位: 无", metrics).color(TEXT_MUTED);
             PanelWidget itemPanel = right.add(panel("物品槽 (ItemSlot)"));
+            itemPanel.add(selectionStatus);
             Stack slotRow = itemPanel.add(Stack.horizontal().gap(6));
             itemSlot1 = slotRow.add(new ItemSlotWidget().icon(icons.primary()).selectable(true)
                     .tooltip(Tooltip.of("钻石 ×3", "点击选择此槽位")));
@@ -330,7 +331,6 @@ public final class DemoContent {
                     .tooltip(Tooltip.of("红石 ×16", "选择互斥演示")));
             disabledItemSlot = slotRow.add(new ItemSlotWidget().icon(icons.primary()).enabled(false)
                     .tooltip(Tooltip.of("禁用槽位")));
-            itemPanel.add(selectionStatus);
             itemSlot1.onSelectionChanged(selected -> {
                 if (selected) {
                     itemSlot2.selected(false);
@@ -345,7 +345,7 @@ public final class DemoContent {
             });
 
             PanelWidget scrollPanelHolder = right.add(panel("滚动 (ScrollPanel)"));
-            scrollPanel = scrollPanelHolder.add(new ScrollPanelWidget().size(Sizing.fill(), Sizing.fixed(90)));
+            scrollPanel = scrollPanelHolder.add(new ScrollPanelWidget().size(Sizing.fill(), Sizing.fixed(110)));
             Stack scrollContent = scrollPanel.add(Stack.vertical().gap(3));
             for (int i = 1; i <= 12; i++) {
                 Stack row = scrollContent.add(Stack.horizontal().gap(6).crossAxisAlign(CrossAxisAlign.CENTER));

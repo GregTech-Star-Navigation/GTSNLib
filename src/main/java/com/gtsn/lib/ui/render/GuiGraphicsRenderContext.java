@@ -29,6 +29,16 @@ public final class GuiGraphicsRenderContext implements RenderContext {
         this.height = height;
     }
 
+    /** 底层 {@link GuiGraphics}（供客户端专用扩展如物品渲染使用）。 */
+    public GuiGraphics graphics() {
+        return graphics;
+    }
+
+    /** 当前字体（供客户端专用扩展使用）。 */
+    public Font font() {
+        return font;
+    }
+
     @Override
     public int width() {
         return width;

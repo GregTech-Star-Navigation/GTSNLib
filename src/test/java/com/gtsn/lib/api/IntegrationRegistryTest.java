@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -75,6 +76,25 @@ class IntegrationRegistryTest {
         }
     }
 
+    /** init() 抛出非 LinkageError 的 JVM 级致命错误（OOM / StackOverflow 等的替身）的假模块。 */
+    private static final class FatalModule implements IntegrationModule {
+
+        @Override
+        public String modId() {
+            return "fatal";
+        }
+
+        @Override
+        public boolean isPresent() {
+            return true;
+        }
+
+        @Override
+        public void init() {
+            throw new AssertionError("fatal JVM error");
+        }
+    }
+
     @Test
     void presentModuleIsInitialized() {
         List<String> order = new ArrayList<>();
@@ -138,6 +158,21 @@ class IntegrationRegistryTest {
         assertEquals(List.of("good"), order, "类加载失败的模块不应阻断其它模块");
         assertTrue(registry.failures().containsKey("broken"));
         assertTrue(registry.get("good").isPresent());
+    }
+
+    @Test
+    void fatalJvmErrorPropagatesAndIsNotRecordedAsFailure() {
+        List<String> order = new ArrayList<>();
+        IntegrationRegistry registry = new IntegrationRegistry(modId -> true);
+        registry.register("fatal", () -> () -> new FatalModule());
+        registry.register("good", () -> () -> new FakeModule("good", order, false));
+
+        AssertionError thrown = assertThrows(AssertionError.class, registry::initializeAll);
+
+        assertEquals("fatal JVM error", thrown.getMessage());
+        assertFalse(registry.failures().containsKey("fatal"), "JVM 级致命错误不得被当作普通联动失败记录");
+        assertTrue(registry.failures().isEmpty(), "致命错误不应写入 failures()");
+        assertTrue(order.isEmpty(), "致命错误应中止本次初始化，后续模块不再初始化");
     }
 
     @Test

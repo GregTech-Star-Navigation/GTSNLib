@@ -21,7 +21,8 @@ import org.slf4j.Logger;
  * <p>加载隔离（ADR-0003）：模块工厂采用 {@code Supplier<Supplier<IntegrationModule>>} 双层
  * supplier，只有 {@link ModPresence} 判定目标在场后才会调用外层与内层 supplier，缺席时目标类型
  * 不会被 JVM 链接。单个模块的实例化或 {@link IntegrationModule#init()} 失败会被记录到
- * {@link #failures()} 并跳过，不阻断其它模块。</p>
+ * {@link #failures()} 并跳过，不阻断其它模块；非 {@link LinkageError} 的 JVM 级致命错误
+ * （如 OOM / StackOverflowError）记录后重新抛出，不当作普通失败吞掉。</p>
  */
 public final class IntegrationRegistry {
 
@@ -128,9 +129,10 @@ public final class IntegrationRegistry {
                         modId, failure);
                 failures.put(modId, failure);
             } catch (Error failure) {
-                // 其它 JVM 级错误（如 OOM）同样显式记录后再抛出范围外的处理。
-                LOGGER.error("[GTSNLib] integration {} failed with a JVM error", modId, failure);
-                failures.put(modId, failure);
+                // 其它 JVM 级致命错误（OOM / StackOverflowError 等）：记录后必须重新抛出，
+                // 绝不当作普通联动失败吞进 failures()。
+                LOGGER.error("[GTSNLib] integration {} failed with a fatal JVM error", modId, failure);
+                throw failure;
             }
         }
         return count;

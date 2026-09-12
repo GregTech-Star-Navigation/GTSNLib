@@ -85,7 +85,7 @@ public final class GtsnGameTests {
             helper.fail("/gtsnlib returned " + output.result());
             return;
         }
-        if (!output.messages().contains("GTSNLib 0.1.0 | integrations: 1 | targets present: 0/6")) {
+        if (!output.messages().contains("GTSNLib 0.1.0 | integrations: 2 | targets present: 0/6")) {
             helper.fail("/gtsnlib status line was " + output.messages());
             return;
         }

@@ -1,0 +1,27 @@
+# GTSNLib 自定义字体（#23）— 门禁构建与单测证据
+# 采集日期：2026-09-13  |  仓库：GregTech-Star-Navigation/GTSNLib  |  提交：见 docs/ui.md 字体章节时的 HEAD
+
+$ .\gradlew.bat clean build
+> Task :test
+> Task :check
+> Task :build
+BUILD SUCCESSFUL in 25s
+9 actionable tasks: 9 executed
+
+JUnit5 汇总（build/test-results/test/*.xml）：
+  suites=66  tests=459  failures=0  errors=0  skipped=0
+  （字体新增用例：ThemeFontTest 9 项、FontResourceFilesTest 6 项、TextWidgetFontTest 7 项、
+    DemoContentTest.fontCompareButtonTogglesSampleBetweenThemeAndVanilla 1 项）
+
+产出与打包内容：
+  build/libs/gtsnlib-0.1.0.jar（reobf，1,253,805 字节）
+  jar 内条目：
+    assets/gtsnlib/font/sarasa_ui_sc.json
+    assets/gtsnlib/font/sarasa_ui_sc.ttf
+    assets/gtsnlib/font/license-sarasa-gothic.txt
+
+子集 TTF 最终大小：
+  src/main/resources/assets/gtsnlib/font/sarasa_ui_sc.ttf = 1,251,540 字节（约 1.19 MiB）
+  源字体：Sarasa UI SC Regular（更纱黑体，SIL OFL 1.1），fonttools 4.65.0 子集化
+  子集范围：ASCII / Latin-1 / Latin Ext-A·B / 常用符号（箭头·数学·带圈数字·几何图形等）/
+            GB2312 一级汉字与 1-9 区标点 / 假名 / 全角形式（共 6,955 个码位，保留 5,957 字形）

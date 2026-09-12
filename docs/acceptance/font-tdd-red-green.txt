@@ -1,0 +1,65 @@
+# GTSNLib 自定义字体（#23）— TDD RED → GREEN 记录
+# 说明：以下为开发过程中实际观察到的失败输出（RED）与修复后通过（GREEN）的摘录。
+
+## 切片 1：主题字体接线（FontId / ThemeTextStyle / ThemeDefinition / ThemeParser / Theme）
+
+RED（实现前，.\gradlew.bat test --tests "com.gtsn.lib.ui.theme.ThemeFontTest"）：
+  26 个错误
+  符号:   类 FontId / 方法 fontId() / 方法 textFont() 等（新 API 尚不存在）
+
+实现后第一次运行仍 RED（测试运行期失败，非编译失败）：
+  ThemeFontTest.parserRejectsInvalidFont() :: java.lang.ExceptionInInitializerError
+  Caused by: java.lang.NullPointerException: Cannot invoke "...Pattern.matcher(...)"
+  because "com.gtsn.lib.ui.theme.FontId.VALID_NAMESPACE" is null
+  → 根因：FontId.VANILLA 常量声明在校验 Pattern 之前，类初始化顺序错误。
+  修复：VANILLA 移到 Pattern 之后。
+
+GREEN：BUILD SUCCESSFUL（theme 全部用例通过）
+
+## 切片 2：字体资源（TTF + 定义 JSON + OFL 许可）
+
+RED（资源缺失时，.\gradlew.bat test --tests "com.gtsn.lib.ui.theme.FontResourceFilesTest"）：
+  tests failures=6
+  defaultThemePointsAtBundledFont() :: 默认主题未声明 text.font
+  providerOrderSelectsFirstMatchAndSkipsSpaces() :: classpath 资源缺失: assets/gtsnlib/font/sarasa_ui_sc.json
+  bundledTtfIsPresentAndParsesAsSfnt() :: classpath 资源缺失: ...sarasa_ui_sc.ttf
+  subsetOmitsGb2312Level2SoReferenceLayerIsRequired() :: classpath 资源缺失: ...sarasa_ui_sc.ttf
+  bundledFontLicensesUnderOfl() :: classpath 资源缺失: ...LICENSE-Sarasa-Gothic.txt
+  shippedFontDefinitionChainsTtfThenVanillaReference() :: classpath 资源缺失: ...sarasa_ui_sc.json
+
+加入资源后：5/6 通过；许可断言大小写过严（Sarasa 版式是 "Permission & Conditions"）→ 修正断言。
+GREEN：6/6。
+
+## 切片 2b：ttf file 解析路径（真实客户端发现）
+
+runClient 截图 + 日志发现：
+  FontManager: Failed to load builder (gtsnlib:sarasa_ui_sc: builder #0 ...), rejecting
+  java.io.FileNotFoundException: gtsnlib:font/font/sarasa_ui_sc.ttf
+  → 根因：1.20.1 TrueTypeGlyphProviderDefinition.load 会执行 location.withPrefix("font/")，
+    JSON 的 file 必须是相对 font/ 的路径（gtsnlib:sarasa_ui_sc.ttf），不能自带 font/。
+  截图证据（修复前）：全部文本渲染为豆腐块。
+
+修复：JSON file 改为 gtsnlib:sarasa_ui_sc.ttf；
+测试先改后跑（RED）：
+  expected: <gtsnlib:sarasa_ui_sc.ttf> but was: <gtsnlib:font/sarasa_ui_sc.ttf>（2 处断言失败）
+GREEN：theme 用例全通过；并新增 assertProviderFileResolves 按 MC 语义（font/ 前缀）校验资源存在。
+
+## 切片 3：渲染链路（RenderContext 字体重载 / TextWidget 覆盖 / TextMetrics）
+
+RED：9 个编译错误（TextMetrics.width(String,FontId)、TextWidget.font/vanillaFont/fontOverride、
+     RenderContext 字体重载均不存在）
+实现后 1 处测试运行期失败：
+  customFontDrivesWrappingAndIntrinsicSize() expected Rect(22,18) but was Rect(12,18)
+  → 根因：contentMeasurer 仍用原始 metrics 而非字体感知度量。
+  修复：measure 改用 effectiveMetrics()。
+GREEN：widget/theme/render/demo/screen 全部用例通过（BUILD SUCCESSFUL）。
+
+## 切片 3b：Style.withFont 误用定义文件路径（真实客户端发现）
+
+修复 ttf file 后 runClient 仍全量豆腐块，且 FontManager 无报错：
+  → 根因：ClientFonts.styled 把「定义文件路径」gtsnlib:font/sarasa_ui_sc.json 传给了
+    Style.withFont；Style 需要的是「字体 id」gtsnlib:sarasa_ui_sc。
+  修复：区分 location()（定义资源校验）与 styleFontId()（withFont）；
+  并加固 ready()：校验定义 + ttf 引用文件 + sfnt magic，失败一律回退原版（不套 missing 字体集）。
+
+最终 runClient：Failed to load builder = 0；截图无豆腐块、龘 回退渲染。

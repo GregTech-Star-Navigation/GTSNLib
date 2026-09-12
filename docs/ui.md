@@ -8,6 +8,9 @@
 > 机器状态桥接（#22，方案 A：只读数据通道 + 自带 UI 组件）：把 GTCEu 机器状态读进本框架的组件
 > （能量条 / 流体罐 / 进度箭头 / 槽位面板 / 状态面板）与 `MachineStatusScreen`，不接管 GT 的 LDLib 界面。
 > 用法、只读边界与客户端同步语义见 `docs/gt-machine-bridge.md`。
+>
+> 自定义字体（#23）：随库打包 OFL 字体（更纱黑体 Sarasa UI SC 子集），GTSN UI 文本默认使用；
+> 缺字形经 `reference` provider 回退原版字库。许可、字体 id 与覆盖方式见「自定义字体（#23）」一节。
 
 ## 包结构
 
@@ -16,13 +19,13 @@
 | `com.gtsn.lib.ui.layout` | 布局引擎：盒模型（padding/margin）、尺寸策略（fixed/wrap/fill）、栈布局（方向/间距/主轴对齐/交叉轴对齐/权重）、测量约束（MeasureSpec）、九宫格锚定 | 无 |
 | `com.gtsn.lib.ui.input` | 输入事件模型（鼠标/滚轮/键盘/字符）、命中测试、焦点管理、事件冒泡路由、悬停路径与鼠标位置 | 无 |
 | `com.gtsn.lib.ui.render` | `RenderContext` 渲染抽象 + `TextureRef` / `SlotIcon`（纯）；`GuiGraphicsRenderContext`（原版后端）；`ItemStackIcon`（物品堆叠渲染） | 实现类客户端 |
-| `com.gtsn.lib.ui.theme` | 主题模型：`Theme` / `ThemeColorRole` / `ThemeColor` / `ThemeTextStyle` / `ThemeSpacing` / `ThemeRounding` / `ThemeTextureRole`、JSON 解析器、继承解析器、注册表与全局上下文 | 无 |
+| `com.gtsn.lib.ui.theme` | 主题模型：`Theme` / `ThemeColorRole` / `ThemeColor` / `ThemeTextStyle`（含字体 id `FontId`）/ `FontId` / `ThemeSpacing` / `ThemeRounding` / `ThemeTextureRole`、JSON 解析器、继承解析器、注册表与全局上下文 | 无 |
 | `com.gtsn.lib.ui.sync` | 容器数据同步：`IntStore` / `SyncCodec` / `SyncCodecs` / `SyncSlot` / `SyncLayout` / `MenuSync` / `SyncSubscription`（纯）；`MenuSyncData` / `SyncedMenu`（原版 `AbstractContainerMenu` 数据槽适配） | 适配器引用原版公共类 |
 | `com.gtsn.lib.ui.sync.bind` | 绑定层：`SyncBinding` / `AbstractSyncBinding` / `LabelBinding` / `ProgressBarBinding` / `SyncBindings` / `SyncBindingGroup` | 无 |
-| `com.gtsn.lib.ui.widget` | `Widget` / `AbstractWidget` 与组件库：`Stack`、`PanelWidget`、`TextWidget`（换行/对齐/行距）、`ButtonWidget`、`ProgressBarWidget`、`ItemSlotWidget`、`ScrollPanelWidget`、`CheckboxWidget`、`ToggleSwitchWidget`、`DividerWidget`、`SpacerWidget`、`Tooltip`、`TextMetrics` | 无 |
+| `com.gtsn.lib.ui.widget` | `Widget` / `AbstractWidget` 与组件库：`Stack`、`PanelWidget`、`TextWidget`（换行/对齐/行距/字体覆盖）、`ButtonWidget`、`ProgressBarWidget`、`ItemSlotWidget`、`ScrollPanelWidget`、`CheckboxWidget`、`ToggleSwitchWidget`、`DividerWidget`、`SpacerWidget`、`Tooltip`、`TextMetrics`（字体感知度量） | 无 |
 | `com.gtsn.lib.ui.screen` | `WidgetHost`（布局/渲染/输入/工具提示覆盖层泊点，纯逻辑）；`GtsnScreen`（Screen 基类）；`GtsnUiTestScreen`（开发测试界面）；`DemoMenuScreen`（数据同步演示屏幕） | Screen 类客户端 |
 | `com.gtsn.lib.ui.demo` | 开发测试界面装配：`DemoContent`（组件画廊）、`DemoState`、`DemoIcons`（客户端图标接缝）、`KeypadWidget`、`ThemeControl`（主题切换接缝）；数据同步演示：`DemoSync`（槽位与推进规则）、`DemoMenu`（演示菜单）、`DemoMenus`（菜单类型注册）、`SyncDemoContent`（演示装配，纯） | 菜单类公共侧 |
-| `com.gtsn.lib.ui.client` | 客户端接线：`/gtsnui` 客户端命令与自动测试开关、`ThemeResources`（资源重载加载主题）、`GtsnUiThemeEvents`（重载事件注册）、`GtsnUiScreens`（菜单屏幕注册）、`GtsnUiSyncAutotest`（数据同步自动测试） | 客户端 |
+| `com.gtsn.lib.ui.client` | 客户端接线：`/gtsnui` 客户端命令与自动测试开关、`ThemeResources`（资源重载加载主题）、`GtsnUiThemeEvents`（重载事件注册）、`GtsnUiScreens`（菜单屏幕注册）、`GtsnUiSyncAutotest`（数据同步自动测试）、`ClientFonts`（字体可用性 + `Style.withFont` 套用）、`ThemeFontMetrics`（主题字体度量） | 客户端 |
 
 ## 组件库（#17）
 
@@ -85,6 +88,54 @@
 
 **切换**：`ThemeContext.cycle()` / `setActive(ThemeId)`；开发测试界面右上角“主题: <名称>”按钮即切换入口，屏幕在 tick 中检测主题变化并以新主题重建控件树（`DemoState` 保留点击/开关/进度/选中槽位等状态）。
 
+## 自定义字体（#23）
+
+GTSN UI 文本可指定字体资源；默认主题使用随库打包的 **更纱黑体 Sarasa Gothic "Sarasa UI SC"**（面向屏幕 UI 的无衬线黑体，Latin 与 CJK 协调）。
+范围**仅限经本框架渲染的文本**——不覆盖原版默认字体，不影响其它 mod / 原版 UI。
+
+**字体资源**（字体 id `gtsnlib:sarasa_ui_sc`）：
+
+| 文件 | 内容 |
+| --- | --- |
+| `assets/gtsnlib/font/sarasa_ui_sc.json` | 字体定义：`providers` = [`ttf` 子集字体, `reference` → `minecraft:default`]（顺序即优先级，首个命中者胜） |
+| `assets/gtsnlib/font/sarasa_ui_sc.ttf` | Sarasa UI SC Regular 子集，**1,251,540 字节（约 1.19 MiB）**；覆盖 Latin 基础 / Latin-1 / Latin Ext-A·B、常用符号、GB2312 一级汉字与标点 |
+| `assets/gtsnlib/font/license-sarasa-gothic.txt` | SIL Open Font License 1.1 全文（随 jar 打包） |
+
+```json
+{
+  "providers": [
+    { "type": "ttf", "file": "gtsnlib:sarasa_ui_sc.ttf", "size": 11.0, "oversample": 2.0,
+      "shift": [0.0, 0.0], "skip": [" "] },
+    { "type": "reference", "id": "minecraft:default" }
+  ]
+}
+```
+
+- **`file` 相对 `font/` 目录**：`TrueTypeGlyphProviderDefinition.load` 会执行 `location.withPrefix("font/")`，
+  故写法是 `gtsnlib:sarasa_ui_sc.ttf`（**不是** `gtsnlib:font/sarasa_ui_sc.ttf`，否则解析为 `font/font/...` 加载失败）。
+- **`reference` 回退层是必需的**：自定义字体不会自动回退原版；`skip: [" "]` 让空格沿用原版空格度量。
+  子集未覆盖的字形（如 GB2312 二级字「龘」U+9F98）由该层用原版字库渲染。
+- `size: 11.0` 匹配原版字体的视觉大小；`oversample: 2.0` 提升缩放下的清晰度；行高仍取原版 `font.lineHeight`（布局度量不因此变化）。
+
+**主题 / 文本接线**：
+
+- `ThemeTextStyle` 新增 `fontId`（`FontId`，如 `gtsnlib:sarasa_ui_sc`）；主题 JSON 的 `text.font` 声明，沿 `extends` 链继承；链上均未声明时回退 `FontId.VANILLA`（`minecraft:default`）。
+- 渲染路径：`RenderContext` 新增字体感知重载（`text` / `textWidth` / `centeredText` 的 `FontId` 参数；`null` = 原版默认）。
+  `GuiGraphicsRenderContext` 把字体经 `Style.withFont(fontId)` 套用；`TextMetrics.width(text, fontId)` 用同一字体度量，保证换行 / 固有尺寸与实际渲染宽度一致（客户端实现 `ThemeFontMetrics`，布局与渲染共用）。
+- 逐控件覆盖：`TextWidget.font(FontId)`（指定字体）、`.vanillaFont()`（强制原版）、`.useThemeFont()`（恢复跟随主题）；覆盖同时驱动度量与渲染。
+- 逐样式覆盖：任何主题可写 `"text": { "font": "gtsnlib:sarasa_ui_sc" }`；第三方字体只要放进 `assets/<ns>/font/` 即可被主题引用。
+- **安全回退**：`ClientFonts.ready` 校验字体定义、`ttf` 引用文件（按 `font/` 前缀）与 sfnt magic；任何一步失败都回退原版字体（不套 `Style.withFont`），避免 `FontManager` 落到 missing 字体集渲染豆腐块。
+
+**开发测试界面**：右列表头下方新增字体对比行——样例文本「GTSN UI 中文 English 0123 龘」默认主题字体，
+按钮「字体: 主题 ↔ 字体: 原版」切换为原版字体对比（龘 即子集外字形的回退演示）。
+自动测试额外抓取 `run/screenshots/gtsnlib-ui-font-theme.png` / `gtsnlib-ui-font-vanilla.png` 两张对比截图。
+
+**验证**（无 MC 单测，headless）：
+
+- `ThemeFontTest`：`FontId` 解析 / 哨兵、`text.font` 解析与非法值拒绝、继承与缺省回退、两参数 `ThemeTextStyle` 兼容。
+- `FontResourceFilesTest`：字体定义 provider 链（ttf → reference）、`file` 按 MC 语义解析存在、子集 TTF 的 cmap 覆盖（含/缺字形）与回退选择、OFL 许可随包、默认主题指向打包字体。
+- `TextWidgetFontTest`：字体覆盖驱动换行 / 固有尺寸 / 渲染参数，居中按字体感知宽度。
+
 ## 容器数据同步（#19）
 
 **模型**（`ui.sync`：纯 Java 核心 + 原版数据槽适配；不引入自定义网络包——int 数据槽覆盖 int/float（原始位）/bool/枚举/索引，足够本轮类型需求）：
@@ -109,6 +160,8 @@
 - 布局 / 输入 / 渲染接口 / 控件 / 演示装配为**纯 Java**（不引用 `net.minecraft`），专职服务端与 GameTest 可安全加载。
 - `ui.screen.GtsnScreen`、`ui.screen.GtsnUiTestScreen`、`ui.render.GuiGraphicsRenderContext`、`ui.render.ItemStackIcon`、`ui.client.GtsnUiClient` 仅在客户端加载；
   `GtsnUiClient` 以 `@Mod.EventBusSubscriber(value = Dist.CLIENT)` 注册事件，专职服务端扫描时不会加载该类。
+- 字体接线同样保持无 MC 依赖内核：`FontId` / `ThemeTextStyle.fontId` / `RenderContext` 字体重载 / `TextMetrics.width(text, font)` 均为纯 Java；
+  `ClientFonts` / `ThemeFontMetrics`（`ui.client`）与 `GuiGraphicsRenderContext` 仅客户端加载。
 - common / 服务端代码不得引用上述客户端类（`runServer` 日志为证）。
 
 ## 开发测试界面
@@ -119,7 +172,7 @@
 2. **自动测试**（CI / 无人值守证据）：启动客户端前设置环境变量 `GTSNLIB_UI_AUTOTEST=1`。客户端进入标题界面后：
    将窗口固定为 1280x720 + GUI 缩放 2（640x360 GUI 空间），自动打开测试界面，注入合成点击/滚轮/键盘输入并悬停物品槽（展示工具提示），
    随后点击“主题”按钮逐主题各抓一张截图（`run/screenshots/gtsnlib-ui-theme-<主题>.png`：默认/琥珀/浅色；主题经资源加载，切换后控件树按新主题重建），
-   最后自动退出客户端。
+   最后切回默认主题并点击“字体”按钮抓取字体对比截图（`run/screenshots/gtsnlib-ui-font-theme.png` / `gtsnlib-ui-font-vanilla.png`，#23），自动退出客户端。
 
 > 自动测试为开发专用；正常游玩请使用 `/gtsnui`。
 
@@ -134,7 +187,7 @@
                                  #       数据同步编解码·槽位注册表·变更通知·绑定层·演示规则（无 MC）
 .\gradlew.bat runGameTestServer  # GameTest：内核 + 组件库 + 主题 + 数据同步（默认值发布/服务端推送/客户端镜像绑定/推进回卷）在专职服务端的真实加载环境中行为验证
 .\gradlew.bat runServer          # 专职服务端：客户端类不被加载（类加载纪律）
-.\gradlew.bat runClient          # 端到端：$env:GTSNLIB_UI_AUTOTEST=1 自动打开 + 交互 + 逐主题截图 + 退出
+.\gradlew.bat runClient          # 端到端：$env:GTSNLIB_UI_AUTOTEST=1 自动打开 + 交互 + 逐主题截图 + 字体对比截图（#23）+ 退出
 .\gradlew.bat runClient          # 数据同步端到端：$env:GTSNLIB_UI_AUTOTEST=sync 创建/载入存档、游戏内打开演示菜单、
                                  #   验证客户端值=服务端值且数值推进、抓图 run/screenshots/gtsnlib-ui-sync-demo.png、退出
 .\gradlew.bat runClient          # 机器状态端到端：$env:GTSNLIB_UI_AUTOTEST=machine 创建/载入存档、放置 test_machine、

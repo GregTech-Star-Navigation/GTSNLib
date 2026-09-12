@@ -210,6 +210,24 @@ class StackLayoutTest {
     }
 
     @Test
+    void stackedChildrenInsideFixedContainerRespectItsWidth() {
+        LayoutNode root = new LayoutNode(LayoutParams.create().direction(Direction.HORIZONTAL));
+        LayoutNode column = new LayoutNode(LayoutParams.create()
+                .width(Sizing.fixed(100)).height(Sizing.wrap())
+                .crossAxisAlign(CrossAxisAlign.STRETCH));
+        LayoutNode panel = new LayoutNode(LayoutParams.create());
+        LayoutNode fill = new LayoutNode(LayoutParams.create().fillWidth().height(Sizing.fixed(10)));
+        panel.addChild(fill);
+        column.addChild(panel);
+        root.addChild(column);
+
+        LayoutEngine.layout(root, Rect.of(0, 0, 300, 200));
+
+        assertEquals(Size.of(100, 10), panel.measuredSize(), "固定容器的拉伸子节点按容器宽测量");
+        assertEquals(Rect.of(0, 0, 100, 10), fill.bounds(), "嵌套填充子节点宽=固定容器宽，不受外层 300 约束");
+    }
+
+    @Test
     void absoluteChildIsAnchoredAndExcludedFromFlow() {
         LayoutNode root = new LayoutNode(LayoutParams.create().padding(Insets.all(5)));
         LayoutNode flow = fixed(20, 20);

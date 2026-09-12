@@ -27,8 +27,8 @@ public final class LayoutEngine {
 
         LayoutParams params = node.params();
         Insets padding = params.padding();
-        MeasureSpec innerWidthSpec = widthSpec.subtract(padding.horizontal());
-        MeasureSpec innerHeightSpec = heightSpec.subtract(padding.vertical());
+        MeasureSpec innerWidthSpec = innerSpec(widthSpec, padding.horizontal(), params.width());
+        MeasureSpec innerHeightSpec = innerSpec(heightSpec, padding.vertical(), params.height());
         Direction direction = params.direction();
         List<LayoutNode> flow = flowChildren(node);
 
@@ -277,6 +277,18 @@ public final class LayoutEngine {
 
     private static MeasureSpec relax(MeasureSpec spec) {
         return spec.mode() == MeasureSpec.Mode.EXACTLY ? MeasureSpec.atMost(spec.size()) : spec;
+    }
+
+    /**
+     * 子树内部测量约束：固定尺寸节点把自身尺寸（扣除 padding）钉给子树，
+     * 使其内部的填充/拉伸子节点按容器尺寸测量，而不是按祖先约束（嵌套固定容器的关键）；
+     * 其它尺寸策略沿用父约束扣除 padding。
+     */
+    private static MeasureSpec innerSpec(MeasureSpec outer, int reserved, Sizing sizing) {
+        if (sizing instanceof Sizing.Fixed fixed) {
+            return MeasureSpec.exactly(Math.max(0, fixed.pixels() - reserved));
+        }
+        return outer.subtract(reserved);
     }
 
     private static MeasureSpec mainSpec(MeasureSpec widthSpec, MeasureSpec heightSpec, Direction direction) {

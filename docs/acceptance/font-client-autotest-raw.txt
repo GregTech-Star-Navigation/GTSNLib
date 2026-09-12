@@ -1,0 +1,44 @@
+# GTSNLib custom font (#23) - runClient autotest raw log (excerpt from run/logs/latest.log)
+# cmd: $env:GTSNLIB_UI_AUTOTEST="1"; .\gradlew.bat runClient
+# date: 2026-09-13 05:36
+
+[139月2026 05:36:06.985] [modloading-worker-0/INFO] [com.gtsn.lib.GTSNLib/]: [GTSNLib] Loading GTSNLib 0.1.0
+[139月2026 05:36:07.612] [Render thread/INFO] [com.gtsn.lib.gt.adapter.GtMaterialRegistration/]: [GTSNLib] created GTCEu material registry for gtsnlib
+[139月2026 05:36:07.927] [Render thread/INFO] [com.gtsn.lib.gt.adapter.GtContentRegistration/]: [GTSNLib] registered demo block gtsnlib:test_block (item gtsnlib:test_block) and item gtsnlib:test_item via registration helper
+[139月2026 05:36:07.938] [Render thread/INFO] [com.gtsn.lib.gt.adapter.GtMaterialRegistration/]: [GTSNLib] recipe hook invoked for gtsnlib:star_alloy (parts: [plate, ingot, rod, dust])
+[139月2026 05:36:07.938] [Render thread/INFO] [com.gtsn.lib.gt.adapter.GtMaterialRegistration/]: [GTSNLib] registered GTCEu material gtsnlib:star_alloy | derived parts: {plate=star_alloy_plate, ingot=star_alloy_ingot, rod=star_alloy_rod, dust=star_alloy_dust} | ore tags: [forge:ingots/star_alloy, forge:plates/star_alloy, forge:dusts/star_alloy, forge:rods/star_alloy] | fluids: {gas=gtsnlib:star_alloy_gas, plasma=gtsnlib:star_alloy_plasma, liquid=gtsnlib:star_alloy}
+[139月2026 05:36:07.958] [Render thread/INFO] [com.gtsn.lib.gt.adapter.GtMaterialRegistration/]: [GTSNLib] registered standalone GTCEu fluid gtsnlib:stellar_air | state: gas | bucket: true
+[139月2026 05:36:09.004] [Render thread/INFO] [com.gtsn.lib.gt.adapter.GtContentRegistration/]: [GTSNLib] registered demo machine gtsnlib:test_machine via registration helper
+[139月2026 05:36:10.504] [Render thread/INFO] [net.minecraftforge.gametest.ForgeGameTestHooks/]: Enabled Gametest Namespaces: [gtsnlib]
+[139月2026 05:36:10.907] [Worker-Main-4/INFO] [com.gtsn.lib.core.GtsnIntegrations/]: [GTSNLib] integrations detected: 0/6
+[139月2026 05:36:11.616] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiScreens/]: [GTSNLib] sync demo menu screen registered
+[139月2026 05:36:16.186] [Render thread/INFO] [com.gtsn.lib.ui.client.ThemeResources/]: [GTSNLib] UI 主题已加载: [gtsnlib:default, gtsnlib:amber, gtsnlib:light]（激活: gtsnlib:default）
+[139月2026 05:36:16.198] [Render thread/INFO] [net.minecraft.client.gui.screens.TitleScreen/]: [GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[139月2026 05:36:16.213] [Render thread/INFO] [net.minecraft.client.gui.screens.TitleScreen/]: [GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[139月2026 05:36:18.239] [Render thread/INFO] [net.minecraft.client.gui.screens.TitleScreen/]: [GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[139月2026 05:36:18.242] [Render thread/INFO] [net.minecraft.client.gui.screens.TitleScreen/]: [GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[139月2026 05:36:18.242] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiAutotestWindow/]: [GTSNLib] autotest window prepared: 1280x720 guiScale=2
+[139月2026 05:36:18.242] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] GTSNLIB_UI_AUTOTEST=1 -> opening UI dev test screen
+[139月2026 05:36:18.286] [Render thread/INFO] [com.gtsn.lib.ui.screen.GtsnUiTestScreen/]: [GTSNLib] UI test screen init: 640x360 theme=gtsnlib:default
+[139月2026 05:36:18.286] [Render thread/INFO] [com.gtsn.lib.ui.screen.GtsnUiTestScreen/]: [GTSNLib] UI effective font = gtsnlib:sarasa_ui_sc (theme=gtsnlib:default, requested=gtsnlib:sarasa_ui_sc)
+[139月2026 05:36:18.334] [Render thread/INFO] [com.gtsn.lib.ui.screen.GtsnUiTestScreen/]: [GTSNLib] UI test screen rendered: frame=1 theme=gtsnlib:default clicks=0 typed=
+[139月2026 05:36:20.260] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] autotest synthetic input: clicks=1 toggled=false checkbox=true switch=true progress=0.30000000000000004 slot1=true scrollY=32 lastKey=K typed=A
+[139月2026 05:36:21.231] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] autotest grabbing screenshot gtsnlib-ui-theme-default.png (theme=gtsnlib:default)
+[139月2026 05:36:21.289] [IO-Worker-6/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] autotest screenshot: 已将截图保存为gtsnlib-ui-theme-default.png
+[139月2026 05:36:22.247] [Render thread/INFO] [com.gtsn.lib.ui.screen.GtsnUiTestScreen/]: [GTSNLib] UI test screen rendered: frame=120 theme=gtsnlib:default clicks=1 typed=A
+[139月2026 05:36:22.278] [Render thread/INFO] [com.gtsn.lib.ui.screen.GtsnUiTestScreen/]: [GTSNLib] UI test screen rebuilt for theme gtsnlib:amber (琥珀)
+[139月2026 05:36:23.250] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] autotest grabbing screenshot gtsnlib-ui-theme-amber.png (theme=gtsnlib:amber)
+[139月2026 05:36:23.298] [IO-Worker-6/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] autotest screenshot: 已将截图保存为gtsnlib-ui-theme-amber.png
+[139月2026 05:36:24.291] [Render thread/INFO] [com.gtsn.lib.ui.screen.GtsnUiTestScreen/]: [GTSNLib] UI test screen rebuilt for theme gtsnlib:light (浅色)
+[139月2026 05:36:25.238] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] autotest grabbing screenshot gtsnlib-ui-theme-light.png (theme=gtsnlib:light)
+[139月2026 05:36:25.285] [IO-Worker-6/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] autotest screenshot: 已将截图保存为gtsnlib-ui-theme-light.png
+[139月2026 05:36:26.224] [Render thread/INFO] [com.gtsn.lib.ui.screen.GtsnUiTestScreen/]: [GTSNLib] UI test screen rendered: frame=240 theme=gtsnlib:light clicks=1 typed=A
+[139月2026 05:36:26.287] [Render thread/INFO] [com.gtsn.lib.ui.screen.GtsnUiTestScreen/]: [GTSNLib] UI test screen rebuilt for theme gtsnlib:default (默认)
+[139月2026 05:36:27.248] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] UI effective font = gtsnlib:sarasa_ui_sc (requested=gtsnlib:sarasa_ui_sc, themeWidth=137, vanillaWidth=140, delta=-3)
+[139月2026 05:36:27.248] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] autotest grabbing screenshot gtsnlib-ui-font-theme.png (theme=gtsnlib:default)
+[139月2026 05:36:27.295] [IO-Worker-6/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] autotest screenshot: 已将截图保存为gtsnlib-ui-font-theme.png
+[139月2026 05:36:29.234] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] autotest grabbing screenshot gtsnlib-ui-font-vanilla.png (theme=gtsnlib:default)
+[139月2026 05:36:29.281] [IO-Worker-6/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] autotest screenshot: 已将截图保存为gtsnlib-ui-font-vanilla.png
+[139月2026 05:36:30.075] [Render thread/INFO] [com.gtsn.lib.ui.screen.GtsnUiTestScreen/]: [GTSNLib] UI test screen rendered: frame=360 theme=gtsnlib:default clicks=1 typed=A
+[139月2026 05:36:31.233] [Render thread/INFO] [com.gtsn.lib.ui.client.GtsnUiClient/]: [GTSNLib] autotest complete (themes captured: 9), stopping client
+[139月2026 05:36:31.265] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Stopping!

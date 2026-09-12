@@ -133,8 +133,18 @@ GTSN UI 文本可指定字体资源；默认主题使用随库打包的 **更纱
 **验证**（无 MC 单测，headless）：
 
 - `ThemeFontTest`：`FontId` 解析 / 哨兵、`text.font` 解析与非法值拒绝、继承与缺省回退、两参数 `ThemeTextStyle` 兼容。
-- `FontResourceFilesTest`：字体定义 provider 链（ttf → reference）、`file` 按 MC 语义解析存在、子集 TTF 的 cmap 覆盖（含/缺字形）与回退选择、OFL 许可随包、默认主题指向打包字体。
+- `FontResourceFilesTest`：字体定义 provider 链（ttf → reference）、`file` 按 MC 语义解析存在、子集 TTF 的 cmap 覆盖（含/缺字形）与回退选择、OFL 许可随包、默认主题指向打包字体、以及子集 TTF 保留 STB 光栅化必需表与 cmap format 4（防止丢表静默回退）。
 - `TextWidgetFontTest`：字体覆盖驱动换行 / 固有尺寸 / 渲染参数，居中按字体感知宽度。
+
+**运行期正向验证（#23 复检新增）**：
+
+- `GtsnUiFontProbe`（客户端）以同一样例在「主题字体 / 原版字体」下的 `Font.width` 差异为正向证据：
+  自动测试记录 `[GTSNLib] UI effective font = gtsnlib:sarasa_ui_sc (… themeWidth=137, vanillaWidth=140 …)`
+  并断言两者必须不同。若自定义字体被安全回退静默吞掉，二者相等 → 断言抛异常，自动测试直接报错，
+  无需肉眼比对截图即可捕获回归（`ClientFonts.ready` 只能校验资源存在，无法证明 MC 真用了 TTF）。
+- `GtsnUiTestScreen.init()` 每次打开测试界面都会记录 `[GTSNLib] UI effective font = <id>`。
+- 放大对比证据：`docs/acceptance/screenshots/font-zoom-compare-4x.png`（>=4x 最近邻裁剪，主题 vs 原版上下堆叠），
+  由 `docs/acceptance/zoom-font-proof.ps1` 从两张自动测试截图生成；观测与像素差见 `docs/acceptance/font-zoom-proof.txt`。
 
 ## 容器数据同步（#19）
 

@@ -10,99 +10,98 @@ Daemon will be stopped at the end of the build
 > Task :prepareServerRun
 
 > Task :runServer
-2026-09-13 05:15:25,774 main WARN Advanced terminal features are not available in this environment
-[05:15:25] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forgeserveruserdev, --gameDir, ., --fml.forgeVersion, 47.4.0, --fml.mcVersion, 1.20.1, --fml.forgeGroup, net.minecraftforge, --fml.mcpVersion, 20230612.114412, --mixin.config, mixins.gtsnlib.json, --nogui]
-[05:15:25] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: ModLauncher 10.0.10+10.0.10+main.22f00f84 starting: java version 17.0.20.1 by Eclipse Adoptium; OS Windows 11 arch amd64 version 10.0
-[05:15:26] [main/INFO] [ne.mi.fm.lo.ImmediateWindowHandler/]: ImmediateWindowProvider not loading because launch target is forgeserveruserdev
-[05:15:26] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.5 Source=union:/C:/Users/zh134/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar%23143!/ Service=ModLauncher Env=SERVER
-[05:15:26] [main/WARN] [ne.mi.fm.lo.mo.ModFileParser/LOADING]: Mod file C:\Users\zh134\.gradle\caches\modules-2\files-2.1\net.minecraftforge\fmlcore\1.20.1-47.4.0\235975dafa4309945b59c56b53f31dc5b65a6051\fmlcore-1.20.1-47.4.0.jar is missing mods.toml file
-[05:15:26] [main/WARN] [ne.mi.fm.lo.mo.ModFileParser/LOADING]: Mod file C:\Users\zh134\.gradle\caches\modules-2\files-2.1\net.minecraftforge\javafmllanguage\1.20.1-47.4.0\f0c0b352173d0a378cbdcec9cfc4ba65899a721\javafmllanguage-1.20.1-47.4.0.jar is missing mods.toml file
-[05:15:26] [main/WARN] [ne.mi.fm.lo.mo.ModFileParser/LOADING]: Mod file C:\Users\zh134\.gradle\caches\modules-2\files-2.1\net.minecraftforge\lowcodelanguage\1.20.1-47.4.0\e862740d8c84d08dbfedea412bef88fe42e727c5\lowcodelanguage-1.20.1-47.4.0.jar is missing mods.toml file
-[05:15:26] [main/WARN] [ne.mi.fm.lo.mo.ModFileParser/LOADING]: Mod file C:\Users\zh134\.gradle\caches\modules-2\files-2.1\net.minecraftforge\mclanguage\1.20.1-47.4.0\5719b3a297a33f877ed5dde4cb4bd75c859096af\mclanguage-1.20.1-47.4.0.jar is missing mods.toml file
-[05:15:26] [main/INFO] [ne.mi.fm.lo.mo.JarInJarDependencyLocator/]: Found 2 dependencies adding them to mods collection
-[05:15:28] [main/INFO] [mixin/]: Compatibility level set to JAVA_17
-[05:15:28] [main/INFO] [cp.mo.mo.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forgeserveruserdev' with arguments [--gameDir, ., --nogui]
-[05:15:28] [main/INFO] [mixin/]: Remapping refMap mixins.gtsnlib.refmap.json using C:\\Users\\zh134\\Desktop\\gtsn\\GTSNLib\\build\\moddev\\artifacts\\intermediateToNamed.srg
-[05:15:28] [main/INFO] [mixin/]: Remapping refMap configuration.refmap.json using C:\\Users\\zh134\\Desktop\\gtsn\\GTSNLib\\build\\moddev\\artifacts\\intermediateToNamed.srg
-[05:15:28] [main/INFO] [mixin/]: Remapping refMap ldlib-common-1.20.1-ldlib-common-refmap.json using C:\\Users\\zh134\\Desktop\\gtsn\\GTSNLib\\build\\moddev\\artifacts\\intermediateToNamed.srg
-[05:15:28] [main/INFO] [mixin/]: Remapping refMap ldlib-forge-1.20.1-ldlib-forge-refmap.json using C:\\Users\\zh134\\Desktop\\gtsn\\GTSNLib\\build\\moddev\\artifacts\\intermediateToNamed.srg
-[05:15:28] [main/INFO] [mixin/]: Remapping refMap gtceu.refmap.json using C:\\Users\\zh134\\Desktop\\gtsn\\GTSNLib\\build\\moddev\\artifacts\\intermediateToNamed.srg
-2026-09-13 05:15:28,770 main WARN Error parsing URI C:\\Users\\zh134\\Desktop\\gtsn\\GTSNLib\\build\\moddev\\serverLog4j2.xml
-[05:15:29] [main/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.3.5).
-[05:15:33] [modloading-worker-0/INFO] [GregTechCEu/]: GregTechCEu is initializing...
-[05:15:33] [modloading-worker-0/INFO] [co.gt.li.GTSNLib/]: [GTSNLib] Loading GTSNLib 0.1.0
-[05:15:33] [modloading-worker-0/INFO] [LowDragLib/]: LowDragLib is initializing on platform: Forge
-[05:15:34] [modloading-worker-0/INFO] [ne.mi.co.ForgeMod/FORGEMOD]: Forge mod loading, version 47.4.0, for MC 1.20.1 with MCP 20230612.114412
-[05:15:34] [modloading-worker-0/INFO] [ne.mi.co.MinecraftForge/FORGE]: MinecraftForge v47.4.0 Initialized
-[05:15:34] [modloading-worker-0/INFO] [Configuration/FileWatching]: Registered gtsnlib config for auto-sync function
-[05:15:34] [modloading-worker-0/INFO] [Configuration/FileWatching]: Registered gtsnlib-server config for auto-sync function
-[05:15:34] [modloading-worker-0/INFO] [Configuration/FileWatching]: Registered configuration config for auto-sync function
-[05:15:34] [modloading-worker-0/INFO] [Configuration/FileWatching]: Registered gtceu config for auto-sync function
-[05:15:34] [modloading-worker-0/INFO] [GregTechCEu/]: High-Tier is Enabled.
-[05:15:34] [main/INFO] [GregTechCEu/]: GTCEu common proxy init!
-[05:15:34] [main/INFO] [GregTechCEu/]: Registering material registries
-[05:15:34] [main/INFO] [co.gt.li.gt.ad.GtMaterialRegistration/]: [GTSNLib] created GTCEu material registry for gtsnlib
-[05:15:34] [main/INFO] [GregTechCEu/]: Registering GTCEu Materials
-[05:15:34] [main/INFO] [GregTechCEu/]: Registering addon Materials
-[05:15:34] [main/INFO] [co.gt.li.gt.ad.GtContentRegistration/]: [GTSNLib] registered demo block gtsnlib:test_block (item gtsnlib:test_block) and item gtsnlib:test_item via registration helper
-[05:15:34] [main/INFO] [co.gt.li.gt.ad.GtMaterialRegistration/]: [GTSNLib] recipe hook invoked for gtsnlib:star_alloy (parts: [ingot, plate, dust, rod])
-[05:15:34] [main/INFO] [co.gt.li.gt.ad.GtMaterialRegistration/]: [GTSNLib] registered GTCEu material gtsnlib:star_alloy | derived parts: {ingot=star_alloy_ingot, plate=star_alloy_plate, dust=star_alloy_dust, rod=star_alloy_rod} | ore tags: [forge:ingots/star_alloy, forge:plates/star_alloy, forge:dusts/star_alloy, forge:rods/star_alloy] | fluids: {plasma=gtsnlib:star_alloy_plasma, gas=gtsnlib:star_alloy_gas, liquid=gtsnlib:star_alloy}
-[05:15:34] [main/INFO] [co.gt.li.gt.ad.GtMaterialRegistration/]: [GTSNLib] registered standalone GTCEu fluid gtsnlib:stellar_air | state: gas | bucket: true
-[05:15:35] [main/WARN] [GregTechCEu/]: FluidStorageKey{gtceu:liquid} already has an associated fluid for material gtceu:lava
-[05:15:35] [main/WARN] [GregTechCEu/]: FluidStorageKey{gtceu:liquid} already has an associated fluid for material gtceu:water
-[05:15:35] [main/WARN] [GregTechCEu/]: FluidStorageKey{gtceu:liquid} already has an associated fluid for material gtceu:milk
-[05:15:35] [main/INFO] [co.gt.li.gt.ad.GtContentRegistration/]: [GTSNLib] registered demo machine gtsnlib:test_machine via registration helper
-[05:15:36] [main/INFO] [GregTechCEu/]: Registering KeyBinds
-[05:15:36] [main/WARN] [ne.mi.fm.DeferredWorkQueue/LOADING]: Mod 'gtceu' took 1.792 s to run a deferred task.
-[05:15:36] [modloading-worker-0/INFO] [co.gt.li.co.GtsnIntegrations/]: [GTSNLib] integrations detected: 0/6
-[05:15:37] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [configuration] Starting version check at https://raw.githubusercontent.com/Toma1O6/UpdateSchemas/master/configuration-forge.json
-[05:15:37] [main/INFO] [mojang/YggdrasilAuthenticationService]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
-[05:15:37] [main/INFO] [ne.mi.re.GameData/REGISTRIES]: Injecting existing registry data into this CLIENT instance
-[05:15:38] [main/WARN] [minecraft/VanillaPackResourcesBuilder]: Assets URL 'union:/C:/Users/zh134/Desktop/gtsn/GTSNLib/build/moddev/artifacts/forge-1.20.1-47.4.0.jar%23147!/assets/.mcassetsroot' uses unexpected schema
-[05:15:38] [main/WARN] [minecraft/VanillaPackResourcesBuilder]: Assets URL 'union:/C:/Users/zh134/Desktop/gtsn/GTSNLib/build/moddev/artifacts/forge-1.20.1-47.4.0.jar%23147!/data/.mcassetsroot' uses unexpected schema
-[05:15:38] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [configuration] Found status: OUTDATED Current: 2.2.0 Target: 2.2.1
-[05:15:38] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
-[05:15:40] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [forge] Found status: OUTDATED Current: 47.4.0 Target: 47.4.10
-[05:15:42] [main/INFO] [GregTechCEu/]: Registering dungeon loot...
-[05:15:42] [main/INFO] [GregTechCEu/]: GregTech Data loading took 3688ms
-[05:15:44] [main/INFO] [minecraft/RecipeManager]: Loaded 63 recipes
-[05:15:45] [main/INFO] [minecraft/AdvancementList]: Loaded 1306 advancements
-[05:15:46] [Server thread/INFO] [minecraft/DedicatedServer]: Starting minecraft server version 1.20.1
-[05:15:46] [Server thread/INFO] [minecraft/DedicatedServer]: Loading properties
-[05:15:46] [Server thread/INFO] [minecraft/DedicatedServer]: Default game type: SURVIVAL
-[05:15:46] [Server thread/INFO] [minecraft/MinecraftServer]: Generating keypair
-[05:15:46] [Server thread/INFO] [minecraft/DedicatedServer]: Starting Minecraft server on *:25565
-[05:15:46] [Server thread/INFO] [minecraft/ServerConnectionListener]: Using default channel type
-[05:15:46] [Server thread/INFO] [minecraft/DedicatedServer]: Preparing level "world"
-[05:15:47] [Server thread/INFO] [minecraft/MinecraftServer]: Preparing start region for dimension minecraft:overworld
-[05:15:49] [Worker-Main-3/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 0%
-[05:15:49] [Worker-Main-3/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 0%
-[05:15:49] [Worker-Main-3/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 0%
-[05:15:49] [Worker-Main-1/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 0%
-[05:15:49] [Worker-Main-4/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 57%
-[05:15:49] [Server thread/INFO] [minecraft/LoggerChunkProgressListener]: Time elapsed: 2141 ms
-[05:15:49] [Server thread/INFO] [minecraft/DedicatedServer]: Done (3.440s)! For help, type "help"
-[05:15:49] [Server thread/INFO] [minecraft/DedicatedServer]: Starting remote control listener
-[05:15:49] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener started
-[05:15:49] [Server thread/INFO] [minecraft/RconThread]: RCON running on 0.0.0.0:25575
-[05:15:49] [Server thread/INFO] [ne.mi.ga.ForgeGameTestHooks/]: Enabled Gametest Namespaces: [gtsnlib]
-[05:15:49] [Server thread/INFO] [ne.mi.se.pe.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
-[05:15:49] [Server thread/INFO] [co.gt.li.gt.ad.GtStartupProbe/]: [GTSNLib] GT adapter probe: material iron present @ gtceu:iron | tag prefixes: 95
-[05:15:50] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
-[05:16:11] [Server thread/INFO] [minecraft/MinecraftServer]: [Rcon: Stopping the server]
-[05:16:11] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping server
-[05:16:11] [Server thread/INFO] [minecraft/MinecraftServer]: Saving players
-[05:16:11] [Server thread/INFO] [minecraft/MinecraftServer]: Saving worlds
-[05:16:11] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[05:16:12] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
-[05:16:12] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
-[05:16:12] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (world): All chunks are saved
-[05:16:12] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[05:16:12] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[05:16:12] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage: All dimensions are saved
-[05:16:12] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener stopped
-[05:16:12] [RCON Client /127.0.0.1 #2/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
-[05:16:12] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 stopped
+2026-09-13 05:34:02,099 main WARN Advanced terminal features are not available in this environment
+[05:34:02] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forgeserveruserdev, --gameDir, ., --fml.forgeVersion, 47.4.0, --fml.mcVersion, 1.20.1, --fml.forgeGroup, net.minecraftforge, --fml.mcpVersion, 20230612.114412, --mixin.config, mixins.gtsnlib.json, --nogui]
+[05:34:02] [main/INFO] [cp.mo.mo.Launcher/MODLAUNCHER]: ModLauncher 10.0.10+10.0.10+main.22f00f84 starting: java version 17.0.20.1 by Eclipse Adoptium; OS Windows 11 arch amd64 version 10.0
+[05:34:02] [main/INFO] [ne.mi.fm.lo.ImmediateWindowHandler/]: ImmediateWindowProvider not loading because launch target is forgeserveruserdev
+[05:34:02] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.5 Source=union:/C:/Users/zh134/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar%23143!/ Service=ModLauncher Env=SERVER
+[05:34:02] [main/WARN] [ne.mi.fm.lo.mo.ModFileParser/LOADING]: Mod file C:\Users\zh134\.gradle\caches\modules-2\files-2.1\net.minecraftforge\fmlcore\1.20.1-47.4.0\235975dafa4309945b59c56b53f31dc5b65a6051\fmlcore-1.20.1-47.4.0.jar is missing mods.toml file
+[05:34:02] [main/WARN] [ne.mi.fm.lo.mo.ModFileParser/LOADING]: Mod file C:\Users\zh134\.gradle\caches\modules-2\files-2.1\net.minecraftforge\javafmllanguage\1.20.1-47.4.0\f0c0b352173d0a378cbdcec9cfc4ba65899a721\javafmllanguage-1.20.1-47.4.0.jar is missing mods.toml file
+[05:34:02] [main/WARN] [ne.mi.fm.lo.mo.ModFileParser/LOADING]: Mod file C:\Users\zh134\.gradle\caches\modules-2\files-2.1\net.minecraftforge\lowcodelanguage\1.20.1-47.4.0\e862740d8c84d08dbfedea412bef88fe42e727c5\lowcodelanguage-1.20.1-47.4.0.jar is missing mods.toml file
+[05:34:02] [main/WARN] [ne.mi.fm.lo.mo.ModFileParser/LOADING]: Mod file C:\Users\zh134\.gradle\caches\modules-2\files-2.1\net.minecraftforge\mclanguage\1.20.1-47.4.0\5719b3a297a33f877ed5dde4cb4bd75c859096af\mclanguage-1.20.1-47.4.0.jar is missing mods.toml file
+[05:34:02] [main/INFO] [ne.mi.fm.lo.mo.JarInJarDependencyLocator/]: Found 2 dependencies adding them to mods collection
+[05:34:04] [main/INFO] [mixin/]: Compatibility level set to JAVA_17
+[05:34:04] [main/INFO] [cp.mo.mo.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forgeserveruserdev' with arguments [--gameDir, ., --nogui]
+[05:34:05] [main/INFO] [mixin/]: Remapping refMap mixins.gtsnlib.refmap.json using C:\\Users\\zh134\\Desktop\\gtsn\\GTSNLib\\build\\moddev\\artifacts\\intermediateToNamed.srg
+[05:34:05] [main/INFO] [mixin/]: Remapping refMap configuration.refmap.json using C:\\Users\\zh134\\Desktop\\gtsn\\GTSNLib\\build\\moddev\\artifacts\\intermediateToNamed.srg
+[05:34:05] [main/INFO] [mixin/]: Remapping refMap ldlib-common-1.20.1-ldlib-common-refmap.json using C:\\Users\\zh134\\Desktop\\gtsn\\GTSNLib\\build\\moddev\\artifacts\\intermediateToNamed.srg
+[05:34:05] [main/INFO] [mixin/]: Remapping refMap ldlib-forge-1.20.1-ldlib-forge-refmap.json using C:\\Users\\zh134\\Desktop\\gtsn\\GTSNLib\\build\\moddev\\artifacts\\intermediateToNamed.srg
+[05:34:05] [main/INFO] [mixin/]: Remapping refMap gtceu.refmap.json using C:\\Users\\zh134\\Desktop\\gtsn\\GTSNLib\\build\\moddev\\artifacts\\intermediateToNamed.srg
+2026-09-13 05:34:05,294 main WARN Error parsing URI C:\\Users\\zh134\\Desktop\\gtsn\\GTSNLib\\build\\moddev\\serverLog4j2.xml
+[05:34:06] [main/INFO] [MixinExtras|Service/]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.3.5).
+[05:34:10] [modloading-worker-0/INFO] [GregTechCEu/]: GregTechCEu is initializing...
+[05:34:10] [modloading-worker-0/INFO] [co.gt.li.GTSNLib/]: [GTSNLib] Loading GTSNLib 0.1.0
+[05:34:10] [modloading-worker-0/INFO] [LowDragLib/]: LowDragLib is initializing on platform: Forge
+[05:34:10] [modloading-worker-0/INFO] [ne.mi.co.ForgeMod/FORGEMOD]: Forge mod loading, version 47.4.0, for MC 1.20.1 with MCP 20230612.114412
+[05:34:10] [modloading-worker-0/INFO] [ne.mi.co.MinecraftForge/FORGE]: MinecraftForge v47.4.0 Initialized
+[05:34:10] [modloading-worker-0/INFO] [Configuration/FileWatching]: Registered configuration config for auto-sync function
+[05:34:10] [modloading-worker-0/INFO] [Configuration/FileWatching]: Registered gtsnlib config for auto-sync function
+[05:34:10] [modloading-worker-0/INFO] [Configuration/FileWatching]: Registered gtsnlib-server config for auto-sync function
+[05:34:10] [modloading-worker-0/INFO] [Configuration/FileWatching]: Registered gtceu config for auto-sync function
+[05:34:10] [modloading-worker-0/INFO] [GregTechCEu/]: High-Tier is Enabled.
+[05:34:10] [main/INFO] [GregTechCEu/]: GTCEu common proxy init!
+[05:34:10] [main/INFO] [GregTechCEu/]: Registering material registries
+[05:34:10] [main/INFO] [co.gt.li.gt.ad.GtMaterialRegistration/]: [GTSNLib] created GTCEu material registry for gtsnlib
+[05:34:10] [main/INFO] [GregTechCEu/]: Registering GTCEu Materials
+[05:34:11] [main/INFO] [GregTechCEu/]: Registering addon Materials
+[05:34:11] [main/INFO] [co.gt.li.gt.ad.GtContentRegistration/]: [GTSNLib] registered demo block gtsnlib:test_block (item gtsnlib:test_block) and item gtsnlib:test_item via registration helper
+[05:34:11] [main/INFO] [co.gt.li.gt.ad.GtMaterialRegistration/]: [GTSNLib] recipe hook invoked for gtsnlib:star_alloy (parts: [plate, ingot, rod, dust])
+[05:34:11] [main/INFO] [co.gt.li.gt.ad.GtMaterialRegistration/]: [GTSNLib] registered GTCEu material gtsnlib:star_alloy | derived parts: {plate=star_alloy_plate, ingot=star_alloy_ingot, rod=star_alloy_rod, dust=star_alloy_dust} | ore tags: [forge:ingots/star_alloy, forge:plates/star_alloy, forge:dusts/star_alloy, forge:rods/star_alloy] | fluids: {plasma=gtsnlib:star_alloy_plasma, liquid=gtsnlib:star_alloy, gas=gtsnlib:star_alloy_gas}
+[05:34:11] [main/INFO] [co.gt.li.gt.ad.GtMaterialRegistration/]: [GTSNLib] registered standalone GTCEu fluid gtsnlib:stellar_air | state: gas | bucket: true
+[05:34:11] [main/WARN] [GregTechCEu/]: FluidStorageKey{gtceu:liquid} already has an associated fluid for material gtceu:water
+[05:34:11] [main/WARN] [GregTechCEu/]: FluidStorageKey{gtceu:liquid} already has an associated fluid for material gtceu:lava
+[05:34:11] [main/WARN] [GregTechCEu/]: FluidStorageKey{gtceu:liquid} already has an associated fluid for material gtceu:milk
+[05:34:12] [main/INFO] [co.gt.li.gt.ad.GtContentRegistration/]: [GTSNLib] registered demo machine gtsnlib:test_machine via registration helper
+[05:34:12] [main/INFO] [GregTechCEu/]: Registering KeyBinds
+[05:34:12] [main/WARN] [ne.mi.fm.DeferredWorkQueue/LOADING]: Mod 'gtceu' took 1.787 s to run a deferred task.
+[05:34:13] [modloading-worker-0/INFO] [co.gt.li.co.GtsnIntegrations/]: [GTSNLib] integrations detected: 0/6
+[05:34:13] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [configuration] Starting version check at https://raw.githubusercontent.com/Toma1O6/UpdateSchemas/master/configuration-forge.json
+[05:34:14] [main/INFO] [mojang/YggdrasilAuthenticationService]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
+[05:34:14] [main/INFO] [ne.mi.re.GameData/REGISTRIES]: Injecting existing registry data into this CLIENT instance
+[05:34:15] [main/WARN] [minecraft/VanillaPackResourcesBuilder]: Assets URL 'union:/C:/Users/zh134/Desktop/gtsn/GTSNLib/build/moddev/artifacts/forge-1.20.1-47.4.0.jar%23147!/assets/.mcassetsroot' uses unexpected schema
+[05:34:15] [main/WARN] [minecraft/VanillaPackResourcesBuilder]: Assets URL 'union:/C:/Users/zh134/Desktop/gtsn/GTSNLib/build/moddev/artifacts/forge-1.20.1-47.4.0.jar%23147!/data/.mcassetsroot' uses unexpected schema
+[05:34:15] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [configuration] Found status: OUTDATED Current: 2.2.0 Target: 2.2.1
+[05:34:15] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
+[05:34:17] [Forge Version Check/INFO] [ne.mi.fm.VersionChecker/]: [forge] Found status: OUTDATED Current: 47.4.0 Target: 47.4.10
+[05:34:18] [main/INFO] [GregTechCEu/]: Registering dungeon loot...
+[05:34:18] [main/INFO] [GregTechCEu/]: GregTech Data loading took 3568ms
+[05:34:21] [main/INFO] [minecraft/RecipeManager]: Loaded 63 recipes
+[05:34:21] [main/INFO] [minecraft/AdvancementList]: Loaded 1306 advancements
+[05:34:22] [Server thread/INFO] [minecraft/DedicatedServer]: Starting minecraft server version 1.20.1
+[05:34:22] [Server thread/INFO] [minecraft/DedicatedServer]: Loading properties
+[05:34:22] [Server thread/INFO] [minecraft/DedicatedServer]: Default game type: SURVIVAL
+[05:34:22] [Server thread/INFO] [minecraft/MinecraftServer]: Generating keypair
+[05:34:22] [Server thread/INFO] [minecraft/DedicatedServer]: Starting Minecraft server on *:25565
+[05:34:22] [Server thread/INFO] [minecraft/ServerConnectionListener]: Using default channel type
+[05:34:22] [Server thread/INFO] [minecraft/DedicatedServer]: Preparing level "world"
+[05:34:23] [Server thread/INFO] [minecraft/MinecraftServer]: Preparing start region for dimension minecraft:overworld
+[05:34:24] [Worker-Main-4/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 0%
+[05:34:24] [Worker-Main-3/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 0%
+[05:34:24] [Worker-Main-3/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 0%
+[05:34:25] [Worker-Main-4/INFO] [minecraft/LoggerChunkProgressListener]: Preparing spawn area: 0%
+[05:34:25] [Server thread/INFO] [minecraft/LoggerChunkProgressListener]: Time elapsed: 1956 ms
+[05:34:25] [Server thread/INFO] [minecraft/DedicatedServer]: Done (3.089s)! For help, type "help"
+[05:34:25] [Server thread/INFO] [minecraft/DedicatedServer]: Starting remote control listener
+[05:34:25] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener started
+[05:34:25] [Server thread/INFO] [minecraft/RconThread]: RCON running on 0.0.0.0:25575
+[05:34:25] [Server thread/INFO] [ne.mi.ga.ForgeGameTestHooks/]: Enabled Gametest Namespaces: [gtsnlib]
+[05:34:25] [Server thread/INFO] [ne.mi.se.pe.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
+[05:34:25] [Server thread/INFO] [co.gt.li.gt.ad.GtStartupProbe/]: [GTSNLib] GT adapter probe: material iron present @ gtceu:iron | tag prefixes: 95
+[05:34:25] [RCON Listener #1/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 started
+[05:34:47] [Server thread/INFO] [minecraft/MinecraftServer]: [Rcon: Stopping the server]
+[05:34:47] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping server
+[05:34:47] [Server thread/INFO] [minecraft/MinecraftServer]: Saving players
+[05:34:47] [Server thread/INFO] [minecraft/MinecraftServer]: Saving worlds
+[05:34:47] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[05:34:48] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[05:34:48] [Server thread/INFO] [minecraft/MinecraftServer]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[05:34:48] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[05:34:48] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[05:34:48] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[05:34:48] [Server thread/INFO] [minecraft/MinecraftServer]: ThreadedAnvilChunkStorage: All dimensions are saved
+[05:34:48] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Listener stopped
+[05:34:48] [RCON Client /127.0.0.1 #2/INFO] [minecraft/RconClient]: Thread RCON Client /127.0.0.1 shutting down
+[05:34:48] [Server thread/INFO] [minecraft/GenericThread]: Thread RCON Client /127.0.0.1 stopped
 
-BUILD SUCCESSFUL in 1m 5s
+BUILD SUCCESSFUL in 1m
 8 actionable tasks: 3 executed, 5 up-to-date

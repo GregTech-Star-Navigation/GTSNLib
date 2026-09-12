@@ -1,41 +1,32 @@
-# GTSNLib 自定义字体（#23）— runClient 自动测试证据
+# GTSNLib 自定义字体（#23）— runClient 自动测试证据（复检版）
 # 采集命令：$env:GTSNLIB_UI_AUTOTEST="1"; .\gradlew.bat runClient
-# 采集日期：2026-09-13  |  窗口：1280x720 / GUI scale 2（640x360）
+# 采集日期：2026-09-13  |  窗口：1280x720 / GUI scale 2（640x360 GUI 空间）
 
-关键日志（Gradle 控制台）：
+关键日志（Gradle 控制台 / run/logs/latest.log 全文检索）：
 
-[Render thread/INFO] [GTSNLib] autotest window prepared: 1280x720 guiScale=2
-[Render thread/INFO] [GTSNLib] GTSNLIB_UI_AUTOTEST=1 -> opening UI dev test screen
-[Render thread/INFO] [GTSNLib] UI test screen init: 640x360 theme=gtsnlib:default
-[Render thread/INFO] [GTSNLib] autotest synthetic input: clicks=1 toggled=false checkbox=true switch=true progress=0.30000000000000004 slot1=true scrollY=32 lastKey=K typed=A
-[Render thread/INFO] [GTSNLib] autotest grabbing screenshot gtsnlib-ui-theme-default.png (theme=gtsnlib:default)
-[Render thread/INFO] [GTSNLib] autotest screenshot: 已将截图保存为gtsnlib-ui-theme-default.png
-[Render thread/INFO] [GTSNLib] UI test screen rebuilt for theme gtsnlib:amber (琥珀)
-[Render thread/INFO] [GTSNLib] autotest grabbing screenshot gtsnlib-ui-theme-amber.png (theme=gtsnlib:amber)
-[Render thread/INFO] [GTSNLib] UI test screen rebuilt for theme gtsnlib:light (浅色)
-[Render thread/INFO] [GTSNLib] autotest grabbing screenshot gtsnlib-ui-theme-light.png (theme=gtsnlib:light)
-[Render thread/INFO] [GTSNLib] UI test screen rebuilt for theme gtsnlib:default (默认)
-[Render thread/INFO] [GTSNLib] autotest grabbing screenshot gtsnlib-ui-font-theme.png (theme=gtsnlib:default)
-[Render thread/INFO] [GTSNLib] autotest screenshot: 已将截图保存为gtsnlib-ui-font-theme.png
-[Render thread/INFO] [GTSNLib] autotest grabbing screenshot gtsnlib-ui-font-vanilla.png (theme=gtsnlib:default)
-[Render thread/INFO] [GTSNLib] autotest screenshot: 已将截图保存为gtsnlib-ui-font-vanilla.png
-[Render thread/INFO] [GTSNLib] autotest complete (themes captured: 9), stopping client
-[Render thread/INFO] [minecraft/Minecraft]: Stopping!
+  [Render thread/INFO] [GTSNLib] autotest window prepared: 1280x720 guiScale=2
+  [Render thread/INFO] [GTSNLib] GTSNLIB_UI_AUTOTEST=1 -> opening UI dev test screen
+  [Render thread/INFO] [GTSNLib] UI test screen init: 640x360 theme=gtsnlib:default
+  [Render thread/INFO] [GTSNLib] UI effective font = gtsnlib:sarasa_ui_sc (theme=gtsnlib:default, requested=gtsnlib:sarasa_ui_sc)
+  [Render thread/INFO] [GTSNLib] autotest synthetic input: clicks=1 toggled=false checkbox=true switch=true progress=0.30000000000000004 slot1=true scrollY=32 lastKey=K typed=A
+  [Render thread/INFO] [GTSNLib] autotest grabbing screenshot gtsnlib-ui-theme-default.png (theme=gtsnlib:default)
+  [Render thread/INFO] [GTSNLib] UI test screen rebuilt for theme gtsnlib:amber (琥珀)
+  [Render thread/INFO] [GTSNLib] autotest grabbing screenshot gtsnlib-ui-theme-amber.png (theme=gtsnlib:amber)
+  [Render thread/INFO] [GTSNLib] UI test screen rebuilt for theme gtsnlib:light (浅色)
+  [Render thread/INFO] [GTSNLib] autotest grabbing screenshot gtsnlib-ui-theme-light.png (theme=gtsnlib:light)
+  [Render thread/INFO] [GTSNLib] UI test screen rebuilt for theme gtsnlib:default (默认)
+  [Render thread/INFO] [GTSNLib] UI effective font = gtsnlib:sarasa_ui_sc (requested=gtsnlib:sarasa_ui_sc, themeWidth=137, vanillaWidth=140, delta=-3)
+  [Render thread/INFO] [GTSNLib] autotest grabbing screenshot gtsnlib-ui-font-theme.png (theme=gtsnlib:default)
+  [Render thread/INFO] [GTSNLib] autotest grabbing screenshot gtsnlib-ui-font-vanilla.png (theme=gtsnlib:default)
+  [Render thread/INFO] [GTSNLib] autotest complete (themes captured: 9), stopping client
 
-BUILD SUCCESSFUL in 43s
+  BUILD SUCCESSFUL in 43s
 
-字体健康检查（同一份控制台输出全文检索）：
-  "Failed to load builder"  匹配数 = 0   （FontManager 未拒绝任何字体定义）
-  "Invalid path in pack"    匹配数 = 0   （许可文件改小写后无资源包路径告警）
-  "回退原版字体"             匹配数 = 0   （ClientFonts 未触发安全回退）
+正向断言（#23 复检新增 GtsnUiFontProbe）：
+  - `UI effective font = gtsnlib:sarasa_ui_sc`：证明 ClientFonts.effective() 未回退原版。
+  - 同一样例「GTSN UI 中文 English 0123 龘」在主题字体下宽 137px、原版字体下宽 140px（delta=-3）。
+    两者必须不等；若自定义字体被静默回退，二者会相等，自动测试将抛
+    IllegalStateException（无需肉眼比对截图即可捕获回归）。
+  - 字体健康检查：`Failed to load builder` = 0、`Invalid path in pack` = 0、`回退原版字体` = 0。
 
-截图（从 run/screenshots/ 复制到 docs/acceptance/screenshots/）：
-  gtsnlib-ui-font-theme.png    —— 字体对比行处于「字体: 主题」；全部 GTSN UI 文本使用
-                                  gtsnlib:sarasa_ui_sc 渲染，中英混排无豆腐块；
-                                  样例末尾「龘」为 GB2312 二级字（子集外），经 reference 层
-                                  由原版字库渲染（字形风格可见差异，证明回退生效）。
-  gtsnlib-ui-font-vanilla.png  —— 点击字体按钮后「字体: 原版」，样例文本切换为
-                                  minecraft:default 原版字体，其余界面仍为主题字体，可直观对比。
-
-观感结论（人工查看两张截图）：新字体笔画均匀、小字号下中文可读性明显优于原版点阵字，
-Latin 与 CJK 混排基线一致；原版对比行保留像素风；无缺字豆腐块、无裁剪与重叠。
+原始输出全文见同目录 font-client-autotest-raw.txt；放大对比证据见 font-zoom-proof.txt。

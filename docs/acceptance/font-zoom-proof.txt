@@ -1,0 +1,34 @@
+# GTSNLib 自定义字体（#23）— 放大对比证据（>=4x）
+# 采集命令：$env:GTSNLIB_UI_AUTOTEST="1"; .\gradlew.bat runClient
+# 生成命令：powershell -NoProfile -ExecutionPolicy Bypass -File docs/acceptance/zoom-font-proof.ps1
+# 采集日期：2026-09-13  |  窗口：1280x720 / GUI scale 2
+
+截图（run/screenshots/，同时复制到 docs/acceptance/screenshots/）：
+  gtsnlib-ui-font-theme.png    字体按钮显示「字体: 主题」→ 样例行使用 gtsnlib:sarasa_ui_sc
+  gtsnlib-ui-font-vanilla.png  点击字体按钮后显示「字体: 原版」→ 样例行使用 minecraft:default
+
+放大裁剪（>=4x，最近邻，区域 x=636..1036 / y=56..84，覆盖「字体」按钮 + 中英混排样例）：
+  docs/acceptance/screenshots/font-zoom-theme-4x.png    主题字体 4x
+  docs/acceptance/screenshots/font-zoom-vanilla-4x.png  原版字体 4x
+  docs/acceptance/screenshots/font-zoom-compare-4x.png  两者上下堆叠 + 标注（单图自证）
+
+人工查看结论（放大图 font-zoom-compare-4x.png）：
+  - 上半「THEME FONT gtsnlib:sarasa_ui_sc」：笔画纤细均匀、曲线平滑、边缘有灰度抗锯齿，
+    为现代无衬线（Sarasa UI SC）；Latin 与 CJK 基线一致，无豆腐块。
+    末尾「龘」为子集外字符，由 reference 层用原版像素字渲染（可见明显的字形风格差异，
+    恰好证明 provider 顺序回退生效）。
+  - 下半「VANILLA FONT minecraft:default」：笔画粗、块状、硬边像素（经典 5x7 位图字），
+    「GTSN UI」的 G/S、数字 0123、中文笔画均为阶梯像素。
+
+客观像素差（System.Drawing 直接读像素，非肉眼）：
+  同一张 pair 的两张截图中：
+    - 标题区 (x20-230,  y10-38)  平均 |ΔRGB| = 0.00   —— 两张图逐像素一致
+    - 正文字段 (x20-300, y58-80)  平均 |ΔRGB| = 0.00   —— 两张图逐像素一致
+    - 字体样例行 (x800-1030,y58-80) 平均 |ΔRGB| = 110.32（最大 480）
+  即：两张截图除字体样例行外完全一致，样例行差异巨大 → 字体按钮确实切换了字库，
+  主题态样例确实是自定义字体而非原版像素字。
+
+运行期正向断言（见 font-client-autotest.txt）：
+  [GTSNLib] UI effective font = gtsnlib:sarasa_ui_sc (requested=gtsnlib:sarasa_ui_sc,
+            themeWidth=137, vanillaWidth=140, delta=-3)
+  主题字体与原版字体对同一样例的宽度不同（137 != 140）；若被回退，宽度将相等并触发断言失败。

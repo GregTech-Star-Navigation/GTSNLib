@@ -1,20 +1,23 @@
-# GTSNLib 自定义字体（#23）— 门禁构建与单测证据
-# 采集日期：2026-09-13  |  仓库：GregTech-Star-Navigation/GTSNLib  |  提交：见 docs/ui.md 字体章节时的 HEAD
+# GTSNLib 自定义字体（#23）— 门禁构建与单测证据（复检版）
+# 采集日期：2026-09-13  |  仓库：GregTech-Star-Navigation/GTSNLib
+# 命令：.\gradlew.bat clean build
 
 $ .\gradlew.bat clean build
 > Task :test
 > Task :check
 > Task :build
-BUILD SUCCESSFUL in 25s
-9 actionable tasks: 9 executed
+BUILD SUCCESSFUL in 24s
 
 JUnit5 汇总（build/test-results/test/*.xml）：
-  suites=66  tests=459  failures=0  errors=0  skipped=0
-  （字体新增用例：ThemeFontTest 9 项、FontResourceFilesTest 6 项、TextWidgetFontTest 7 项、
-    DemoContentTest.fontCompareButtonTogglesSampleBetweenThemeAndVanilla 1 项）
+  suites=66  tests=460  failures=0  errors=0  skipped=0
+  （字体相关用例：ThemeFontTest 9 项、FontResourceFilesTest 7 项、TextWidgetFontTest 7 项、
+    DemoContentTest 字体切换 1 项；本轮新增
+    FontResourceFilesTest.bundledTtfHasTablesRequiredByStbRasterizer —— 校验子集 TTF 保留
+    STB 光栅化必需表（cmap/glyf/loca/head/hhea/hmtx/maxp/name/OS-2/post）且含 cmap format 4，
+    防止“子集器丢表导致 FontManager 静默丢弃 ttf provider、只剩 reference 层回退原版”。）
 
 产出与打包内容：
-  build/libs/gtsnlib-0.1.0.jar（reobf，1,253,805 字节）
+  build/libs/gtsnlib-0.1.0.jar（reobf，1,257,477 字节）
   jar 内条目：
     assets/gtsnlib/font/sarasa_ui_sc.json
     assets/gtsnlib/font/sarasa_ui_sc.ttf
@@ -25,3 +28,5 @@ JUnit5 汇总（build/test-results/test/*.xml）：
   源字体：Sarasa UI SC Regular（更纱黑体，SIL OFL 1.1），fonttools 4.65.0 子集化
   子集范围：ASCII / Latin-1 / Latin Ext-A·B / 常用符号（箭头·数学·带圈数字·几何图形等）/
             GB2312 一级汉字与 1-9 区标点 / 假名 / 全角形式（共 6,955 个码位，保留 5,957 字形）
+  sfnt 表目录（本轮实测）：GDEF/GPOS/GSUB/OS2/VORG/cmap/gasp/glyf/head/hhea/hmtx/loca/
+            maxp/name/post/vhea/vmtx；cmap 子表仅 format 4（platform 0/3）——与 STB 兼容。

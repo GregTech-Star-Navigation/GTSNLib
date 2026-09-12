@@ -1,15 +1,16 @@
-# GTSNLib 自定义字体（#23）— GameTest 证据（专职服务端）
-# 采集日期：2026-09-13  |  命令：.\gradlew.bat runGameTestServer
+# GTSNLib 自定义字体（#23）— GameTest 证据（专职服务端，复检版）
+# 采集日期：2026-09-13  |  命令：.\gradlew.bat runGameTestServer --offline
 
-$ .\gradlew.bat runGameTestServer
-BUILD SUCCESSFUL in 39s
+$ .\gradlew.bat runGameTestServer --offline
+BUILD SUCCESSFUL in 37s
 
-服务端日志关键行（run/logs/latest.log）：
+服务端日志关键行：
   [GameTestServer]: Running test batch 'defaultBatch:1' (40 tests)...
   [GameTestServer]: 40 tests are now running!
   [GameTestServer]: ========= 40 GAME TESTS COMPLETE ======================
   [GameTestServer]: All 40 required tests passed :)
   [GameTestServer]: Game test server shutting down
 
-说明：演示界面新增字体对比行（右列主题行下方）+ 滚动面板高度 110→90 后，
-布局约束用例（keypad/clipShowcase 在根边界内、badge 右下锚定、两 fixture 几何一致）全部通过。
+说明：字体为纯客户端资源，专职服务端不加载任何字体类（类加载纪律 ADR-0003/0004）；
+演示界面新增字体对比行后，布局约束用例（keypad/clipShowcase 在根边界内、badge 右下锚定、
+两 fixture 几何一致）全部通过。

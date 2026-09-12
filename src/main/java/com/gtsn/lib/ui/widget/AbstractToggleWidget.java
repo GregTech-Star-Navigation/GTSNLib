@@ -44,22 +44,25 @@ public abstract class AbstractToggleWidget extends AbstractWidget {
         return checked;
     }
 
-    /** 静默设置选中状态（不触发回调）。 */
-    public AbstractToggleWidget checked(boolean checked) {
+    /** 静默设置选中状态（不触发回调）；返回子类型以便链式构建。 */
+    @SuppressWarnings("unchecked")
+    public <T extends AbstractToggleWidget> T checked(boolean checked) {
         this.checked = checked;
-        return this;
+        return (T) this;
     }
 
     public boolean isEnabled() {
         return enabled;
     }
 
-    public AbstractToggleWidget enabled(boolean enabled) {
+    /** 设置启用态；返回子类型以便链式构建。 */
+    @SuppressWarnings("unchecked")
+    public <T extends AbstractToggleWidget> T enabled(boolean enabled) {
         this.enabled = enabled;
         if (!enabled) {
             pressed = false;
         }
-        return this;
+        return (T) this;
     }
 
     public boolean isHovered() {

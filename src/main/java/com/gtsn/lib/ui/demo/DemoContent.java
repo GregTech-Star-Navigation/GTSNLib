@@ -279,9 +279,10 @@ public final class DemoContent {
                     .crossAxisAlign(CrossAxisAlign.STRETCH));
             left.add(new TextWidget("GTSN UI 组件库", metrics).shadow(true).colorRole(ThemeColorRole.TEXT_STRONG));
 
-            // 先在局部变量中构造（供按钮回调引用），再按布局顺序加入面板。
-            clickStatus = new TextWidget("点击次数: 0", metrics).colorRole(ThemeColorRole.TEXT_MUTED);
-            toggleStatus = new TextWidget("状态: A", metrics).colorRole(ThemeColorRole.TEXT_MUTED);
+            // 先在局部变量中构造（供按钮回调引用），再按布局顺序加入面板；状态从 DemoState 恢复（主题切换会重建控件树）。
+            clickStatus = new TextWidget("点击次数: " + state.clicks(), metrics).colorRole(ThemeColorRole.TEXT_MUTED);
+            toggleStatus = new TextWidget("状态: " + (state.toggled() ? "B" : "A"), metrics)
+                    .colorRole(state.toggled() ? ThemeColorRole.SUCCESS : ThemeColorRole.TEXT_MUTED);
             progressBar = new ProgressBarWidget().range(0, 1).value(state.progress())
                     .label(progress -> Math.round(progress * 100) + "%")
                     .size(Sizing.fill(), Sizing.fixed(12));
@@ -360,25 +361,33 @@ public final class DemoContent {
             }
             themeRow.add(new TextWidget("资源驱动主题", metrics).colorRole(ThemeColorRole.TEXT_MUTED));
 
-            selectionStatus = new TextWidget("已选槽位: 无", metrics).colorRole(ThemeColorRole.TEXT_MUTED);
+            selectionStatus = new TextWidget("已选槽位: " + selectionLabel(), metrics).colorRole(ThemeColorRole.TEXT_MUTED);
             PanelWidget itemPanel = right.add(panel("物品槽 (ItemSlot)"));
             itemPanel.add(selectionStatus);
             Stack slotRow = itemPanel.add(Stack.horizontal().gap(space(Spacing.MD)));
             itemSlot1 = slotRow.add(new ItemSlotWidget().icon(icons.primary()).selectable(true)
+                    .selected(state.selectedSlot() == 1)
                     .tooltip(Tooltip.of("钻石 ×3", "点击选择此槽位")));
             itemSlot2 = slotRow.add(new ItemSlotWidget().icon(icons.secondary()).selectable(true)
+                    .selected(state.selectedSlot() == 2)
                     .tooltip(Tooltip.of("红石 ×16", "选择互斥演示")));
             disabledItemSlot = slotRow.add(new ItemSlotWidget().icon(icons.primary()).enabled(false)
                     .tooltip(Tooltip.of("禁用槽位")));
             itemSlot1.onSelectionChanged(selected -> {
                 if (selected) {
                     itemSlot2.selected(false);
+                    state.selectedSlot(1);
+                } else if (state.selectedSlot() == 1) {
+                    state.selectedSlot(0);
                 }
                 updateSelectionStatus();
             });
             itemSlot2.onSelectionChanged(selected -> {
                 if (selected) {
                     itemSlot1.selected(false);
+                    state.selectedSlot(2);
+                } else if (state.selectedSlot() == 2) {
+                    state.selectedSlot(0);
                 }
                 updateSelectionStatus();
             });
@@ -429,13 +438,12 @@ public final class DemoContent {
         }
 
         private void updateSelectionStatus() {
-            String label = "无";
-            if (itemSlot1.isSelected()) {
-                label = "1";
-            } else if (itemSlot2.isSelected()) {
-                label = "2";
-            }
-            selectionStatus.text("已选槽位: " + label);
+            selectionStatus.text("已选槽位: " + selectionLabel());
+        }
+
+        /** 选中槽位标签（0 = 无，1 / 2 为槽位号）；从 {@link DemoState} 读取以支持重建恢复。 */
+        private String selectionLabel() {
+            return state.selectedSlot() == 0 ? "无" : String.valueOf(state.selectedSlot());
         }
 
         private PanelWidget panel(String title) {

@@ -41,5 +41,5 @@
     "tooltip_border": "#FFE0A040",
     "tooltip_text": "#FFFFE8B0"
   },
-  "spacing": { "md": 8, "lg": 12 }
+  "spacing": { "lg": 10, "xl": 12 }
 }

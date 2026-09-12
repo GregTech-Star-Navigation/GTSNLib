@@ -163,6 +163,23 @@ class DemoContentTest {
     }
 
     @Test
+    void rebuiltContentRestoresObservableState() {
+        DemoState state = new DemoState();
+        state.incrementClicks();
+        state.incrementClicks();
+        state.toggle();
+        state.selectedSlot(2);
+
+        // 主题切换会重建控件树：新树必须从 DemoState 恢复可观察状态。
+        DemoContent rebuilt = DemoContent.build(state, PlainTextMetrics.INSTANCE);
+
+        assertEquals("点击次数: 2", rebuilt.clickStatus().text());
+        assertTrue(rebuilt.toggleStatus().text().contains("B"), rebuilt.toggleStatus().text());
+        assertTrue(rebuilt.itemSlot2().isSelected(), "重建后应恢复槽位选择");
+        assertFalse(rebuilt.itemSlot1().isSelected());
+    }
+
+    @Test
     void hoveringItemSlotShowsTooltip() {
         Rect slot = demo.itemSlot1().bounds();
         host.dispatch(new InputEvent.MouseMoved(slot.x() + 4, slot.y() + 4));

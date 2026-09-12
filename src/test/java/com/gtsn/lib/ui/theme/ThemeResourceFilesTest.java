@@ -50,8 +50,9 @@ class ThemeResourceFilesTest {
         assertEquals(0xFF201A10, amber.color(ThemeColorRole.PANEL_BACKGROUND));
         assertEquals(ThemeColorRole.SLOT_EDGE_LIGHT.defaultArgb(),
                 amber.color(ThemeColorRole.SLOT_EDGE_LIGHT), "未覆盖角色继承默认主题（即枚举默认值）");
-        assertEquals(8, amber.spacing(Spacing.MD), "琥珀主题显式间距");
-        assertEquals(10, amber.spacing(Spacing.XL), "未覆盖间距继承默认主题");
+        assertEquals(10, amber.spacing(Spacing.LG), "琥珀主题显式间距");
+        assertEquals(12, amber.spacing(Spacing.XL), "琥珀主题显式间距");
+        assertEquals(6, amber.spacing(Spacing.MD), "未覆盖间距继承默认主题");
     }
 
     @Test

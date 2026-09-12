@@ -3,7 +3,9 @@ package com.gtsn.lib.ui.demo;
 import java.util.Objects;
 
 /**
- * 开发测试界面的可观察状态：点击计数、开关、最近按键、已输入字符与进度值。
+ * 开发测试界面的可观察状态：点击计数、开关、最近按键、已输入字符、进度值与选中槽位。
+ *
+ * <p>控件树在主题切换等场景会重建；可观察状态保存在本对象中，重建时恢复。</p>
  */
 public final class DemoState {
 
@@ -12,6 +14,7 @@ public final class DemoState {
     private String lastKey = "(none)";
     private String typed = "";
     private double progress;
+    private int selectedSlot;
 
     public int clicks() {
         return clicks;
@@ -62,5 +65,14 @@ public final class DemoState {
 
     public void advanceProgress(double delta) {
         progress(progress + delta);
+    }
+
+    /** 选中槽位：0 = 无，1 / 2 对应两个可选项。 */
+    public int selectedSlot() {
+        return selectedSlot;
+    }
+
+    public void selectedSlot(int selectedSlot) {
+        this.selectedSlot = Math.max(0, Math.min(2, selectedSlot));
     }
 }

@@ -52,7 +52,7 @@ public final class WidgetHost {
         return height;
     }
 
-    /** 按屏幕尺寸重新布局整棵树（根节点包围盒即屏幕）。 */
+    /** 按屏幕尺寸重新布局整棵树（根节点包围盒即屏幕），随后自顶向下通知各控件布局完成。 */
     public void resize(int width, int height) {
         if (width < 0 || height < 0) {
             throw new IllegalArgumentException("host size must be non-negative: " + width + "x" + height);
@@ -60,6 +60,14 @@ public final class WidgetHost {
         this.width = width;
         this.height = height;
         LayoutEngine.layout(root.node(), Rect.of(0, 0, width, height));
+        notifyLayout(root);
+    }
+
+    private static void notifyLayout(Widget widget) {
+        widget.onLayout();
+        for (Widget child : widget.children()) {
+            notifyLayout(child);
+        }
     }
 
     /** 渲染整棵控件树。 */

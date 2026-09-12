@@ -58,6 +58,10 @@ public interface Widget {
     default void onHoverChanged(boolean hovered) {
     }
 
+    /** 布局完成回调（宿主在每次 resize 布局后、对全树自顶向下调用；滚动容器在此重排内容）。 */
+    default void onLayout() {
+    }
+
     /** 工具提示；{@code null} 表示无。悬停时由宿主沿命中路径向上解析最近的非空提示。 */
     default Tooltip tooltip() {
         return null;

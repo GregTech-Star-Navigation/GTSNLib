@@ -3,7 +3,6 @@ package com.gtsn.lib.ui.client;
 import com.gtsn.lib.ui.demo.DemoMenu;
 import com.gtsn.lib.ui.demo.DemoSync;
 import com.gtsn.lib.ui.screen.DemoMenuScreen;
-import com.mojang.blaze3d.platform.Window;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -19,7 +18,6 @@ import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraftforge.network.NetworkHooks;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 
 import java.util.UUID;
@@ -260,29 +258,13 @@ final class GtsnUiSyncAutotest {
                 WorldOptions.defaultWithRandomSeed(), WorldPresets::createNormalWorldDimensions);
     }
 
-    /** 固定窗口 1280x720 + GUI 缩放 2，保证截图清晰（与组件库自动测试一致）。 */
+    /** 固定窗口 1280x720 + GUI 缩放 2，保证截图清晰（与组件库自动测试共用窗口准备）。 */
     private static void prepareWindow(Minecraft minecraft) {
-        Window window = minecraft.getWindow();
-        // 未聚焦 / 最小化的窗口不会被 GLFW 应用尺寸变化：先恢复显示再设置尺寸。
-        GLFW.glfwShowWindow(window.getWindow());
-        GLFW.glfwRestoreWindow(window.getWindow());
-        window.setWindowed(1280, 720);
-        minecraft.options.guiScale().set(2);
-        minecraft.resizeDisplay();
-        LOGGER.info("[GTSNLib] sync autotest window prepared: {}x{} guiScale=2",
-                window.getWidth(), window.getHeight());
+        GtsnUiAutotestWindow.prepare(minecraft, "sync autotest");
     }
 
     /** 截图前确保窗口尺寸（窗口被最小化 / 桌面会话变化时重新恢复并应用尺寸）。 */
     private static void ensureWindowSized(Minecraft minecraft) {
-        Window window = minecraft.getWindow();
-        if (window.getWidth() < 320 || window.getHeight() < 240) {
-            GLFW.glfwShowWindow(window.getWindow());
-            GLFW.glfwRestoreWindow(window.getWindow());
-            window.setWindowed(1280, 720);
-            minecraft.resizeDisplay();
-            LOGGER.info("[GTSNLib] sync autotest re-applied window size: {}x{}",
-                    window.getWidth(), window.getHeight());
-        }
+        GtsnUiAutotestWindow.ensureSized(minecraft, "sync autotest");
     }
 }

@@ -1,9 +1,9 @@
-# GTSN UI（phase 3：主题/资源系统）
+# GTSN UI（phase 4：容器数据同步）
 
 不依赖 LDLib 的自研 UI 框架（ADR-0004）。**phase 1**（#16）交付内核：布局引擎、渲染抽象、输入路由、控件基类、`GtsnScreen` 与开发测试界面；
 **phase 2**（#17）交付组件库：面板 / 文本 / 按钮 / 进度条 / 物品槽 / 滚动容器 / 复选框 / 开关 / 工具提示 / 分隔线 / 占位；
-**phase 3**（#18）交付主题 / 资源系统：语义颜色角色、文本度量、间距与圆角刻度、纹理引用、JSON 资源加载、主题注册表与切换。
-容器数据同步（#19）为后续轮次，不在本轮范围。
+**phase 3**（#18）交付主题 / 资源系统：语义颜色角色、文本度量、间距与圆角刻度、纹理引用、JSON 资源加载、主题注册表与切换；
+**phase 4**（#19）交付容器数据同步：类型编解码的数据槽布局、服务端写 / 客户端读、变更监听与控件绑定层，含游戏内演示菜单与自动测试。
 
 ## 包结构
 
@@ -13,10 +13,12 @@
 | `com.gtsn.lib.ui.input` | 输入事件模型（鼠标/滚轮/键盘/字符）、命中测试、焦点管理、事件冒泡路由、悬停路径与鼠标位置 | 无 |
 | `com.gtsn.lib.ui.render` | `RenderContext` 渲染抽象 + `TextureRef` / `SlotIcon`（纯）；`GuiGraphicsRenderContext`（原版后端）；`ItemStackIcon`（物品堆叠渲染） | 实现类客户端 |
 | `com.gtsn.lib.ui.theme` | 主题模型：`Theme` / `ThemeColorRole` / `ThemeColor` / `ThemeTextStyle` / `ThemeSpacing` / `ThemeRounding` / `ThemeTextureRole`、JSON 解析器、继承解析器、注册表与全局上下文 | 无 |
+| `com.gtsn.lib.ui.sync` | 容器数据同步：`IntStore` / `SyncCodec` / `SyncCodecs` / `SyncSlot` / `SyncLayout` / `MenuSync` / `SyncSubscription`（纯）；`MenuSyncData` / `SyncedMenu`（原版 `AbstractContainerMenu` 数据槽适配） | 适配器引用原版公共类 |
+| `com.gtsn.lib.ui.sync.bind` | 绑定层：`SyncBinding` / `AbstractSyncBinding` / `LabelBinding` / `ProgressBarBinding` / `SyncBindings` / `SyncBindingGroup` | 无 |
 | `com.gtsn.lib.ui.widget` | `Widget` / `AbstractWidget` 与组件库：`Stack`、`PanelWidget`、`TextWidget`（换行/对齐/行距）、`ButtonWidget`、`ProgressBarWidget`、`ItemSlotWidget`、`ScrollPanelWidget`、`CheckboxWidget`、`ToggleSwitchWidget`、`DividerWidget`、`SpacerWidget`、`Tooltip`、`TextMetrics` | 无 |
-| `com.gtsn.lib.ui.screen` | `WidgetHost`（布局/渲染/输入/工具提示覆盖层泊点，纯逻辑）；`GtsnScreen`（Screen 基类）；`GtsnUiTestScreen`（开发测试界面） | Screen 类客户端 |
-| `com.gtsn.lib.ui.demo` | 开发测试界面装配：`DemoContent`（组件画廊）、`DemoState`、`DemoIcons`（客户端图标接缝）、`KeypadWidget`、`ThemeControl`（主题切换接缝） | 无 |
-| `com.gtsn.lib.ui.client` | 客户端接线：`/gtsnui` 客户端命令与自动测试开关、`ThemeResources`（资源重载加载主题）、`GtsnUiThemeEvents`（重载事件注册） | 客户端 |
+| `com.gtsn.lib.ui.screen` | `WidgetHost`（布局/渲染/输入/工具提示覆盖层泊点，纯逻辑）；`GtsnScreen`（Screen 基类）；`GtsnUiTestScreen`（开发测试界面）；`DemoMenuScreen`（数据同步演示屏幕） | Screen 类客户端 |
+| `com.gtsn.lib.ui.demo` | 开发测试界面装配：`DemoContent`（组件画廊）、`DemoState`、`DemoIcons`（客户端图标接缝）、`KeypadWidget`、`ThemeControl`（主题切换接缝）；数据同步演示：`DemoSync`（槽位与推进规则）、`DemoMenu`（演示菜单）、`DemoMenus`（菜单类型注册）、`SyncDemoContent`（演示装配，纯） | 菜单类公共侧 |
+| `com.gtsn.lib.ui.client` | 客户端接线：`/gtsnui` 客户端命令与自动测试开关、`ThemeResources`（资源重载加载主题）、`GtsnUiThemeEvents`（重载事件注册）、`GtsnUiScreens`（菜单屏幕注册）、`GtsnUiSyncAutotest`（数据同步自动测试） | 客户端 |
 
 ## 组件库（#17）
 
@@ -79,6 +81,25 @@
 
 **切换**：`ThemeContext.cycle()` / `setActive(ThemeId)`；开发测试界面右上角“主题: <名称>”按钮即切换入口，屏幕在 tick 中检测主题变化并以新主题重建控件树（`DemoState` 保留点击/开关/进度/选中槽位等状态）。
 
+## 容器数据同步（#19）
+
+**模型**（`ui.sync`：纯 Java 核心 + 原版数据槽适配；不引入自定义网络包——int 数据槽覆盖 int/float（原始位）/bool/枚举/索引，足够本轮类型需求）：
+
+| 组成 | 说明 |
+| --- | --- |
+| `IntStore` | 后端抽象（`get`/`set`/`size`）；单测以内存后端驱动，游戏内实现为 `MenuSyncData` |
+| `SyncCodec<T>` / `SyncCodecs` | 类型 ↔ int 编解码：任意 / 区间 int（编解码钳制）、float（原始位精确往返；非有限值写侧拒绝、读侧兜底）、bool、枚举（序数 + 越界回退到首个常量或指定常量）、index（`[0, size)` 钳制）。**读侧对任意原始值兜底不抛异常**，写侧拒绝非法值 |
+| `SyncSlot<T>` / `SyncLayout` | 槽位描述符与注册表：按声明顺序分配索引、名称唯一、默认值按编解码规则归一、`build()` 后冻结；槽位句柄两端共用 |
+| `MenuSync` | 绑定布局与后端：服务端权威写 `set`、两端 `get`、`refresh()` 检测外部写入（客户端收包直写后端）并按槽通知 `onChange` 监听器；监听器异常隔离、订阅可取消、跨布局槽位与容量不足显式拒绝 |
+| `MenuSyncData` / `SyncedMenu` | `SimpleContainerData` 的 `IntStore` 适配；菜单基类在构造期 `addDataSlots` 注册（服务端写入由原版 `broadcastChanges` 自动推送到客户端，随包到达客户端 `setData` 落回后端） |
+| `ui.sync.bind` | 绑定层：`SyncBindings.progressBar/label` 把同步值接到进度条 / 文本控件；`SyncBindingGroup.refresh()` 由屏幕 tick 驱动（先 `MenuSync.refresh()` 再经监听器落实控件更新）；值未变不重复应用，`close()` 解绑 |
+
+**数据流**：服务端写 `MenuSync.set` → `ContainerData` 后端 → `AbstractContainerMenu.broadcastChanges()` → `ClientboundContainerSetDataPacket` → 客户端 `setData` 写入后端 → 屏幕 `tick()` 调 `SyncBindingGroup.refresh()` → 监听器 → 控件更新。
+
+**演示与入口**：`ui.demo` 的 `DemoSync`（progress/speed/active/phase/tier 五种类型槽位，含纯推进规则）+ `DemoMenu`（服务端每 10 tick 推进，进度回卷时轮换档位/速度/开关）+ `DemoMenuScreen`（进度条 + 各类型值文本）。
+
+打开方式：**服务端命令 `/gtsnlib ui`**（经 `NetworkHooks.openScreen`；本地/服务器均可用，需玩家执行）。
+
 ## 类加载纪律
 
 - 布局 / 输入 / 渲染接口 / 控件 / 演示装配为**纯 Java**（不引用 `net.minecraft`），专职服务端与 GameTest 可安全加载。
@@ -105,8 +126,11 @@
 ## 验证
 
 ```bash
-.\gradlew.bat test               # 单测：布局几何 / 输入路由 / 各组件状态机 / 工具提示 / 演示装配 / 主题解析·继承·回退·切换（无 MC）
-.\gradlew.bat runGameTestServer  # GameTest：内核 + 组件库 + 主题在专职服务端的真实加载环境中行为验证
+.\gradlew.bat test               # 单测：布局几何 / 输入路由 / 各组件状态机 / 工具提示 / 演示装配 / 主题解析·继承·回退·切换 /
+                                 #       数据同步编解码·槽位注册表·变更通知·绑定层·演示规则（无 MC）
+.\gradlew.bat runGameTestServer  # GameTest：内核 + 组件库 + 主题 + 数据同步（默认值发布/服务端推送/客户端镜像绑定/推进回卷）在专职服务端的真实加载环境中行为验证
 .\gradlew.bat runServer          # 专职服务端：客户端类不被加载（类加载纪律）
 .\gradlew.bat runClient          # 端到端：$env:GTSNLIB_UI_AUTOTEST=1 自动打开 + 交互 + 逐主题截图 + 退出
+.\gradlew.bat runClient          # 数据同步端到端：$env:GTSNLIB_UI_AUTOTEST=sync 创建/载入存档、游戏内打开演示菜单、
+                                 #   验证客户端值=服务端值且数值推进、抓图 run/screenshots/gtsnlib-ui-sync-demo.png、退出
 ```

@@ -147,11 +147,7 @@ public final class GtsnUiClient {
      * 固定自动测试窗口为 1280x720 + GUI 缩放 2（640x360 GUI 空间），保证组件库完整可见、文字清晰。
      */
     private static void prepareWindow(Minecraft minecraft) {
-        minecraft.getWindow().setWindowed(1280, 720);
-        minecraft.options.guiScale().set(2);
-        minecraft.resizeDisplay();
-        LOGGER.info("[GTSNLib] autotest window prepared: {}x{} guiScale=2",
-                minecraft.getWindow().getWidth(), minecraft.getWindow().getHeight());
+        GtsnUiAutotestWindow.prepare(minecraft, "autotest");
     }
 
     /**

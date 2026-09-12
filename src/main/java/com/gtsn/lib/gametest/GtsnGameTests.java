@@ -3,7 +3,10 @@ package com.gtsn.lib.gametest;
 import com.gtsn.lib.GTSNLib;
 import com.gtsn.lib.core.config.GtsnCommonConfig;
 import com.gtsn.lib.gt.adapter.GtAdapter;
+import com.gtsn.lib.gt.adapter.GtPartStatus;
 import com.gtsn.lib.gt.adapter.GtQueryResult;
+import com.gtsn.lib.gt.registration.MaterialPart;
+import com.gtsn.lib.gt.registration.MaterialRegistration;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.gametest.framework.GameTest;
@@ -15,7 +18,9 @@ import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 最小 GameTest 集：证明 {@code runGameTestServer} 可运行、库已被加载，且 {@code /gtsnlib}
@@ -124,6 +129,75 @@ public final class GtsnGameTests {
         GtQueryResult result = adapter.query(GtAdapter.DEFAULT_PROBE_MATERIAL);
         if (!result.materialPresent()) {
             helper.fail("GT material " + GtAdapter.DEFAULT_PROBE_MATERIAL + " not found through the adapter");
+            return;
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void materialRegistrationGeneratesDerivedPartsAndTags(GameTestHelper helper) {
+        GtAdapter adapter = GtAdapter.get();
+        String id = GtAdapter.DEMO_MATERIAL;
+
+        if (!adapter.query(id).materialPresent()) {
+            helper.fail("DSL-registered material " + id + " is not present in GTCEu");
+            return;
+        }
+
+        MaterialRegistration registration = adapter.registeredMaterial(id).orElse(null);
+        if (registration == null) {
+            helper.fail("material " + id + " was not registered through the GTSN registrar");
+            return;
+        }
+        for (String part : List.of("ingot", "plate", "dust", "rod")) {
+            if (!registration.derivedItems().containsKey(part)) {
+                helper.fail("registration missing derived part " + part + ": " + registration.derivedItems());
+                return;
+            }
+        }
+        for (String tag : List.of(
+                "forge:ingots/star_alloy", "forge:plates/star_alloy",
+                "forge:dusts/star_alloy", "forge:rods/star_alloy")) {
+            if (!registration.hasOreTag(tag)) {
+                helper.fail("registration missing ore tag " + tag + ": " + registration.oreTags());
+                return;
+            }
+        }
+
+        Set<MaterialPart> parts = new LinkedHashSet<>();
+        for (String key : registration.derivedItems().keySet()) {
+            parts.add(MaterialPart.fromKey(key));
+        }
+        List<GtPartStatus> statuses = adapter.partStatus(id, parts);
+        if (statuses.size() != 4) {
+            helper.fail("expected 4 live part statuses, got " + statuses);
+            return;
+        }
+        for (GtPartStatus status : statuses) {
+            if (!status.itemGenerated()) {
+                helper.fail("GTCEu did not generate item for part " + status.part() + ": " + status);
+                return;
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void gtsnlibGtMaterialCommandReportsRegistration(GameTestHelper helper) {
+        CommandOutput output = runCommand(helper, "gtsnlib gt material gtsnlib:star_alloy");
+
+        if (output.result() != 1) {
+            helper.fail("/gtsnlib gt material returned " + output.result());
+            return;
+        }
+        boolean present = output.messages().stream()
+                .anyMatch(line -> line.contains("material gtsnlib:star_alloy: present"));
+        boolean derived = output.messages().stream()
+                .anyMatch(line -> line.contains("registration gtsnlib:star_alloy") && line.contains("ingot"));
+        boolean generated = output.messages().stream()
+                .anyMatch(line -> line.contains("part ingot") && line.contains("generated=true"));
+        if (!present || !derived || !generated) {
+            helper.fail("/gtsnlib gt material output was " + output.messages());
             return;
         }
         helper.succeed();

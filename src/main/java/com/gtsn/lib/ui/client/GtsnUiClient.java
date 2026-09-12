@@ -34,7 +34,9 @@ import org.slf4j.Logger;
  *   <li>开发自动测试（环境变量 {@code GTSNLIB_UI_AUTOTEST}）：
  *       <ul>
  *         <li>{@code =1}：客户端进入标题界面后自动打开开发测试界面，注入合成点击/字符输入，随后逐主题点击
- *             “主题”按钮并各抓一张截图（{@code run/screenshots/gtsnlib-ui-theme-<主题>.png}），最后退出。</li>
+ *             “主题”按钮并各抓一张截图（{@code run/screenshots/gtsnlib-ui-theme-<主题>.png}），
+ *             再对字体样例文本抓“主题字体 / 原版字体”对比截图（{@code gtsnlib-ui-font-theme.png} /
+ *             {@code gtsnlib-ui-font-vanilla.png}，#23），最后退出。</li>
  *         <li>{@code =sync}（#19）：创建/载入固定存档后在游戏内打开数据同步演示菜单，采样客户端/服务端同步值
  *             并抓图（{@code run/screenshots/gtsnlib-ui-sync-demo.png}），最后退出（见 {@link GtsnUiSyncAutotest}）。</li>
  *       </ul>
@@ -49,6 +51,8 @@ public final class GtsnUiClient {
 
     private static final String SCREENSHOT_PREFIX = "gtsnlib-ui-theme-";
     private static final String SCREENSHOT_SUFFIX = ".png";
+    private static final String FONT_THEME_SCREENSHOT = "gtsnlib-ui-font-theme.png";
+    private static final String FONT_VANILLA_SCREENSHOT = "gtsnlib-ui-font-vanilla.png";
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -157,7 +161,7 @@ public final class GtsnUiClient {
         // 每个主题一张截图：默认 → 点击切换 → 下一主题 → 再切换 → 第三个主题。
         if (screenTicks >= 60 && themeShots == 0) {
             themeShots = 1;
-            grab(minecraft);
+            grab(minecraft, themeScreenshotName());
             return;
         }
         if (screenTicks >= 80 && themeShots == 1) {
@@ -167,7 +171,7 @@ public final class GtsnUiClient {
         }
         if (screenTicks >= 100 && themeShots == 2) {
             themeShots = 3;
-            grab(minecraft);
+            grab(minecraft, themeScreenshotName());
             return;
         }
         if (screenTicks >= 120 && themeShots == 3) {
@@ -177,18 +181,42 @@ public final class GtsnUiClient {
         }
         if (screenTicks >= 140 && themeShots == 4) {
             themeShots = 5;
-            grab(minecraft);
+            grab(minecraft, themeScreenshotName());
             return;
         }
-        if (screenTicks >= 200 && !stopRequested) {
+        // 字体证据（#23）：切回默认主题后，对同一段中英混排样例文本各抓一张“主题字体 / 原版字体”截图。
+        if (screenTicks >= 160 && themeShots == 5) {
+            themeShots = 6;
+            click(screen, screen.demo().themeButton());
+            return;
+        }
+        if (screenTicks >= 180 && themeShots == 6) {
+            themeShots = 7;
+            grab(minecraft, FONT_THEME_SCREENSHOT);
+            return;
+        }
+        if (screenTicks >= 200 && themeShots == 7) {
+            themeShots = 8;
+            click(screen, screen.demo().fontCompareButton());
+            return;
+        }
+        if (screenTicks >= 220 && themeShots == 8) {
+            themeShots = 9;
+            grab(minecraft, FONT_VANILLA_SCREENSHOT);
+            return;
+        }
+        if (screenTicks >= 260 && !stopRequested) {
             stopRequested = true;
             LOGGER.info("[GTSNLib] autotest complete (themes captured: {}), stopping client", themeShots);
             minecraft.stop();
         }
     }
 
-    private static void grab(Minecraft minecraft) {
-        String name = SCREENSHOT_PREFIX + ThemeContext.activeId().path() + SCREENSHOT_SUFFIX;
+    private static String themeScreenshotName() {
+        return SCREENSHOT_PREFIX + ThemeContext.activeId().path() + SCREENSHOT_SUFFIX;
+    }
+
+    private static void grab(Minecraft minecraft, String name) {
         LOGGER.info("[GTSNLib] autotest grabbing screenshot {} (theme={})", name, ThemeContext.activeId());
         Screenshot.grab(minecraft.gameDirectory, name, minecraft.getMainRenderTarget(),
                 message -> LOGGER.info("[GTSNLib] autotest screenshot: {}", message.getString()));

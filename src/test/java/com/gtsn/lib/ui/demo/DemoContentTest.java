@@ -58,6 +58,7 @@ class DemoContentTest {
                 demo.checkbox(), demo.logCheckbox(), demo.toggleSwitch(), demo.disabledToggle(),
                 demo.progressBar(), demo.itemSlot1(), demo.itemSlot2(), demo.disabledItemSlot(),
                 demo.scrollPanel(), demo.clipShowcase(), demo.keypad(), demo.badge(),
+                demo.fontCompareButton(), demo.fontSample(),
                 demo.clickStatus(), demo.toggleStatus(), demo.selectionStatus()}) {
             Rect bounds = widget.bounds();
             if (bounds.isEmpty() || !root.contains(bounds.x(), bounds.y())
@@ -65,6 +66,25 @@ class DemoContentTest {
                 throw new AssertionError("控件越出根边界: " + bounds);
             }
         }
+    }
+
+    @Test
+    void fontCompareButtonTogglesSampleBetweenThemeAndVanilla() {
+        assertEquals(java.util.Optional.empty(), demo.fontSample().fontOverride(),
+                "默认主题字体：样例无逐控件覆盖");
+        assertEquals("字体: 主题", demo.fontCompareButton().label());
+
+        click(demo.fontCompareButton());
+
+        assertEquals(com.gtsn.lib.ui.theme.FontId.VANILLA, demo.fontSample().fontOverride().orElseThrow(),
+                "切换后为显式原版字体");
+        assertEquals("字体: 原版", demo.fontCompareButton().label());
+
+        click(demo.fontCompareButton());
+
+        assertEquals(java.util.Optional.empty(), demo.fontSample().fontOverride(),
+                "再次切换恢复跟随主题");
+        assertEquals("字体: 主题", demo.fontCompareButton().label());
     }
 
     @Test

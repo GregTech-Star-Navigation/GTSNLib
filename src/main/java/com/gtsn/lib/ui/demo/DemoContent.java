@@ -70,6 +70,8 @@ public final class DemoContent {
     private final ScrollPanelWidget scrollPanel;
     private final ClipWidget clipShowcase;
     private final Widget badge;
+    private final ButtonWidget fontCompareButton;
+    private final TextWidget fontSample;
 
     private DemoContent(Builder builder) {
         this.root = builder.root;
@@ -96,6 +98,8 @@ public final class DemoContent {
         this.scrollPanel = builder.scrollPanel;
         this.clipShowcase = builder.clipShowcase;
         this.badge = builder.badge;
+        this.fontCompareButton = builder.fontCompareButton;
+        this.fontSample = builder.fontSample;
     }
 
     public static DemoContent build(TextMetrics metrics) {
@@ -219,6 +223,16 @@ public final class DemoContent {
         return badge;
     }
 
+    /** 字体对比按钮（#23）：切换样例文本在主题字体 / 原版字体间对比。 */
+    public ButtonWidget fontCompareButton() {
+        return fontCompareButton;
+    }
+
+    /** 字体样例文本（#23）：默认主题字体；点击对比按钮切到原版。 */
+    public TextWidget fontSample() {
+        return fontSample;
+    }
+
     /** 组装过程内部使用，避免超长方法中的前向引用问题。 */
     private static final class Builder {
 
@@ -251,6 +265,9 @@ public final class DemoContent {
         private ScrollPanelWidget scrollPanel;
         private ClipWidget clipShowcase;
         private Widget badge;
+        private ButtonWidget fontCompareButton;
+        private TextWidget fontSample;
+        private boolean fontCompareVanilla;
 
         private Builder(DemoState state, TextMetrics metrics, DemoIcons icons,
                         ThemeControl themeControl, Theme theme) {
@@ -361,6 +378,15 @@ public final class DemoContent {
             }
             themeRow.add(new TextWidget("资源驱动主题", metrics).colorRole(ThemeColorRole.TEXT_MUTED));
 
+            // 字体（#23）：样例文本默认用主题字体渲染，按钮可切到原版字体对比（含回退字形「龘」）。
+            Stack fontRow = right.add(Stack.horizontal().gap(space(Spacing.SM))
+                    .crossAxisAlign(CrossAxisAlign.CENTER));
+            fontCompareButton = fontRow.add(new ButtonWidget(fontCompareLabel(), metrics, this::toggleFontCompare)
+                    .tooltip(Tooltip.of("字体对比：切换样例文本的字体",
+                            "主题字体 gtsnlib:sarasa_ui_sc ↔ 原版 minecraft:default")));
+            fontSample = fontRow.add(new TextWidget("GTSN UI 中文 English 0123 龘", metrics)
+                    .colorRole(ThemeColorRole.TEXT_MUTED));
+
             selectionStatus = new TextWidget("已选槽位: " + selectionLabel(), metrics).colorRole(ThemeColorRole.TEXT_MUTED);
             PanelWidget itemPanel = right.add(panel("物品槽 (ItemSlot)"));
             itemPanel.add(selectionStatus);
@@ -393,7 +419,7 @@ public final class DemoContent {
             });
 
             PanelWidget scrollPanelHolder = right.add(panel("滚动 (ScrollPanel)"));
-            scrollPanel = scrollPanelHolder.add(new ScrollPanelWidget().size(Sizing.fill(), Sizing.fixed(110)));
+            scrollPanel = scrollPanelHolder.add(new ScrollPanelWidget().size(Sizing.fill(), Sizing.fixed(90)));
             Stack scrollContent = scrollPanel.add(Stack.vertical().gap(space(Spacing.SM)));
             for (int i = 1; i <= 12; i++) {
                 Stack row = scrollContent.add(Stack.horizontal().gap(space(Spacing.MD))
@@ -435,6 +461,21 @@ public final class DemoContent {
             }
             themeControl.nextTheme();
             themeButton.label(themeLabel());
+        }
+
+        /** 字体对比（#23）：样例文本在主题字体与原版字体间切换（渲染与量算同步覆盖）。 */
+        private void toggleFontCompare() {
+            fontCompareVanilla = !fontCompareVanilla;
+            if (fontCompareVanilla) {
+                fontSample.vanillaFont();
+            } else {
+                fontSample.useThemeFont();
+            }
+            fontCompareButton.label(fontCompareLabel());
+        }
+
+        private String fontCompareLabel() {
+            return fontCompareVanilla ? "字体: 原版" : "字体: 主题";
         }
 
         private void updateSelectionStatus() {

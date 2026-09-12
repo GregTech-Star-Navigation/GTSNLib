@@ -2,6 +2,8 @@ package com.gtsn.lib.core.command;
 
 import com.gtsn.lib.GTSNLib;
 import com.gtsn.lib.api.IntegrationRegistry;
+import com.gtsn.lib.compat.mekanism.ChemicalReport;
+import com.gtsn.lib.compat.mekanism.MekanismChemicals;
 import com.gtsn.lib.core.GtsnBuildInfo;
 import com.gtsn.lib.core.GtsnIntegrations;
 import com.gtsn.lib.core.IntegrationSummary;
@@ -62,7 +64,12 @@ public final class GtsnCommand {
                                 .then(Commands.argument("id", StringArgumentType.greedyString())
                                         .executes(GtsnCommand::executeGtFluid))))
                 .then(Commands.literal("reg")
-                        .executes(GtsnCommand::executeReg)));
+                        .executes(GtsnCommand::executeReg))
+                .then(Commands.literal("mek")
+                        .executes(GtsnCommand::executeMek)
+                        .then(Commands.literal("chemical")
+                                .then(Commands.argument("id", StringArgumentType.greedyString())
+                                        .executes(GtsnCommand::executeMekChemical)))));
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {
@@ -154,6 +161,31 @@ public final class GtsnCommand {
         }
         for (String line : GtRegistrationReport.commandLines(statuses,
                 adapter.blocks().size(), adapter.items().size(), adapter.machines().size())) {
+            context.getSource().sendSuccess(() -> Component.literal(line), false);
+        }
+        return 1;
+    }
+
+    /**
+     * {@code /gtsnlib mek}：列出 Mekanism 化学注册后端可用性与已声明化学物质数量（#14 的游戏内证据）。
+     *
+     * <p>本类只依赖纯门面 {@link MekanismChemicals}（GTSN 自有类型），不引用任何 Mekanism 类型。</p>
+     */
+    private static int executeMek(CommandContext<CommandSourceStack> context) {
+        for (String line : ChemicalReport.summaryLines(
+                MekanismChemicals.available(), MekanismChemicals.registrations().size())) {
+            context.getSource().sendSuccess(() -> Component.literal(line), false);
+        }
+        return 1;
+    }
+
+    /**
+     * {@code /gtsnlib mek chemical <id>}：查询化学物质在 Mekanism 注册表中的存在性、种类与颜色
+     * （#14 的游戏内证据）；Mekanism 缺席时报告后端不可用。
+     */
+    private static int executeMekChemical(CommandContext<CommandSourceStack> context) {
+        String id = StringArgumentType.getString(context, "id");
+        for (String line : ChemicalReport.commandLines(MekanismChemicals.status(id))) {
             context.getSource().sendSuccess(() -> Component.literal(line), false);
         }
         return 1;

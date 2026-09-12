@@ -4,6 +4,8 @@ import com.gtsn.lib.GTSNLib;
 import com.gtsn.lib.api.IntegrationModule;
 import com.gtsn.lib.api.IntegrationRegistry;
 import com.gtsn.lib.api.IntegrationTargets;
+import com.gtsn.lib.compat.mekanism.ChemicalStatus;
+import com.gtsn.lib.compat.mekanism.MekanismChemicals;
 import com.gtsn.lib.core.ForgeModPresence;
 import com.gtsn.lib.core.GtsnIntegrations;
 import com.gtsn.lib.core.config.GtsnCommonConfig;
@@ -425,6 +427,69 @@ public final class GtsnGameTests {
                 .contentStatus(RegistrationKind.BLOCK, "gtsnlib:not_a_real_block");
         if (status.present()) {
             helper.fail("unknown block reported as present: " + status);
+            return;
+        }
+        helper.succeed();
+    }
+
+    /**
+     * Mekanism 化学注册随真实在场动态判定（#14）：Mekanism 在场时，经声明式 DSL 注册的演示化学物质必须
+     * 存在于 Mekanism 注册表且可经命令查询；缺席时后端保持未安装且不触发任何类链接错误。
+     */
+    @GameTest(template = "empty")
+    public static void mekanismChemicalRegistrationMatchesPresence(GameTestHelper helper) {
+        boolean present = ModList.get().isLoaded(IntegrationTargets.MEKANISM.modId());
+        if (!present) {
+            if (MekanismChemicals.available()) {
+                helper.fail("Mekanism chemical backend was installed while Mekanism is absent");
+                return;
+            }
+            ChemicalStatus status = MekanismChemicals.status(MekanismChemicals.DEMO_CHEMICAL);
+            if (status.present()) {
+                helper.fail("chemical reported present while Mekanism is absent: " + status);
+                return;
+            }
+            CommandOutput output = runCommand(helper, "gtsnlib mek chemical " + MekanismChemicals.DEMO_CHEMICAL);
+            if (output.result() != 1) {
+                helper.fail("/gtsnlib mek chemical returned " + output.result());
+                return;
+            }
+            boolean unavailable = output.messages().stream()
+                    .anyMatch(line -> line.contains("backend unavailable"));
+            if (!unavailable) {
+                helper.fail("/gtsnlib mek chemical output was " + output.messages());
+                return;
+            }
+            helper.succeed();
+            return;
+        }
+
+        if (!MekanismChemicals.available()) {
+            helper.fail("Mekanism is present but the chemical backend was not installed");
+            return;
+        }
+        if (!MekanismChemicals.isRegistered(MekanismChemicals.DEMO_CHEMICAL)) {
+            helper.fail("demo chemical " + MekanismChemicals.DEMO_CHEMICAL
+                    + " was not registered through the chemical DSL");
+            return;
+        }
+        ChemicalStatus status = MekanismChemicals.status(MekanismChemicals.DEMO_CHEMICAL);
+        if (!status.present()) {
+            helper.fail("DSL-registered chemical " + MekanismChemicals.DEMO_CHEMICAL
+                    + " is absent from Mekanism registry: " + status);
+            return;
+        }
+        if (!"gas".equals(status.kindKey()) || !"mekanism:gas".equals(status.registryId())) {
+            helper.fail("chemical kind/registry was " + status.kindKey() + " / " + status.registryId());
+            return;
+        }
+        CommandOutput output = runCommand(helper, "gtsnlib mek chemical " + MekanismChemicals.DEMO_CHEMICAL);
+        boolean presentLine = output.messages().stream()
+                .anyMatch(line -> line.contains("chemical " + MekanismChemicals.DEMO_CHEMICAL + ": present @")
+                        && line.contains("kind=gas")
+                        && line.contains("registry=mekanism:gas"));
+        if (!presentLine) {
+            helper.fail("/gtsnlib mek chemical output was " + output.messages());
             return;
         }
         helper.succeed();

@@ -185,4 +185,71 @@ class MaterialSpecTest {
         assertFalse(MaterialIcon.METALLIC.key().isBlank());
         assertThrows(IllegalArgumentException.class, () -> MaterialIcon.fromKey("unobtainium"));
     }
+
+    // ---- #13: material fluid forms ----
+
+    @Test
+    void declaresFluidStates() {
+        MaterialSpec spec = MaterialSpec.builder("gtsnlib", "star_alloy")
+                .parts(MaterialPart.INGOT)
+                .fluids(FluidState.LIQUID, FluidState.GAS, FluidState.PLASMA)
+                .build();
+
+        assertEquals(Set.of(FluidState.LIQUID, FluidState.GAS, FluidState.PLASMA), spec.fluidStates());
+        assertTrue(spec.hasFluidStates());
+    }
+
+    @Test
+    void fluidStatesEmptyByDefault() {
+        MaterialSpec spec = MaterialSpec.builder("gtsnlib", "star_alloy")
+                .parts(MaterialPart.INGOT)
+                .build();
+
+        assertTrue(spec.fluidStates().isEmpty());
+        assertFalse(spec.hasFluidStates());
+    }
+
+    @Test
+    void parsesFluidStateByKey() {
+        MaterialSpec spec = MaterialSpec.builder("gtsnlib", "star_alloy")
+                .parts(MaterialPart.INGOT)
+                .fluid("gas")
+                .build();
+
+        assertEquals(Set.of(FluidState.GAS), spec.fluidStates());
+    }
+
+    @Test
+    void deduplicatesFluidStates() {
+        MaterialSpec spec = MaterialSpec.builder("gtsnlib", "star_alloy")
+                .parts(MaterialPart.INGOT)
+                .fluids(FluidState.GAS, FluidState.GAS)
+                .build();
+
+        assertEquals(Set.of(FluidState.GAS), spec.fluidStates());
+    }
+
+    @Test
+    void rejectsUnknownFluidStateKey() {
+        assertThrows(IllegalArgumentException.class, () -> MaterialSpec.builder("gtsnlib", "star_alloy")
+                .parts(MaterialPart.INGOT)
+                .fluid("solid"));
+    }
+
+    @Test
+    void rejectsNullFluidState() {
+        assertThrows(NullPointerException.class, () -> MaterialSpec.builder("gtsnlib", "star_alloy")
+                .parts(MaterialPart.INGOT)
+                .fluid((FluidState) null));
+    }
+
+    @Test
+    void fluidStatesViewIsUnmodifiable() {
+        MaterialSpec spec = MaterialSpec.builder("gtsnlib", "star_alloy")
+                .parts(MaterialPart.INGOT)
+                .fluid(FluidState.LIQUID)
+                .build();
+
+        assertThrows(UnsupportedOperationException.class, () -> spec.fluidStates().add(FluidState.GAS));
+    }
 }

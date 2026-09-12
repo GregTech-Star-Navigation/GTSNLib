@@ -36,6 +36,7 @@ public final class MaterialSpec {
     private final int color;
     private final MaterialIcon iconSet;
     private final Set<MaterialPart> parts;
+    private final Set<FluidState> fluidStates;
     private final String element;
     private final List<MaterialComponent> components;
     private final MaterialRecipeHook recipeHook;
@@ -46,6 +47,7 @@ public final class MaterialSpec {
         this.color = builder.color;
         this.iconSet = builder.iconSet;
         this.parts = Collections.unmodifiableSet(new LinkedHashSet<>(builder.parts));
+        this.fluidStates = Collections.unmodifiableSet(new LinkedHashSet<>(builder.fluidStates));
         this.element = builder.element;
         this.components = List.copyOf(builder.components);
         this.recipeHook = builder.recipeHook;
@@ -86,6 +88,16 @@ public final class MaterialSpec {
         return parts;
     }
 
+    /** 声明的流体形态（液体 / 气体 / 等离子体；保持声明顺序，去重后只读）。 */
+    public Set<FluidState> fluidStates() {
+        return fluidStates;
+    }
+
+    /** 是否声明了任何流体形态。 */
+    public boolean hasFluidStates() {
+        return !fluidStates.isEmpty();
+    }
+
     /** 主元素符号（仅当声明为单质时存在）。 */
     public Optional<String> element() {
         return Optional.ofNullable(element);
@@ -109,6 +121,7 @@ public final class MaterialSpec {
         private int color = 0xFFFFFF;
         private MaterialIcon iconSet = MaterialIcon.METALLIC;
         private final Set<MaterialPart> parts = new LinkedHashSet<>();
+        private final Set<FluidState> fluidStates = new LinkedHashSet<>();
         private String element;
         private final List<MaterialComponent> components = new ArrayList<>();
         private MaterialRecipeHook recipeHook;
@@ -166,6 +179,43 @@ public final class MaterialSpec {
             Objects.requireNonNull(keys, "keys");
             for (String key : keys) {
                 part(key);
+            }
+            return this;
+        }
+
+        /** 追加一个流体形态（材料流体：一键注册进 GT 流体体系）。 */
+        public Builder fluid(FluidState state) {
+            fluidStates.add(Objects.requireNonNull(state, "state"));
+            return this;
+        }
+
+        /** 追加若干流体形态。 */
+        public Builder fluids(FluidState... states) {
+            Objects.requireNonNull(states, "states");
+            for (FluidState state : states) {
+                fluid(state);
+            }
+            return this;
+        }
+
+        /**
+         * 按声明键追加一个流体形态。
+         *
+         * @throws IllegalArgumentException 未知物态键
+         */
+        public Builder fluid(String key) {
+            return fluid(FluidState.fromKey(key));
+        }
+
+        /**
+         * 按声明键追加若干流体形态。
+         *
+         * @throws IllegalArgumentException 存在未知物态键
+         */
+        public Builder fluids(String... keys) {
+            Objects.requireNonNull(keys, "keys");
+            for (String key : keys) {
+                fluid(key);
             }
             return this;
         }

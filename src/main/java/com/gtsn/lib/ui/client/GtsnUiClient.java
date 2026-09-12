@@ -4,6 +4,7 @@ import com.gtsn.lib.GTSNLib;
 import com.gtsn.lib.ui.demo.DemoContent;
 import com.gtsn.lib.ui.layout.Rect;
 import com.gtsn.lib.ui.screen.GtsnUiTestScreen;
+import com.gtsn.lib.ui.theme.ThemeContext;
 import com.gtsn.lib.ui.widget.Widget;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
@@ -24,7 +25,8 @@ import org.slf4j.Logger;
  * <ul>
  *   <li>注册客户端命令 {@code /gtsnui}（经 Forge {@link RegisterClientCommandsEvent}，本地执行、不发往服务器）。</li>
  *   <li>开发自动测试：设置环境变量 {@code GTSNLIB_UI_AUTOTEST=1} 后，客户端进入标题界面时自动打开
- *       开发测试界面，注入合成点击/字符输入，抓取截图 {@code run/screenshots/gtsnlib-ui-autotest.png} 后退出。</li>
+ *       开发测试界面，注入合成点击/字符输入，随后逐主题点击“主题”按钮并各抓一张截图
+ *       （{@code run/screenshots/gtsnlib-ui-theme-<主题>.png}），最后自动退出客户端。</li>
  * </ul>
  */
 @Mod.EventBusSubscriber(modid = GTSNLib.MOD_ID, bus = Bus.FORGE, value = Dist.CLIENT)
@@ -33,14 +35,15 @@ public final class GtsnUiClient {
     /** 自动测试开关：环境变量值为 {@code 1} 时启用（runClient 继承进程环境变量）。 */
     public static final String AUTOTEST_ENV = "GTSNLIB_UI_AUTOTEST";
 
-    private static final String SCREENSHOT_NAME = "gtsnlib-ui-autotest.png";
+    private static final String SCREENSHOT_PREFIX = "gtsnlib-ui-theme-";
+    private static final String SCREENSHOT_SUFFIX = ".png";
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private static boolean autoOpened;
     private static int screenTicks;
     private static boolean inputInjected;
-    private static boolean screenshotTaken;
+    private static int themeShots;
     private static boolean stopRequested;
 
     private GtsnUiClient() {
@@ -87,18 +90,44 @@ public final class GtsnUiClient {
             injectSyntheticInput(screen);
             return;
         }
-        if (screenTicks >= 60 && !screenshotTaken) {
-            screenshotTaken = true;
-            LOGGER.info("[GTSNLib] autotest grabbing screenshot {}", SCREENSHOT_NAME);
-            Screenshot.grab(minecraft.gameDirectory, SCREENSHOT_NAME, minecraft.getMainRenderTarget(),
-                    message -> LOGGER.info("[GTSNLib] autotest screenshot: {}", message.getString()));
+        // 每个主题一张截图：默认 → 点击切换 → 下一主题 → 再切换 → 第三个主题。
+        if (screenTicks >= 60 && themeShots == 0) {
+            themeShots = 1;
+            grab(minecraft);
             return;
         }
-        if (screenTicks >= 140 && !stopRequested) {
+        if (screenTicks >= 80 && themeShots == 1) {
+            themeShots = 2;
+            click(screen, screen.demo().themeButton());
+            return;
+        }
+        if (screenTicks >= 100 && themeShots == 2) {
+            themeShots = 3;
+            grab(minecraft);
+            return;
+        }
+        if (screenTicks >= 120 && themeShots == 3) {
+            themeShots = 4;
+            click(screen, screen.demo().themeButton());
+            return;
+        }
+        if (screenTicks >= 140 && themeShots == 4) {
+            themeShots = 5;
+            grab(minecraft);
+            return;
+        }
+        if (screenTicks >= 200 && !stopRequested) {
             stopRequested = true;
-            LOGGER.info("[GTSNLib] autotest complete, stopping client");
+            LOGGER.info("[GTSNLib] autotest complete (themes captured: {}), stopping client", themeShots);
             minecraft.stop();
         }
+    }
+
+    private static void grab(Minecraft minecraft) {
+        String name = SCREENSHOT_PREFIX + ThemeContext.activeId().path() + SCREENSHOT_SUFFIX;
+        LOGGER.info("[GTSNLib] autotest grabbing screenshot {} (theme={})", name, ThemeContext.activeId());
+        Screenshot.grab(minecraft.gameDirectory, name, minecraft.getMainRenderTarget(),
+                message -> LOGGER.info("[GTSNLib] autotest screenshot: {}", message.getString()));
     }
 
     /**

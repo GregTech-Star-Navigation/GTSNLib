@@ -5,6 +5,10 @@ import com.gtsn.lib.ui.layout.CrossAxisAlign;
 import com.gtsn.lib.ui.layout.Insets;
 import com.gtsn.lib.ui.layout.MainAxisAlign;
 import com.gtsn.lib.ui.layout.Sizing;
+import com.gtsn.lib.ui.theme.Spacing;
+import com.gtsn.lib.ui.theme.Theme;
+import com.gtsn.lib.ui.theme.ThemeColorRole;
+import com.gtsn.lib.ui.theme.ThemeContext;
 import com.gtsn.lib.ui.widget.BoxWidget;
 import com.gtsn.lib.ui.widget.ButtonWidget;
 import com.gtsn.lib.ui.widget.CheckboxWidget;
@@ -30,6 +34,9 @@ import java.util.Objects;
  *
  * <p>纯控件树，不依赖 Minecraft；客户端窗口与 GameTest 共用同一份装配保证行为一致。
  * 物品图标经 {@link DemoIcons} 注入，客户端可传入真实物品堆叠渲染。</p>
+ *
+ * <p>主题（#18）：颜色使用语义角色（渲染时按当前主题解析），间距来自 {@link Theme} 的刻度，
+ * 主题切换按钮经 {@link ThemeControl} 接缝接线。</p>
  */
 public final class DemoContent {
 
@@ -42,6 +49,7 @@ public final class DemoContent {
     private final ButtonWidget disabledButton;
     private final ButtonWidget progressUpButton;
     private final ButtonWidget progressResetButton;
+    private final ButtonWidget themeButton;
 
     private final CheckboxWidget checkbox;
     private final CheckboxWidget logCheckbox;
@@ -72,6 +80,7 @@ public final class DemoContent {
         this.disabledButton = builder.disabledButton;
         this.progressUpButton = builder.progressUpButton;
         this.progressResetButton = builder.progressResetButton;
+        this.themeButton = builder.themeButton;
         this.checkbox = builder.checkbox;
         this.logCheckbox = builder.logCheckbox;
         this.toggleSwitch = builder.toggleSwitch;
@@ -98,10 +107,19 @@ public final class DemoContent {
     }
 
     public static DemoContent build(DemoState state, TextMetrics metrics, DemoIcons icons) {
+        return build(state, metrics, icons, null, ThemeContext.active());
+    }
+
+    /**
+     * 完整装配：{@code themeControl} 可空（主题按钮禁用），{@code theme} 可空（取当前激活主题）。
+     */
+    public static DemoContent build(DemoState state, TextMetrics metrics, DemoIcons icons,
+                                    ThemeControl themeControl, Theme theme) {
         Objects.requireNonNull(state, "state");
         Objects.requireNonNull(metrics, "metrics");
         Objects.requireNonNull(icons, "icons");
-        return new Builder(state, metrics, icons).assemble();
+        Theme activeTheme = theme != null ? theme : ThemeContext.active();
+        return new Builder(state, metrics, icons, themeControl, activeTheme).assemble();
     }
 
     public Widget root() {
@@ -134,6 +152,11 @@ public final class DemoContent {
 
     public ButtonWidget progressResetButton() {
         return progressResetButton;
+    }
+
+    /** 主题切换按钮（自动测试 / 手动验收的切换入口）。 */
+    public ButtonWidget themeButton() {
+        return themeButton;
     }
 
     public CheckboxWidget checkbox() {
@@ -199,13 +222,11 @@ public final class DemoContent {
     /** 组装过程内部使用，避免超长方法中的前向引用问题。 */
     private static final class Builder {
 
-        private static final int PANEL_BG = 0xFF181C22;
-        private static final int PANEL_BORDER = 0xFF2E3846;
-        private static final int TEXT_MUTED = 0xFF9FB0C0;
-
         private final DemoState state;
         private final TextMetrics metrics;
         private final DemoIcons icons;
+        private final ThemeControl themeControl;
+        private final Theme theme;
 
         private Stack root;
         private ButtonWidget clickButton;
@@ -214,6 +235,7 @@ public final class DemoContent {
         private ButtonWidget disabledButton;
         private ButtonWidget progressUpButton;
         private ButtonWidget progressResetButton;
+        private ButtonWidget themeButton;
         private CheckboxWidget checkbox;
         private CheckboxWidget logCheckbox;
         private ToggleSwitchWidget toggleSwitch;
@@ -230,14 +252,21 @@ public final class DemoContent {
         private ClipWidget clipShowcase;
         private Widget badge;
 
-        private Builder(DemoState state, TextMetrics metrics, DemoIcons icons) {
+        private Builder(DemoState state, TextMetrics metrics, DemoIcons icons,
+                        ThemeControl themeControl, Theme theme) {
             this.state = state;
             this.metrics = metrics;
             this.icons = icons;
+            this.themeControl = themeControl;
+            this.theme = theme;
+        }
+
+        private int space(Spacing step) {
+            return theme.spacing(step);
         }
 
         private DemoContent assemble() {
-            root = Stack.horizontal().padding(Insets.all(8)).gap(8);
+            root = Stack.horizontal().padding(Insets.all(space(Spacing.LG))).gap(space(Spacing.LG));
             buildLeftColumn();
             buildRightColumn();
             buildBadge();
@@ -245,20 +274,20 @@ public final class DemoContent {
         }
 
         private void buildLeftColumn() {
-            Stack left = root.add(Stack.vertical().gap(6)
+            Stack left = root.add(Stack.vertical().gap(space(Spacing.MD))
                     .size(Sizing.fixed(300), Sizing.wrap())
                     .crossAxisAlign(CrossAxisAlign.STRETCH));
-            left.add(new TextWidget("GTSN UI 组件库", metrics).shadow(true).color(0xFFE8F0F8));
+            left.add(new TextWidget("GTSN UI 组件库", metrics).shadow(true).colorRole(ThemeColorRole.TEXT_STRONG));
 
             // 先在局部变量中构造（供按钮回调引用），再按布局顺序加入面板。
-            clickStatus = new TextWidget("点击次数: 0", metrics).color(TEXT_MUTED);
-            toggleStatus = new TextWidget("状态: A", metrics).color(TEXT_MUTED);
+            clickStatus = new TextWidget("点击次数: 0", metrics).colorRole(ThemeColorRole.TEXT_MUTED);
+            toggleStatus = new TextWidget("状态: A", metrics).colorRole(ThemeColorRole.TEXT_MUTED);
             progressBar = new ProgressBarWidget().range(0, 1).value(state.progress())
                     .label(progress -> Math.round(progress * 100) + "%")
                     .size(Sizing.fill(), Sizing.fixed(12));
 
             PanelWidget buttonPanel = left.add(panel("按钮 (Button)"));
-            Stack buttonRow1 = buttonPanel.add(Stack.horizontal().gap(6));
+            Stack buttonRow1 = buttonPanel.add(Stack.horizontal().gap(space(Spacing.MD)));
             clickButton = buttonRow1.add(new ButtonWidget("点击 +1", metrics, () -> {
                 state.incrementClicks();
                 clickStatus.text("点击次数: " + state.clicks());
@@ -266,14 +295,14 @@ public final class DemoContent {
             toggleButton = buttonRow1.add(new ButtonWidget("切换状态", metrics, () -> {
                 state.toggle();
                 toggleStatus.text("状态: " + (state.toggled() ? "B" : "A"))
-                        .color(state.toggled() ? 0xFF7FD08A : TEXT_MUTED);
+                        .colorRole(state.toggled() ? ThemeColorRole.SUCCESS : ThemeColorRole.TEXT_MUTED);
             }));
             clearButton = buttonRow1.add(new ButtonWidget("清空", metrics, () -> {
                 state.clearTyped();
                 state.lastKey("(none)");
             }));
 
-            Stack buttonRow2 = buttonPanel.add(Stack.horizontal().gap(6));
+            Stack buttonRow2 = buttonPanel.add(Stack.horizontal().gap(space(Spacing.MD)));
             disabledButton = buttonRow2.add(new ButtonWidget("禁用按钮", metrics, () -> {
             }).enabled(false).tooltip(Tooltip.of("禁用态：不响应输入", "状态报告为 DISABLED")));
             progressUpButton = buttonRow2.add(new ButtonWidget("进度+10%", metrics, () -> {
@@ -284,7 +313,7 @@ public final class DemoContent {
                 state.progress(0);
                 progressBar.value(0);
             }));
-            buttonPanel.add(new DividerWidget().color(PANEL_BORDER));
+            buttonPanel.add(new DividerWidget());
             buttonPanel.add(clickStatus);
             buttonPanel.add(toggleStatus);
             buttonPanel.add(progressBar);
@@ -294,7 +323,7 @@ public final class DemoContent {
             }).tooltip(Tooltip.of("复选框：点击或空格切换")));
             logCheckbox = selectionPanel.add(new CheckboxWidget("记录日志", metrics, value -> {
             }).checked(true).tooltip(Tooltip.of("默认勾选的复选框")));
-            Stack switchRow = selectionPanel.add(Stack.horizontal().gap(10));
+            Stack switchRow = selectionPanel.add(Stack.horizontal().gap(space(Spacing.XL)));
             toggleSwitch = switchRow.add(new ToggleSwitchWidget("自动运行", metrics, value -> {
             }).tooltip(Tooltip.of("开关：轨道 + 滑块")));
             disabledToggle = switchRow.add(new ToggleSwitchWidget("锁定", metrics, value -> {
@@ -303,28 +332,38 @@ public final class DemoContent {
             PanelWidget textPanel = left.add(panel("文本 (Text)"));
             textPanel.add(new TextWidget(
                     "这是一段用于演示自动换行与行距的长文本：宽度受限时按词断行，超长单词按字符硬断。", metrics)
-                    .wrap(260).color(0xFFC8D4E0));
-            Stack alignRow = textPanel.add(Stack.horizontal().gap(8));
+                    .wrap(260).lineSpacing(theme.textStyle().lineSpacing()));
+            Stack alignRow = textPanel.add(Stack.horizontal().gap(space(Spacing.LG)));
             alignRow.add(new TextWidget("左对齐", metrics).size(Sizing.fixed(72), Sizing.wrap()));
             alignRow.add(new TextWidget("居中", metrics).align(TextAlign.CENTER)
-                    .size(Sizing.fixed(72), Sizing.wrap()).color(0xFFB8C8D8));
+                    .size(Sizing.fixed(72), Sizing.wrap()).colorRole(ThemeColorRole.TEXT_MUTED));
             alignRow.add(new TextWidget("右对齐", metrics).align(TextAlign.RIGHT)
-                    .size(Sizing.fixed(72), Sizing.wrap()).color(0xFF8FB0C8));
-            textPanel.add(new DividerWidget().color(PANEL_BORDER));
-            textPanel.add(new TextWidget("分隔线下方：Divider 基元", metrics).color(TEXT_MUTED));
+                    .size(Sizing.fixed(72), Sizing.wrap()).colorRole(ThemeColorRole.ACCENT));
+            textPanel.add(new DividerWidget());
+            textPanel.add(new TextWidget("分隔线下方：Divider 基元", metrics).colorRole(ThemeColorRole.TEXT_MUTED));
 
             PanelWidget inputPanel = left.add(panel("输入 (Input)"));
             keypad = inputPanel.add(new KeypadWidget(state));
         }
 
         private void buildRightColumn() {
-            Stack right = root.add(Stack.vertical().gap(6).weight(1)
+            Stack right = root.add(Stack.vertical().gap(space(Spacing.MD)).weight(1)
                     .crossAxisAlign(CrossAxisAlign.STRETCH));
 
-            selectionStatus = new TextWidget("已选槽位: 无", metrics).color(TEXT_MUTED);
+            Stack themeRow = right.add(Stack.horizontal().gap(space(Spacing.SM))
+                    .crossAxisAlign(CrossAxisAlign.CENTER));
+            themeButton = themeRow.add(new ButtonWidget(themeLabel(), metrics, this::switchTheme)
+                    .tooltip(Tooltip.of("主题系统：切换到下一个已加载主题",
+                            "主题来自资源包 assets/<namespace>/ui/themes/*.json")));
+            if (themeControl == null) {
+                themeButton.enabled(false);
+            }
+            themeRow.add(new TextWidget("资源驱动主题", metrics).colorRole(ThemeColorRole.TEXT_MUTED));
+
+            selectionStatus = new TextWidget("已选槽位: 无", metrics).colorRole(ThemeColorRole.TEXT_MUTED);
             PanelWidget itemPanel = right.add(panel("物品槽 (ItemSlot)"));
             itemPanel.add(selectionStatus);
-            Stack slotRow = itemPanel.add(Stack.horizontal().gap(6));
+            Stack slotRow = itemPanel.add(Stack.horizontal().gap(space(Spacing.MD)));
             itemSlot1 = slotRow.add(new ItemSlotWidget().icon(icons.primary()).selectable(true)
                     .tooltip(Tooltip.of("钻石 ×3", "点击选择此槽位")));
             itemSlot2 = slotRow.add(new ItemSlotWidget().icon(icons.secondary()).selectable(true)
@@ -346,31 +385,47 @@ public final class DemoContent {
 
             PanelWidget scrollPanelHolder = right.add(panel("滚动 (ScrollPanel)"));
             scrollPanel = scrollPanelHolder.add(new ScrollPanelWidget().size(Sizing.fill(), Sizing.fixed(110)));
-            Stack scrollContent = scrollPanel.add(Stack.vertical().gap(3));
+            Stack scrollContent = scrollPanel.add(Stack.vertical().gap(space(Spacing.SM)));
             for (int i = 1; i <= 12; i++) {
-                Stack row = scrollContent.add(Stack.horizontal().gap(6).crossAxisAlign(CrossAxisAlign.CENTER));
-                row.add(new BoxWidget().fixedSize(6, 10).fill(i % 2 == 0 ? 0xFF4C74A8 : 0xFF6F8F5F));
-                row.add(new TextWidget("滚动条目 " + i, metrics).color(0xFFC8D4E0));
+                Stack row = scrollContent.add(Stack.horizontal().gap(space(Spacing.MD))
+                        .crossAxisAlign(CrossAxisAlign.CENTER));
+                row.add(new BoxWidget().fixedSize(6, 10)
+                        .fill(i % 2 == 0 ? ThemeColorRole.ACCENT : ThemeColorRole.SUCCESS));
+                row.add(new TextWidget("滚动条目 " + i, metrics).colorRole(ThemeColorRole.TEXT_MUTED));
             }
 
             PanelWidget layoutPanel = right.add(panel("布局 (Layout / Clip)"));
             clipShowcase = layoutPanel.add(new ClipWidget().size(Sizing.fill(), Sizing.fixed(70))
-                    .padding(Insets.all(4)));
-            Stack showcaseColumn = clipShowcase.add(Stack.vertical().gap(4));
-            Stack boxesRow = showcaseColumn.add(Stack.horizontal().gap(6));
-            boxesRow.add(new BoxWidget().fixedSize(46, 20).fill(0xFF4878A8).border(0xFF9CC4E4, 1));
+                    .padding(Insets.all(space(Spacing.SM))));
+            Stack showcaseColumn = clipShowcase.add(Stack.vertical().gap(space(Spacing.SM)));
+            Stack boxesRow = showcaseColumn.add(Stack.horizontal().gap(space(Spacing.MD)));
+            boxesRow.add(new BoxWidget().fixedSize(46, 20).fill(ThemeColorRole.ACCENT)
+                    .border(ThemeColorRole.BORDER_STRONG, 1));
             boxesRow.add(new BoxWidget().size(Sizing.fill(), Sizing.fixed(20)).weight(1)
-                    .fill(0xFF507850).border(0xFF9CC4E4, 1));
-            boxesRow.add(new BoxWidget().fixedSize(46, 20).fill(0xFFB08A48).border(0xFF9CC4E4, 1));
-            showcaseColumn.add(new BoxWidget().fixedSize(500, 30).fill(0xFF803030));
+                    .fill(ThemeColorRole.SUCCESS).border(ThemeColorRole.BORDER_STRONG, 1));
+            boxesRow.add(new BoxWidget().fixedSize(46, 20).fill(ThemeColorRole.WARNING)
+                    .border(ThemeColorRole.BORDER_STRONG, 1));
+            showcaseColumn.add(new BoxWidget().fixedSize(500, 30).fill(ThemeColorRole.DANGER));
         }
 
         private void buildBadge() {
             Stack badgeStack = root.add(Stack.vertical().fixedSize(150, 16)
                     .align(MainAxisAlign.CENTER, CrossAxisAlign.CENTER)
                     .absolute(Anchor.BOTTOM_RIGHT, -4, -4));
-            badgeStack.add(new TextWidget("components #17", metrics).color(0xFF8FB0C8));
+            badgeStack.add(new TextWidget("theme #18", metrics).colorRole(ThemeColorRole.TEXT_MUTED));
             badge = badgeStack;
+        }
+
+        private String themeLabel() {
+            return themeControl != null ? "主题: " + themeControl.activeThemeName() : "主题: 未接入";
+        }
+
+        private void switchTheme() {
+            if (themeControl == null) {
+                return;
+            }
+            themeControl.nextTheme();
+            themeButton.label(themeLabel());
         }
 
         private void updateSelectionStatus() {
@@ -384,8 +439,9 @@ public final class DemoContent {
         }
 
         private PanelWidget panel(String title) {
-            return new PanelWidget().title(title, metrics).padding(Insets.all(6)).gap(4)
-                    .background(PANEL_BG).border(PANEL_BORDER, 1);
+            return new PanelWidget().title(title, metrics).padding(Insets.all(space(Spacing.MD)))
+                    .gap(space(Spacing.SM))
+                    .background(ThemeColorRole.PANEL_BACKGROUND).border(ThemeColorRole.PANEL_BORDER, 1);
         }
     }
 }

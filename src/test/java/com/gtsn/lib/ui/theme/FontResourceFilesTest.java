@@ -29,7 +29,7 @@ class FontResourceFilesTest {
     private static final String FONT_NAME = "sarasa_ui_sc";
     private static final String FONT_JSON = FONT_DIR + FONT_NAME + ".json";
     private static final String FONT_TTF = FONT_DIR + FONT_NAME + ".ttf";
-    private static final String FONT_LICENSE = FONT_DIR + "LICENSE-Sarasa-Gothic.txt";
+    private static final String FONT_LICENSE = FONT_DIR + "license-sarasa-gothic.txt";
     private static final String THEME_JSON = "assets/gtsnlib/ui/themes/default.json";
 
     private static byte[] readBytes(String classpathResource) throws IOException {
@@ -60,10 +60,12 @@ class FontResourceFilesTest {
 
         JsonObject ttf = providers.get(0).getAsJsonObject();
         assertEquals("ttf", ttf.get("type").getAsString());
-        assertEquals("gtsnlib:font/" + FONT_NAME + ".ttf", ttf.get("file").getAsString());
+        assertEquals("gtsnlib:" + FONT_NAME + ".ttf", ttf.get("file").getAsString(),
+                "file 是相对 font/ 目录的路径（TrueTypeGlyphProviderDefinition.load 会前置 font/）");
         assertTrue(ttf.get("size").getAsFloat() > 0, "ttf provider 必须给出字号");
         assertTrue(ttf.get("oversample").getAsFloat() >= 1.0F, "ttf provider 采样倍率");
         assertTrue(ttf.getAsJsonArray("skip").toString().contains(" "), "跳过空格，交由原版空格度量");
+        assertProviderFileResolves(ttf.get("file").getAsString());
 
         JsonObject reference = providers.get(1).getAsJsonObject();
         assertEquals("reference", reference.get("type").getAsString());
@@ -105,10 +107,23 @@ class FontResourceFilesTest {
         JsonArray providers = providers();
         TtfCmap subset = TtfCmap.parse(readBytes(FONT_TTF));
 
-        assertEquals("gtsnlib:font/" + FONT_NAME + ".ttf", resolve(providers, subset, '中'), "子集内字形由 TTF 服务");
-        assertEquals("gtsnlib:font/" + FONT_NAME + ".ttf", resolve(providers, subset, 'A'), "ASCII 由 TTF 服务");
+        assertEquals("gtsnlib:" + FONT_NAME + ".ttf", resolve(providers, subset, '中'), "子集内字形由 TTF 服务");
+        assertEquals("gtsnlib:" + FONT_NAME + ".ttf", resolve(providers, subset, 'A'), "ASCII 由 TTF 服务");
         assertEquals("minecraft:default", resolve(providers, subset, ' '), "space 被 ttf.skip 跳过 → 原版空格");
         assertEquals("minecraft:default", resolve(providers, subset, '龘'), "子集未覆盖 → 原版回退层");
+    }
+
+    /**
+     * 按 MC 语义解析 ttf provider 的 {@code file}：{@code ResourceLocation.withPrefix("font/")}
+     * 后必须命中随包资源（否则 FontManager 拒绝该字体、Style.withFont 渲染豆腐块）。
+     */
+    private static void assertProviderFileResolves(String file) {
+        int separator = file.indexOf(':');
+        String namespace = separator < 0 ? "minecraft" : file.substring(0, separator);
+        String path = separator < 0 ? file : file.substring(separator + 1);
+        String classpath = "assets/" + namespace + "/font/" + path;
+        assertNotNull(FontResourceFilesTest.class.getClassLoader().getResourceAsStream(classpath),
+                "ttf provider file 解析失败（MC 会前置 font/）: " + classpath);
     }
 
     @Test

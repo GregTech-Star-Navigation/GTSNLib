@@ -2,7 +2,7 @@
   "providers": [
     {
       "type": "ttf",
-      "file": "gtsnlib:font/sarasa_ui_sc.ttf",
+      "file": "gtsnlib:sarasa_ui_sc.ttf",
       "size": 11.0,
       "oversample": 2.0,
       "shift": [0.0, 0.0],

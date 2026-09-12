@@ -1,0 +1,70 @@
+# RCON /gtsnlib command sweep - 2026-09-13T05:03:11.5710838+08:00
+### /gtsnlib
+GTSNLib 0.1.0 | integrations: 6 | targets present: 0/6
+mekanism: absent
+immersiveengineering: absent
+create: absent
+ae2: absent
+enderio: absent
+ad_astra: absent
+
+
+### /gtsnlib gt
+GT adapter | available: true | tag prefixes: 95
+material iron: present @ gtceu:iron [gtceu] formula=Fe
+
+
+### /gtsnlib gt material gtsnlib:star_alloy
+GT adapter | available: true | tag prefixes: 95
+material gtsnlib:star_alloy: present @ gtsnlib:star_alloy [gtsnlib]
+registration gtsnlib:star_alloy | derived: {plate=star_alloy_plate, dust=star_alloy_dust, rod=star_alloy_rod, ingot=star_alloy_ingot}
+ore tags: [forge:ingots/star_alloy, forge:plates/star_alloy, forge:dusts/star_alloy, forge:rods/star_alloy]
+part plate -> star_alloy_plate [forge:plates/star_alloy] generated=true
+part dust -> star_alloy_dust [forge:dusts/star_alloy] generated=true
+part rod -> star_alloy_rod [forge:rods/star_alloy] generated=true
+part ingot -> star_alloy_ingot [forge:ingots/star_alloy] generated=true
+fluid plasma -> gtsnlib:star_alloy_plasma present=true
+fluid gas -> gtsnlib:star_alloy_gas present=true
+fluid liquid -> gtsnlib:star_alloy present=true
+
+
+### /gtsnlib gt material iron
+GT adapter | available: true | tag prefixes: 95
+material iron: present @ gtceu:iron [gtceu] formula=Fe
+registration iron: absent
+
+
+### /gtsnlib gt fluid gtsnlib:star_alloy_plasma
+GT fluid | available: true | present: true
+fluid gtsnlib:star_alloy_plasma: present @ gtsnlib:star_alloy_plasma state=plasma [material gtsnlib:star_alloy]
+
+
+### /gtsnlib gt fluid gtsnlib:stellar_air
+GT fluid | available: true | present: true
+fluid gtsnlib:stellar_air: present @ gtsnlib:stellar_air state=gas [standalone]
+
+
+### /gtsnlib reg
+GTSNLib registrations | blocks: 1 | items: 1 | machines: 1
+block gtsnlib:test_block: present=true @ gtsnlib:test_block
+item gtsnlib:test_item: present=true @ gtsnlib:test_item
+machine gtsnlib:test_machine: present=true @ gtsnlib:test_machine
+
+
+### /gtsnlib mek
+Mekanism chemicals | backend: false | registered: 0
+
+
+### /gtsnlib mek chemical gtsnlib:test_chemical
+Mekanism chemical | backend: false | present: false
+chemical gtsnlib:test_chemical: backend unavailable
+
+
+### /gtsnlib ui
+A player is required to run this command here
+
+
+### /stop
+Stopping the server
+
+

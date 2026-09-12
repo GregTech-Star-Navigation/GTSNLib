@@ -53,7 +53,7 @@
     "tooltip_border": "#FF8FB0C8",
     "tooltip_text": "#FFFFFFFF"
   },
-  "text": { "shadow": false, "line_spacing": 0 },
+  "text": { "shadow": false, "line_spacing": 0, "font": "gtsnlib:sarasa_ui_sc" },
   "spacing": { "xs": 2, "sm": 4, "md": 6, "lg": 8, "xl": 10 },
   "rounding": { "small": 0, "medium": 0, "large": 0 }
 }

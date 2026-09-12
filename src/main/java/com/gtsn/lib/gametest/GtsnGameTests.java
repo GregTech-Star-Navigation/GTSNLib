@@ -1,6 +1,11 @@
 package com.gtsn.lib.gametest;
 
 import com.gtsn.lib.GTSNLib;
+import com.gtsn.lib.api.IntegrationModule;
+import com.gtsn.lib.api.IntegrationRegistry;
+import com.gtsn.lib.api.IntegrationTargets;
+import com.gtsn.lib.core.ForgeModPresence;
+import com.gtsn.lib.core.GtsnIntegrations;
 import com.gtsn.lib.core.config.GtsnCommonConfig;
 import com.gtsn.lib.gt.adapter.GtAdapter;
 import com.gtsn.lib.gt.adapter.GtFluidStatus;
@@ -81,17 +86,59 @@ public final class GtsnGameTests {
     public static void gtsnlibCommandPrintsStatus(GameTestHelper helper) {
         CommandOutput output = runCommand(helper, "gtsnlib");
 
+        long present = IntegrationTargets.modIds().stream().filter(id -> ModList.get().isLoaded(id)).count();
+        String expectedStatus = "GTSNLib 0.1.0 | integrations: 6 | targets present: " + present + "/6";
+
         if (output.result() != 1) {
             helper.fail("/gtsnlib returned " + output.result());
             return;
         }
-        if (!output.messages().contains("GTSNLib 0.1.0 | integrations: 6 | targets present: 0/6")) {
-            helper.fail("/gtsnlib status line was " + output.messages());
+        if (!output.messages().contains(expectedStatus)) {
+            helper.fail("/gtsnlib status line was " + output.messages() + ", expected " + expectedStatus);
             return;
         }
-        for (String modId : List.of("mekanism", "immersiveengineering", "create", "ae2", "enderio", "ad_astra")) {
-            if (!output.messages().contains(modId + ": absent")) {
-                helper.fail("/gtsnlib did not report target " + modId + ": " + output.messages());
+        for (String modId : IntegrationTargets.modIds()) {
+            String expected = modId + ": " + (ModList.get().isLoaded(modId) ? "present" : "absent");
+            if (!output.messages().contains(expected)) {
+                helper.fail("/gtsnlib did not report target " + expected + ": " + output.messages());
+                return;
+            }
+        }
+        helper.succeed();
+    }
+
+    /** 真实 {@link ForgeModPresence} 冒烟：必须与运行时 {@link ModList} 判定一致。 */
+    @GameTest(template = "empty")
+    public static void forgeModPresenceMatchesRealModList(GameTestHelper helper) {
+        ForgeModPresence presence = new ForgeModPresence();
+        if (!presence.isLoaded(GTSNLib.MOD_ID)) {
+            helper.fail("ForgeModPresence did not detect GTSNLib itself in the real ModList");
+            return;
+        }
+        if (presence.isLoaded("gtsnlib_not_a_real_mod")) {
+            helper.fail("ForgeModPresence reported a non-existent mod as loaded");
+            return;
+        }
+        helper.succeed();
+    }
+
+    /** 六个联动模块均已登记；在场的模块已初始化，缺席的模块未被实例化（真实环境两态覆盖）。 */
+    @GameTest(template = "empty")
+    public static void integrationModulesMatchRealPresence(GameTestHelper helper) {
+        IntegrationRegistry registry = GtsnIntegrations.registry();
+        if (registry.registeredCount() != 6) {
+            helper.fail("expected 6 registered integration modules, got " + registry.registeredCount());
+            return;
+        }
+        for (String modId : IntegrationTargets.modIds()) {
+            boolean present = ModList.get().isLoaded(modId);
+            IntegrationModule module = registry.get(modId).orElse(null);
+            if (present && module == null) {
+                helper.fail("present target was not initialized: " + modId);
+                return;
+            }
+            if (!present && module != null) {
+                helper.fail("absent target was initialized: " + modId);
                 return;
             }
         }

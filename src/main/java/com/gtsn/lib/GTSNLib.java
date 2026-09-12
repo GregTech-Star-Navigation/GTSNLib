@@ -1,6 +1,9 @@
 package com.gtsn.lib;
 
+import com.gtsn.lib.core.ForgeModPresence;
 import com.gtsn.lib.core.GtsnBuildInfo;
+import com.gtsn.lib.core.GtsnIntegrations;
+import com.gtsn.lib.core.config.GtsnConfig;
 import com.mojang.logging.LogUtils;
 import net.minecraftforge.fml.common.Mod;
 import org.slf4j.Logger;
@@ -15,7 +18,7 @@ public class GTSNLib {
 
     public GTSNLib() {
         LOGGER.info("[GTSNLib] Loading GTSNLib {}", GtsnBuildInfo.VERSION);
-        // T1: 联动数为 0（框架尚未注册任何联动模块）。
-        LOGGER.info("[GTSNLib] {}", GtsnBuildInfo.formatStatus(GtsnBuildInfo.VERSION, 0));
+        GtsnConfig.init();
+        GtsnIntegrations.bootstrap(new ForgeModPresence());
     }
 }

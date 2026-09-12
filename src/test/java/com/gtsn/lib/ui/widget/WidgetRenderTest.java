@@ -1,7 +1,6 @@
 package com.gtsn.lib.ui.widget;
 
 import com.gtsn.lib.ui.RecordingRenderContext;
-import com.gtsn.lib.ui.TestTextMetrics;
 import com.gtsn.lib.ui.input.InputEvent;
 import com.gtsn.lib.ui.input.Keys;
 import com.gtsn.lib.ui.layout.Insets;
@@ -26,7 +25,7 @@ class WidgetRenderTest {
     void renderPaintsParentBeforeChildrenInListOrder() {
         Stack root = Stack.vertical().padding(Insets.all(2));
         root.add(new BoxWidget().fixedSize(40, 20).fill(0xFF112233));
-        root.add(new TextWidget("hi", TestTextMetrics.INSTANCE));
+        root.add(new TextWidget("hi", PlainTextMetrics.INSTANCE));
         WidgetHost host = new WidgetHost(root);
         host.resize(100, 50);
         RecordingRenderContext ctx = new RecordingRenderContext(100, 50);
@@ -55,7 +54,7 @@ class WidgetRenderTest {
     @Test
     void textWidgetWrapsIntrinsicSizeFromMetrics() {
         Stack root = Stack.vertical().padding(Insets.all(3));
-        TextWidget text = root.add(new TextWidget("abcd", TestTextMetrics.INSTANCE));
+        TextWidget text = root.add(new TextWidget("abcd", PlainTextMetrics.INSTANCE));
         WidgetHost host = new WidgetHost(root);
 
         host.resize(100, 50);
@@ -64,10 +63,22 @@ class WidgetRenderTest {
     }
 
     @Test
+    void buttonWrapsIntrinsicSizeAroundLabelAndPadding() {
+        Stack root = Stack.vertical();
+        ButtonWidget button = root.add(new ButtonWidget("ok", PlainTextMetrics.INSTANCE, () -> {
+        }));
+        WidgetHost host = new WidgetHost(root);
+
+        host.resize(100, 50);
+
+        assertEquals(Rect.of(0, 0, 24, 15), button.bounds(), "宽度=文本+左右 padding，高度=行高+上下 padding");
+    }
+
+    @Test
     void buttonFiresOnClickInsideAndNotOutside() {
         AtomicInteger clicks = new AtomicInteger();
         Stack root = Stack.vertical();
-        root.add(new ButtonWidget("ok", TestTextMetrics.INSTANCE, clicks::incrementAndGet).fixedSize(40, 20));
+        root.add(new ButtonWidget("ok", PlainTextMetrics.INSTANCE, clicks::incrementAndGet).fixedSize(40, 20));
         WidgetHost host = new WidgetHost(root);
         host.resize(100, 50);
 
@@ -89,7 +100,7 @@ class WidgetRenderTest {
         AtomicInteger clicks = new AtomicInteger();
         Stack root = Stack.vertical();
         ButtonWidget button = root.add(
-                new ButtonWidget("ok", TestTextMetrics.INSTANCE, clicks::incrementAndGet).fixedSize(40, 20));
+                new ButtonWidget("ok", PlainTextMetrics.INSTANCE, clicks::incrementAndGet).fixedSize(40, 20));
         WidgetHost host = new WidgetHost(root);
         host.resize(100, 50);
         host.router().focus().requestFocus(button);
@@ -104,7 +115,7 @@ class WidgetRenderTest {
     @Test
     void hoveredButtonRendersDifferentFillColor() {
         Stack root = Stack.vertical();
-        root.add(new ButtonWidget("ok", TestTextMetrics.INSTANCE, () -> {
+        root.add(new ButtonWidget("ok", PlainTextMetrics.INSTANCE, () -> {
         }).fixedSize(40, 20));
         WidgetHost host = new WidgetHost(root);
         host.resize(100, 50);

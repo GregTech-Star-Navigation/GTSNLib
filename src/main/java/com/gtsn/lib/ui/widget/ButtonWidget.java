@@ -36,6 +36,10 @@ public final class ButtonWidget extends AbstractWidget {
         this.label = Objects.requireNonNull(label, "label");
         this.metrics = Objects.requireNonNull(metrics, "metrics");
         this.onClick = Objects.requireNonNull(onClick, "onClick");
+        node().params().padding(Insets.symmetric(3, 6));
+        node().contentMeasurer((widthSpec, heightSpec) -> Size.of(
+                widthSpec.resolve(this.metrics.width(this.label)),
+                heightSpec.resolve(this.metrics.lineHeight())));
     }
 
     public ButtonWidget label(String label) {

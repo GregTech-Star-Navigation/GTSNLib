@@ -27,5 +27,7 @@ public final class IntegrationModules {
                 () -> () -> new com.gtsn.lib.integration.ae2.Ae2Integration());
         registry.register(IntegrationTargets.ENDER_IO.modId(),
                 () -> () -> new com.gtsn.lib.integration.enderio.EnderioIntegration());
+        registry.register(IntegrationTargets.AD_ASTRA.modId(),
+                () -> () -> new com.gtsn.lib.integration.adastra.AdAstraIntegration());
     }
 }

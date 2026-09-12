@@ -3,8 +3,10 @@ package com.gtsn.lib.gametest;
 import com.gtsn.lib.GTSNLib;
 import com.gtsn.lib.core.config.GtsnCommonConfig;
 import com.gtsn.lib.gt.adapter.GtAdapter;
+import com.gtsn.lib.gt.adapter.GtFluidStatus;
 import com.gtsn.lib.gt.adapter.GtPartStatus;
 import com.gtsn.lib.gt.adapter.GtQueryResult;
+import com.gtsn.lib.gt.registration.FluidRegistration;
 import com.gtsn.lib.gt.registration.MaterialPart;
 import com.gtsn.lib.gt.registration.MaterialRegistration;
 import net.minecraft.commands.CommandSource;
@@ -198,6 +200,92 @@ public final class GtsnGameTests {
                 .anyMatch(line -> line.contains("part ingot") && line.contains("generated=true"));
         if (!present || !derived || !generated) {
             helper.fail("/gtsnlib gt material output was " + output.messages());
+            return;
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void materialRegistersLiquidGasPlasmaFluidForms(GameTestHelper helper) {
+        GtAdapter adapter = GtAdapter.get();
+        MaterialRegistration registration = adapter.registeredMaterial(GtAdapter.DEMO_MATERIAL).orElse(null);
+        if (registration == null) {
+            helper.fail("material " + GtAdapter.DEMO_MATERIAL + " was not registered through the GTSN registrar");
+            return;
+        }
+        List<GtFluidStatus> fluids = adapter.materialFluids(GtAdapter.DEMO_MATERIAL);
+        if (fluids.size() != 3) {
+            helper.fail("expected 3 material fluid forms, got " + fluids);
+            return;
+        }
+        for (String state : List.of("liquid", "gas", "plasma")) {
+            String expectedId = registration.fluid(state).orElse(null);
+            if (expectedId == null) {
+                helper.fail("material registration missing fluid state " + state + ": " + registration.fluids());
+                return;
+            }
+            GtFluidStatus status = fluids.stream()
+                    .filter(fluid -> state.equals(fluid.stateKey()))
+                    .findFirst().orElse(null);
+            if (status == null || !status.present()) {
+                helper.fail("material fluid form " + state + " not present in GT registry: " + fluids);
+                return;
+            }
+            if (!GtAdapter.DEMO_MATERIAL.equals(status.materialKey())) {
+                helper.fail("fluid " + state + " not linked to material: " + status);
+                return;
+            }
+            if (!expectedId.equals(status.fluidId())) {
+                helper.fail("fluid " + state + " registered at " + status.fluidId() + ", expected " + expectedId);
+                return;
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void standaloneFluidIsRegisteredAndQueryable(GameTestHelper helper) {
+        GtAdapter adapter = GtAdapter.get();
+        FluidRegistration registration = adapter.registeredFluid(GtAdapter.DEMO_FLUID).orElse(null);
+        if (registration == null) {
+            helper.fail("standalone fluid " + GtAdapter.DEMO_FLUID + " was not registered through the GTSN registrar");
+            return;
+        }
+        if (!registration.standalone()) {
+            helper.fail("fluid " + GtAdapter.DEMO_FLUID + " unexpectedly linked to material "
+                    + registration.materialKey());
+            return;
+        }
+        GtFluidStatus status = adapter.fluidStatus(GtAdapter.DEMO_FLUID);
+        if (!status.present()) {
+            helper.fail("standalone fluid " + GtAdapter.DEMO_FLUID + " absent from GT registry: " + status);
+            return;
+        }
+        if (status.materialLinked()) {
+            helper.fail("standalone fluid reported material link: " + status);
+            return;
+        }
+        if (!"gas".equals(status.stateKey())) {
+            helper.fail("standalone fluid state was " + status.stateKey());
+            return;
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void gtsnlibGtFluidCommandReportsFluid(GameTestHelper helper) {
+        CommandOutput output = runCommand(helper, "gtsnlib gt fluid gtsnlib:star_alloy_plasma");
+
+        if (output.result() != 1) {
+            helper.fail("/gtsnlib gt fluid returned " + output.result());
+            return;
+        }
+        boolean present = output.messages().stream()
+                .anyMatch(line -> line.contains("fluid gtsnlib:star_alloy_plasma: present @ gtsnlib:star_alloy_plasma")
+                        && line.contains("state=plasma")
+                        && line.contains("[material gtsnlib:star_alloy]"));
+        if (!present) {
+            helper.fail("/gtsnlib gt fluid output was " + output.messages());
             return;
         }
         helper.succeed();

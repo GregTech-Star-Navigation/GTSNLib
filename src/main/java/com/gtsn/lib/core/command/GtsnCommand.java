@@ -7,6 +7,8 @@ import com.gtsn.lib.core.GtsnIntegrations;
 import com.gtsn.lib.core.IntegrationSummary;
 import com.gtsn.lib.gt.adapter.GtAdapter;
 import com.gtsn.lib.gt.adapter.GtAdapterReport;
+import com.gtsn.lib.gt.adapter.GtFluidReport;
+import com.gtsn.lib.gt.adapter.GtFluidStatus;
 import com.gtsn.lib.gt.adapter.GtPartStatus;
 import com.gtsn.lib.gt.adapter.GtQueryResult;
 import com.gtsn.lib.gt.registration.MaterialPart;
@@ -49,7 +51,10 @@ public final class GtsnCommand {
                         .executes(GtsnCommand::executeGt)
                         .then(Commands.literal("material")
                                 .then(Commands.argument("id", StringArgumentType.greedyString())
-                                        .executes(GtsnCommand::executeGtMaterial)))));
+                                        .executes(GtsnCommand::executeGtMaterial)))
+                        .then(Commands.literal("fluid")
+                                .then(Commands.argument("id", StringArgumentType.greedyString())
+                                        .executes(GtsnCommand::executeGtFluid)))));
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {
@@ -100,7 +105,24 @@ public final class GtsnCommand {
             lines.add("registration " + id + ": absent");
         }
 
+        for (GtFluidStatus fluid : adapter.materialFluids(id)) {
+            lines.add(GtFluidReport.materialFluidLine(fluid));
+        }
+
         for (String line : lines) {
+            context.getSource().sendSuccess(() -> Component.literal(line), false);
+        }
+        return 1;
+    }
+
+    /**
+     * {@code /gtsnlib gt fluid <id>}：查询流体在 GT 流体注册表中的存在性与物态，
+     * 并在命中材料流体形态或一次性流体登记时打印材料关联（#13 的游戏内证据）。
+     */
+    private static int executeGtFluid(CommandContext<CommandSourceStack> context) {
+        String id = StringArgumentType.getString(context, "id");
+        GtFluidStatus status = GtAdapter.get().fluidStatus(id);
+        for (String line : GtFluidReport.commandLines(status)) {
             context.getSource().sendSuccess(() -> Component.literal(line), false);
         }
         return 1;

@@ -1,5 +1,8 @@
 package com.gtsn.lib.gt.adapter;
 
+import com.gtsn.lib.gt.registration.FluidRegistration;
+import com.gtsn.lib.gt.registration.FluidSpec;
+import com.gtsn.lib.gt.registration.FluidState;
 import com.gtsn.lib.gt.registration.MaterialPart;
 import com.gtsn.lib.gt.registration.MaterialRegistration;
 import com.gtsn.lib.gt.registration.MaterialSpec;
@@ -7,12 +10,15 @@ import com.gtsn.lib.gt.registration.MaterialSpec;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -29,6 +35,11 @@ class GtAdapterTest {
     private static final List<GtTagPrefixRef> PREFIXES = List.of(
             new GtTagPrefixRef("ingot", "ingot", "tagprefix.ingot"),
             new GtTagPrefixRef("tinyDust", "tiny_dust", "tagprefix.tiny_dust"));
+
+    /** 假后端认为已注册的流体资源位置（state 由路径后缀推导）。 */
+    private static final Set<String> PRESENT_FLUIDS = Set.of(
+            "gtsnlib:liquid_air", "gtsnlib:star_alloy",
+            "gtsnlib:star_alloy_gas", "gtsnlib:star_alloy_plasma");
 
     private static GtBackend backend(boolean available) {
         return new GtBackend() {
@@ -54,7 +65,33 @@ class GtAdapterTest {
 
             @Override
             public MaterialRegistration registerMaterial(MaterialSpec spec) {
-                throw new UnsupportedOperationException("not needed for lookup tests");
+                Map<String, String> fluids = new LinkedHashMap<>();
+                for (FluidState state : spec.fluidStates()) {
+                    fluids.put(state.key(), switch (state) {
+                        case LIQUID -> spec.key();
+                        case GAS -> spec.key() + "_gas";
+                        case PLASMA -> spec.key() + "_plasma";
+                    });
+                }
+                return new MaterialRegistration(spec.id(), spec.namespace(), spec.key(),
+                        Map.of(), List.of(), fluids);
+            }
+
+            @Override
+            public FluidRegistration registerFluid(FluidSpec spec) {
+                return new FluidRegistration(spec.id(), spec.namespace(), spec.key(), spec.state(),
+                        spec.material().map(FluidSpec.MaterialLink::key).orElse(""),
+                        spec.namespace() + ":" + spec.id());
+            }
+
+            @Override
+            public GtFluidStatus fluidStatus(String fluidId) {
+                if (PRESENT_FLUIDS.contains(fluidId)) {
+                    String state = fluidId.endsWith("_gas") ? "gas"
+                            : fluidId.endsWith("_plasma") ? "plasma" : "liquid";
+                    return GtFluidStatus.present(fluidId, available, fluidId, state, "");
+                }
+                return GtFluidStatus.missing(fluidId, available, "", "", "");
             }
 
             @Override
@@ -134,5 +171,78 @@ class GtAdapterTest {
         assertEquals("gold", result.query());
         assertEquals("", result.materialResourceLocation());
         assertEquals(2, result.tagPrefixCount());
+    }
+
+    // ---- #13: fluid / gas / plasma ----
+
+    @Test
+    void fluidStatusResolvesMaterialFluidForm() {
+        GtAdapter adapter = adapter();
+        adapter.registerMaterial(MaterialSpec.builder("gtsnlib", "star_alloy")
+                .parts(MaterialPart.INGOT)
+                .fluids(FluidState.LIQUID, FluidState.GAS, FluidState.PLASMA)
+                .build());
+
+        GtFluidStatus status = adapter.fluidStatus("gtsnlib:star_alloy_gas");
+
+        assertTrue(status.present());
+        assertEquals("gas", status.stateKey());
+        assertEquals("gtsnlib:star_alloy", status.materialKey());
+        assertEquals("gtsnlib:star_alloy_gas", status.fluidId());
+    }
+
+    @Test
+    void materialFluidsListsDeclaredStates() {
+        GtAdapter adapter = adapter();
+        adapter.registerMaterial(MaterialSpec.builder("gtsnlib", "star_alloy")
+                .parts(MaterialPart.INGOT)
+                .fluids(FluidState.LIQUID, FluidState.GAS, FluidState.PLASMA)
+                .build());
+
+        List<GtFluidStatus> fluids = adapter.materialFluids("gtsnlib:star_alloy");
+
+        assertEquals(3, fluids.size());
+        assertTrue(fluids.stream().allMatch(GtFluidStatus::present));
+        assertTrue(fluids.stream().allMatch(GtFluidStatus::materialLinked));
+        assertEquals(Set.of("liquid", "gas", "plasma"),
+                fluids.stream().map(GtFluidStatus::stateKey).collect(java.util.stream.Collectors.toSet()));
+    }
+
+    @Test
+    void fluidStatusResolvesStandaloneFluid() {
+        GtAdapter adapter = adapter();
+        adapter.registerFluid(FluidSpec.builder("gtsnlib", "liquid_air")
+                .standalone()
+                .state(FluidState.GAS)
+                .build());
+
+        assertTrue(adapter.isFluidRegistered("gtsnlib:liquid_air"));
+        GtFluidStatus status = adapter.fluidStatus("gtsnlib:liquid_air");
+
+        assertTrue(status.present());
+        assertFalse(status.materialLinked());
+        assertEquals("gas", status.stateKey());
+        assertEquals("gtsnlib:liquid_air", status.fluidId());
+    }
+
+    @Test
+    void rejectsDuplicateFluidRegistration() {
+        GtAdapter adapter = adapter();
+        FluidSpec spec = FluidSpec.builder("gtsnlib", "liquid_air")
+                .standalone()
+                .state(FluidState.GAS)
+                .build();
+        adapter.registerFluid(spec);
+
+        assertThrows(IllegalArgumentException.class, () -> adapter.registerFluid(spec));
+    }
+
+    @Test
+    void fluidStatusReportsAbsent() {
+        GtFluidStatus status = adapter().fluidStatus("gtsnlib:nope");
+
+        assertFalse(status.present());
+        assertEquals("", status.fluidId());
+        assertEquals("gtsnlib:nope", status.query());
     }
 }

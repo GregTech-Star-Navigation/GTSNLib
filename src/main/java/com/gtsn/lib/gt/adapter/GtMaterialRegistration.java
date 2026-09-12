@@ -1,6 +1,9 @@
 package com.gtsn.lib.gt.adapter;
 
 import com.gtsn.lib.GTSNLib;
+import com.gtsn.lib.gt.registration.FluidRegistration;
+import com.gtsn.lib.gt.registration.FluidSpec;
+import com.gtsn.lib.gt.registration.FluidState;
 import com.gtsn.lib.gt.registration.MaterialIcon;
 import com.gtsn.lib.gt.registration.MaterialPart;
 import com.gtsn.lib.gt.registration.MaterialRegistration;
@@ -43,18 +46,38 @@ public final class GtMaterialRegistration {
         LOGGER.info("[GTSNLib] created GTCEu material registry for {}", NAMESPACE);
     }
 
-    /** 通过声明式 DSL 注册演示材料，验证衍生件、矿词与配方钩子接缝。 */
+    /**
+     * 通过声明式 DSL 注册演示材料（含液体/气体/等离子体三种流体形态）与一种一次性流体，
+     * 验证衍生件、矿词、配方钩子与流体注册接缝（#12/#13）。
+     */
     @SubscribeEvent
     public static void onMaterial(MaterialEvent event) {
+        GtAdapter adapter = GtAdapter.get();
+
         MaterialSpec spec = MaterialSpec.builder(NAMESPACE, GtAdapter.DEMO_MATERIAL_ID)
                 .color(0x8A2BE2)
                 .iconSet(MaterialIcon.METALLIC)
                 .parts(MaterialPart.INGOT, MaterialPart.PLATE, MaterialPart.DUST, MaterialPart.ROD)
+                .fluids(FluidState.LIQUID, FluidState.GAS, FluidState.PLASMA)
                 .recipeHook(GtMaterialRegistration::logRecipeHook)
                 .build();
-        MaterialRegistration registration = GtAdapter.get().registerMaterial(spec);
-        LOGGER.info("[GTSNLib] registered GTCEu material {} | derived parts: {} | ore tags: {}",
-                registration.resourceLocation(), registration.derivedItems(), registration.oreTags());
+        MaterialRegistration registration = adapter.registerMaterial(spec);
+        LOGGER.info("[GTSNLib] registered GTCEu material {} | derived parts: {} | ore tags: {} | fluids: {}",
+                registration.resourceLocation(), registration.derivedItems(),
+                registration.oreTags(), registration.fluids());
+
+        // 一次性（无材料）流体：验证 standalone 注册路径与游戏内可查询性。
+        FluidSpec fluid = FluidSpec.builder(NAMESPACE, GtAdapter.DEMO_FLUID_ID)
+                .standalone()
+                .state(FluidState.GAS)
+                .color(0x88CCFF)
+                .temperature(300)
+                .hasBlock(false)
+                .hasBucket(true)
+                .build();
+        FluidRegistration fluidRegistration = adapter.registerFluid(fluid);
+        LOGGER.info("[GTSNLib] registered standalone GTCEu fluid {} | state: {} | bucket: {}",
+                fluidRegistration.fluidId(), fluidRegistration.stateKey(), fluidRegistration.standalone());
     }
 
     private static void logRecipeHook(MaterialRegistration registration) {

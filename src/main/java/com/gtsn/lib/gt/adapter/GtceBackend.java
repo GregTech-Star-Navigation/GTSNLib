@@ -1,5 +1,8 @@
 package com.gtsn.lib.gt.adapter;
 
+import com.gtsn.lib.gt.registration.FluidRegistration;
+import com.gtsn.lib.gt.registration.FluidSpec;
+import com.gtsn.lib.gt.registration.FluidState;
 import com.gtsn.lib.gt.registration.MaterialComponent;
 import com.gtsn.lib.gt.registration.MaterialPart;
 import com.gtsn.lib.gt.registration.MaterialRegistration;
@@ -9,24 +12,33 @@ import com.gregtechceu.gtceu.api.GTCEuAPI;
 import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
 import com.gregtechceu.gtceu.api.data.chemical.Element;
 import com.gregtechceu.gtceu.api.data.chemical.material.IMaterialRegistryManager;
+import com.gregtechceu.gtceu.api.data.chemical.material.MarkerMaterial;
 import com.gregtechceu.gtceu.api.data.chemical.material.Material;
 import com.gregtechceu.gtceu.api.data.chemical.material.info.MaterialFlag;
 import com.gregtechceu.gtceu.api.data.chemical.material.info.MaterialFlags;
 import com.gregtechceu.gtceu.api.data.chemical.material.info.MaterialIconSet;
 import com.gregtechceu.gtceu.api.data.chemical.material.registry.MaterialRegistry;
 import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
+import com.gregtechceu.gtceu.api.fluids.GTFluid;
+import com.gregtechceu.gtceu.api.fluids.store.FluidStorageKey;
+import com.gregtechceu.gtceu.api.fluids.store.FluidStorageKeys;
+import com.gregtechceu.gtceu.api.registry.registrate.GTRegistrate;
+import com.gregtechceu.gtceu.api.registry.registrate.IGTFluidBuilder;
 import com.gregtechceu.gtceu.common.data.GTElements;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -65,6 +77,20 @@ import java.util.Set;
  */
 final class GtceBackend implements GtBackend {
 
+    /**
+     * 独立（无材料）流体的元数据载体。
+     *
+     * <p>GTCEu 7.5.3 的 {@code GTRegistrate#createFluid} 需要一个 {@link Material} 仅用于
+     * 语言键 / 贴图命名；{@link MarkerMaterial} 不进入材料注册表、不参与任何物品生成（见
+     * {@code MarkerMaterial#registerMaterial()} 为空实现），因此是承载一次性流体的干净载体。</p>
+     */
+    private static final Material STANDALONE_CARRIER =
+            new MarkerMaterial(new ResourceLocation("gtsnlib", "standalone_fluid"));
+
+    /** 一次性流体默认贴图（GTCEu 自带的中性流体贴图，附属 mod 可另行提供自定义贴图）。 */
+    private static final ResourceLocation DEFAULT_STILL =
+            new ResourceLocation("gtceu", "block/fluids/fluid.air");
+
     @Override
     public boolean available() {
         return GTCEuAPI.materialManager != null;
@@ -101,21 +127,12 @@ final class GtceBackend implements GtBackend {
 
     @Override
     public GtRegistrateHandle registrate(String modId) {
-        return GtRegistrateHandle.create(modId);
+        return GtRegistrateHandle.of(modId, requireRegistry(modId).getRegistrate());
     }
 
     @Override
     public MaterialRegistration registerMaterial(MaterialSpec spec) {
-        IMaterialRegistryManager manager = GTCEuAPI.materialManager;
-        if (manager == null) {
-            throw new IllegalStateException("GTCEu material registry is unavailable");
-        }
-        MaterialRegistry registry = manager.getRegistry(spec.namespace());
-        if (!spec.namespace().equals(registry.getModid())) {
-            throw new IllegalStateException("no GTCEu material registry for namespace '" + spec.namespace()
-                    + "'; create it during MaterialRegistryEvent before registering materials");
-        }
-
+        requireRegistry(spec.namespace());
         Material material = buildMaterial(spec);
 
         Map<String, String> derivedItems = new LinkedHashMap<>();
@@ -128,7 +145,70 @@ final class GtceBackend implements GtBackend {
                 oreTags.add(tag.location().toString());
             }
         }
-        return new MaterialRegistration(spec.id(), spec.namespace(), spec.key(), derivedItems, oreTags);
+
+        // 材料流体形态的 GT 资源位置在其构建期即可确定性推导：#13 的“与材料注册正确关联”。
+        Map<String, String> fluids = new LinkedHashMap<>();
+        for (FluidState state : FluidState.values()) {
+            if (!spec.fluidStates().contains(state)) {
+                continue;
+            }
+            FluidStorageKey key = storageKeyFor(state);
+            String path = key.getRegistryNameFor(material);
+            fluids.put(state.key(), spec.namespace() + ":" + path);
+        }
+        return new MaterialRegistration(spec.id(), spec.namespace(), spec.key(), derivedItems, oreTags, fluids);
+    }
+
+    @Override
+    public FluidRegistration registerFluid(FluidSpec spec) {
+        MaterialRegistry registry = requireRegistry(spec.namespace());
+
+        Material material = spec.material()
+                .map(link -> {
+                    Material linked = GTCEuAPI.materialManager.getMaterial(link.key());
+                    if (linked == null) {
+                        throw new IllegalArgumentException("fluid '" + spec.key()
+                                + "' references unknown GTCEu material: " + link.key());
+                    }
+                    return linked;
+                })
+                .orElse(STANDALONE_CARRIER);
+
+        GTRegistrate registrate = registry.getRegistrate();
+        IGTFluidBuilder builder = registrate
+                .createFluid(spec.id(), "gtceu.fluid.generic", material, DEFAULT_STILL, DEFAULT_STILL)
+                .temperature(spec.temperature())
+                .density(spec.density())
+                .luminance(spec.luminosity())
+                .viscosity(spec.viscosity())
+                .burnTime(spec.burnTime())
+                .hasBlock(spec.hasBlock())
+                .hasBucket(spec.hasBucket())
+                .color(spec.color() | 0xFF000000)
+                .state(gtStateFor(spec.state()));
+        builder.registerFluid();
+
+        String materialKey = spec.material().map(FluidSpec.MaterialLink::key).orElse("");
+        return new FluidRegistration(spec.id(), spec.namespace(), spec.key(), spec.state(),
+                materialKey, spec.namespace() + ":" + spec.id());
+    }
+
+    @Override
+    public GtFluidStatus fluidStatus(String fluidId) {
+        String query = fluidId == null ? "" : fluidId;
+        boolean available = GTCEuAPI.materialManager != null;
+        ResourceLocation location = parseFluidLocation(query);
+        if (location == null) {
+            return GtFluidStatus.missing(query, available, "", "", "");
+        }
+        Fluid fluid = ForgeRegistries.FLUIDS.getValue(location);
+        if (fluid == null) {
+            return GtFluidStatus.missing(query, available, "", "", "");
+        }
+        String stateKey = fluid instanceof GTFluid gtFluid
+                ? gtFluid.getState().name().toLowerCase(Locale.ROOT)
+                : "";
+        return GtFluidStatus.present(query, available, location.toString(), stateKey, "");
     }
 
     @Override
@@ -201,7 +281,61 @@ final class GtceBackend implements GtBackend {
             builder.components(pairs.toArray());
         }
 
+        // 材料流体形态（#13）：按固定顺序声明，保证主物态确定，流体资源位置可推导。
+        for (FluidState state : FluidState.values()) {
+            if (!spec.fluidStates().contains(state)) {
+                continue;
+            }
+            switch (state) {
+                case LIQUID -> builder.liquid();
+                case GAS -> builder.gas();
+                case PLASMA -> builder.plasma();
+            }
+        }
+
         return builder.buildAndRegister();
+    }
+
+    /** 校验并返回给定命名空间的 GTCEu 材料注册表（缺失时给出可诊断错误）。 */
+    private static MaterialRegistry requireRegistry(String namespace) {
+        IMaterialRegistryManager manager = GTCEuAPI.materialManager;
+        if (manager == null) {
+            throw new IllegalStateException("GTCEu material registry is unavailable");
+        }
+        MaterialRegistry registry = manager.getRegistry(namespace);
+        if (registry == null || !namespace.equals(registry.getModid())) {
+            throw new IllegalStateException("no GTCEu material registry for namespace '" + namespace
+                    + "'; create it during MaterialRegistryEvent before registering materials");
+        }
+        return registry;
+    }
+
+    /** 声明式物态 → GTCEu 流体存储键。 */
+    private static FluidStorageKey storageKeyFor(FluidState state) {
+        return switch (state) {
+            case LIQUID -> FluidStorageKeys.LIQUID;
+            case GAS -> FluidStorageKeys.GAS;
+            case PLASMA -> FluidStorageKeys.PLASMA;
+        };
+    }
+
+    /** 声明式物态 → GTCEu 流体物态。 */
+    private static com.gregtechceu.gtceu.api.fluids.FluidState gtStateFor(FluidState state) {
+        return switch (state) {
+            case LIQUID -> com.gregtechceu.gtceu.api.fluids.FluidState.LIQUID;
+            case GAS -> com.gregtechceu.gtceu.api.fluids.FluidState.GAS;
+            case PLASMA -> com.gregtechceu.gtceu.api.fluids.FluidState.PLASMA;
+        };
+    }
+
+    /** 解析流体资源位置；裸路径默认补全 GTSNLib 命名空间。非法输入返回 {@code null}。 */
+    private static ResourceLocation parseFluidLocation(String query) {
+        String raw = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
+        if (raw.isEmpty()) {
+            return null;
+        }
+        String candidate = raw.indexOf(':') >= 0 ? raw : "gtsnlib:" + raw;
+        return ResourceLocation.tryParse(candidate);
     }
 
     /** 声明部件 → GTCEu tag prefix。每个部件都有独立、已验证的映射。 */

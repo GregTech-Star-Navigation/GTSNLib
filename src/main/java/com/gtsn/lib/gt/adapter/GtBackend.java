@@ -1,5 +1,7 @@
 package com.gtsn.lib.gt.adapter;
 
+import com.gtsn.lib.gt.registration.FluidRegistration;
+import com.gtsn.lib.gt.registration.FluidSpec;
 import com.gtsn.lib.gt.registration.MaterialPart;
 import com.gtsn.lib.gt.registration.MaterialRegistration;
 import com.gtsn.lib.gt.registration.MaterialSpec;
@@ -30,6 +32,18 @@ interface GtBackend {
 
     /** 将声明式材料翻译并注册进 GTCEu，返回结果视图（材料注册简化层的翻译点）。 */
     MaterialRegistration registerMaterial(MaterialSpec spec);
+
+    /** 将声明式流体翻译并注册进 GTCEu，返回结果视图（流体注册简化层的翻译点，#13）。 */
+    FluidRegistration registerFluid(FluidSpec spec);
+
+    /**
+     * 实时查询 GT 流体注册表中给定资源位置的物态与存在性（#13）。
+     *
+     * <p>返回视图的材料关联由门面 {@link GtAdapter} 依据注册记录补齐；后端只负责注册表事实。</p>
+     *
+     * @param fluidId 流体资源位置（{@code namespace:path}）
+     */
+    GtFluidStatus fluidStatus(String fluidId);
 
     /**
      * 实时查询给定材料各声明部件在 GTCEu 中的生成状态与矿词。

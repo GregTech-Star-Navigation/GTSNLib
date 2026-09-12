@@ -25,10 +25,16 @@ public final class GtRegistrateHandle {
         this.registrate = registrate;
     }
 
-    /** 通过 GTCEu 7.5.3 的 {@code GTRegistrate.create(String)} 建立注册入口。 */
-    static GtRegistrateHandle create(String modId) {
+    /**
+     * 包装给定命名空间材料注册表自带的 {@link GTRegistrate}。
+     *
+     * <p>必须使用 {@code GTCEuAPI.materialManager.getRegistry(modId).getRegistrate()}：GTCEu 会为每个
+     * 材料注册表的 registrate 挂接 {@code RegisterEvent} 监听（见 GTCEu 7.5.3 {@code CommonProxy#init}），
+     * 而孤立的 {@code GTRegistrate.create(modId)} 从未挂接事件总线，其条目不会被注册。</p>
+     */
+    static GtRegistrateHandle of(String modId, GTRegistrate registrate) {
         Objects.requireNonNull(modId, "modId");
-        return new GtRegistrateHandle(modId, GTRegistrate.create(modId));
+        return new GtRegistrateHandle(modId, Objects.requireNonNull(registrate, "registrate"));
     }
 
     /** 该注册入口所属的 ModID。 */

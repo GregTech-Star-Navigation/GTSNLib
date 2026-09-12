@@ -24,15 +24,20 @@ import org.slf4j.Logger;
  *
  * <ul>
  *   <li>注册客户端命令 {@code /gtsnui}（经 Forge {@link RegisterClientCommandsEvent}，本地执行、不发往服务器）。</li>
- *   <li>开发自动测试：设置环境变量 {@code GTSNLIB_UI_AUTOTEST=1} 后，客户端进入标题界面时自动打开
- *       开发测试界面，注入合成点击/字符输入，随后逐主题点击“主题”按钮并各抓一张截图
- *       （{@code run/screenshots/gtsnlib-ui-theme-<主题>.png}），最后自动退出客户端。</li>
+ *   <li>开发自动测试（环境变量 {@code GTSNLIB_UI_AUTOTEST}）：
+ *       <ul>
+ *         <li>{@code =1}：客户端进入标题界面后自动打开开发测试界面，注入合成点击/字符输入，随后逐主题点击
+ *             “主题”按钮并各抓一张截图（{@code run/screenshots/gtsnlib-ui-theme-<主题>.png}），最后退出。</li>
+ *         <li>{@code =sync}（#19）：创建/载入固定存档后在游戏内打开数据同步演示菜单，采样客户端/服务端同步值
+ *             并抓图（{@code run/screenshots/gtsnlib-ui-sync-demo.png}），最后退出（见 {@link GtsnUiSyncAutotest}）。</li>
+ *       </ul>
+ *   </li>
  * </ul>
  */
 @Mod.EventBusSubscriber(modid = GTSNLib.MOD_ID, bus = Bus.FORGE, value = Dist.CLIENT)
 public final class GtsnUiClient {
 
-    /** 自动测试开关：环境变量值为 {@code 1} 时启用（runClient 继承进程环境变量）。 */
+    /** 自动测试开关：环境变量为 {@code 1}（组件库/主题）或 {@code sync}（数据同步演示）时启用。 */
     public static final String AUTOTEST_ENV = "GTSNLIB_UI_AUTOTEST";
 
     private static final String SCREENSHOT_PREFIX = "gtsnlib-ui-theme-";
@@ -66,10 +71,18 @@ public final class GtsnUiClient {
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || !"1".equals(System.getenv(AUTOTEST_ENV))) {
+        if (event.phase != TickEvent.Phase.END) {
             return;
         }
+        String mode = System.getenv(AUTOTEST_ENV);
         Minecraft minecraft = Minecraft.getInstance();
+        if (GtsnUiSyncAutotest.MODE.equals(mode)) {
+            GtsnUiSyncAutotest.tick(minecraft);
+            return;
+        }
+        if (!"1".equals(mode)) {
+            return;
+        }
         if (minecraft.screen instanceof GtsnUiTestScreen testScreen) {
             tickAutotest(minecraft, testScreen);
             return;

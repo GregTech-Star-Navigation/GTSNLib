@@ -5,6 +5,8 @@ import com.gtsn.lib.ui.input.InputRouter;
 import com.gtsn.lib.ui.layout.LayoutEngine;
 import com.gtsn.lib.ui.layout.Rect;
 import com.gtsn.lib.ui.render.RenderContext;
+import com.gtsn.lib.ui.theme.Theme;
+import com.gtsn.lib.ui.theme.ThemeColorRole;
 import com.gtsn.lib.ui.widget.Tooltip;
 import com.gtsn.lib.ui.widget.Widget;
 
@@ -15,16 +17,13 @@ import java.util.Optional;
 /**
  * 控件泊点：持有一棵控件树、驱动布局（resize）、渲染与输入派发。
  *
- * <p>本类不依赖 Minecraft，客户端的 {@code GtsnScreen} 只是它的薄壳（转发生命周期回调与坐标）。</p>
+ * <p>本类不依赖 Minecraft，客户端的 {@code GtsnScreen} 只是它的薄壳（转发生命周期回调与坐标）。
+ * 工具提示配色取渲染上下文当前主题的 {@code TOOLTIP_*} 角色。</p>
  */
 public final class WidgetHost {
 
     /** 工具提示内边距（像素）。 */
     public static final int TOOLTIP_PADDING = 4;
-
-    private static final int TOOLTIP_BACKGROUND = 0xF0101418;
-    private static final int TOOLTIP_BORDER = 0xFF8FB0C8;
-    private static final int TOOLTIP_TEXT = 0xFFFFFFFF;
 
     private final Widget root;
     private final InputRouter router;
@@ -112,14 +111,18 @@ public final class WidgetHost {
             return;
         }
         Rect box = layoutTooltip(tooltip, context);
-        context.fill(box.x(), box.y(), box.width(), box.height(), TOOLTIP_BACKGROUND);
-        context.fill(box.x(), box.y(), box.width(), 1, TOOLTIP_BORDER);
-        context.fill(box.x(), box.bottom() - 1, box.width(), 1, TOOLTIP_BORDER);
-        context.fill(box.x(), box.y() + 1, 1, box.height() - 2, TOOLTIP_BORDER);
-        context.fill(box.right() - 1, box.y() + 1, 1, box.height() - 2, TOOLTIP_BORDER);
+        Theme theme = context.theme();
+        int background = theme.color(ThemeColorRole.TOOLTIP_BACKGROUND);
+        int border = theme.color(ThemeColorRole.TOOLTIP_BORDER);
+        int textColor = theme.color(ThemeColorRole.TOOLTIP_TEXT);
+        context.fill(box.x(), box.y(), box.width(), box.height(), background);
+        context.fill(box.x(), box.y(), box.width(), 1, border);
+        context.fill(box.x(), box.bottom() - 1, box.width(), 1, border);
+        context.fill(box.x(), box.y() + 1, 1, box.height() - 2, border);
+        context.fill(box.right() - 1, box.y() + 1, 1, box.height() - 2, border);
         int lineY = box.y() + TOOLTIP_PADDING;
         for (String line : tooltip.lines()) {
-            context.text(line, box.x() + TOOLTIP_PADDING, lineY, TOOLTIP_TEXT, false);
+            context.text(line, box.x() + TOOLTIP_PADDING, lineY, textColor, false);
             lineY += context.textLineHeight();
         }
     }

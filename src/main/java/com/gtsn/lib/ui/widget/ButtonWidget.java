@@ -7,12 +7,15 @@ import com.gtsn.lib.ui.layout.Rect;
 import com.gtsn.lib.ui.layout.Size;
 import com.gtsn.lib.ui.layout.Sizing;
 import com.gtsn.lib.ui.render.RenderContext;
+import com.gtsn.lib.ui.theme.Theme;
+import com.gtsn.lib.ui.theme.ThemeColor;
+import com.gtsn.lib.ui.theme.ThemeColorRole;
 
 import java.util.Objects;
 
 /**
  * 按钮控件：鼠标点击（按下与释放在同一边界内）或在聚焦时按 Enter/Space 触发回调。
- * 具备悬停/按下/聚焦三态视觉。
+ * 具备悬停/按下/聚焦三态视觉；颜色默认取主题角色，{@link #colors} 可字面量覆盖。
  */
 public final class ButtonWidget extends AbstractWidget {
 
@@ -20,12 +23,12 @@ public final class ButtonWidget extends AbstractWidget {
     private final Runnable onClick;
     private String label;
 
-    private int idleFill = 0xFF3B3B3B;
-    private int hoverFill = 0xFF4C4C4C;
-    private int pressedFill = 0xFF2B2B2B;
-    private int borderColor = 0xFF8A8A8A;
-    private int focusBorderColor = 0xFF7FB8FF;
-    private int textColor = 0xFFF0F0F0;
+    private ThemeColor idleFill = ThemeColor.role(ThemeColorRole.BUTTON_BACKGROUND);
+    private ThemeColor hoverFill = ThemeColor.role(ThemeColorRole.BUTTON_BACKGROUND_HOVERED);
+    private ThemeColor pressedFill = ThemeColor.role(ThemeColorRole.BUTTON_BACKGROUND_PRESSED);
+    private ThemeColor borderColor = ThemeColor.role(ThemeColorRole.BORDER);
+    private ThemeColor focusBorderColor = ThemeColor.role(ThemeColorRole.FOCUS_RING);
+    private ThemeColor textColor = ThemeColor.role(ThemeColorRole.TEXT_STRONG);
 
     private boolean hovered;
     private boolean pressed;
@@ -86,11 +89,12 @@ public final class ButtonWidget extends AbstractWidget {
         return ButtonState.NORMAL;
     }
 
+    /** 字面量覆盖四态颜色（不随主题变化）。 */
     public ButtonWidget colors(int idleFill, int hoverFill, int pressedFill, int textColor) {
-        this.idleFill = idleFill;
-        this.hoverFill = hoverFill;
-        this.pressedFill = pressedFill;
-        this.textColor = textColor;
+        this.idleFill = ThemeColor.literal(idleFill);
+        this.hoverFill = ThemeColor.literal(hoverFill);
+        this.pressedFill = ThemeColor.literal(pressedFill);
+        this.textColor = ThemeColor.literal(textColor);
         return this;
     }
 
@@ -122,9 +126,15 @@ public final class ButtonWidget extends AbstractWidget {
     @Override
     protected void onRender(RenderContext context) {
         Rect box = bounds();
-        int fill = !enabled ? 0xFF2A2A2A : pressed ? pressedFill : hovered ? hoverFill : idleFill;
+        Theme theme = context.theme();
+        int fill = !enabled ? theme.color(ThemeColorRole.BACKGROUND_DISABLED)
+                : pressed ? pressedFill.resolve(theme)
+                : hovered ? hoverFill.resolve(theme)
+                : idleFill.resolve(theme);
         context.fill(box.x(), box.y(), box.width(), box.height(), fill);
-        int border = enabled ? (focused ? focusBorderColor : borderColor) : 0xFF5A5A5A;
+        int border = !enabled ? theme.color(ThemeColorRole.BORDER_DISABLED)
+                : focused ? focusBorderColor.resolve(theme)
+                : borderColor.resolve(theme);
         if ((border >>> 24) != 0 && box.width() > 0 && box.height() > 0) {
             context.fill(box.x(), box.y(), box.width(), 1, border);
             context.fill(box.x(), box.bottom() - 1, box.width(), 1, border);
@@ -132,7 +142,8 @@ public final class ButtonWidget extends AbstractWidget {
             context.fill(box.right() - 1, box.y() + 1, 1, box.height() - 2, border);
         }
         int labelY = box.y() + Math.max(0, (box.height() - context.textLineHeight()) / 2);
-        context.centeredText(label, box.x() + box.width() / 2, labelY, enabled ? textColor : 0xFF9A9A9A, false);
+        context.centeredText(label, box.x() + box.width() / 2, labelY,
+                enabled ? textColor.resolve(theme) : theme.color(ThemeColorRole.TEXT_DISABLED), false);
     }
 
     @Override

@@ -5,9 +5,14 @@ import com.gtsn.lib.ui.layout.Rect;
 import com.gtsn.lib.ui.layout.Size;
 import com.gtsn.lib.ui.layout.Sizing;
 import com.gtsn.lib.ui.render.RenderContext;
+import com.gtsn.lib.ui.theme.Theme;
+import com.gtsn.lib.ui.theme.ThemeColor;
+import com.gtsn.lib.ui.theme.ThemeColorRole;
 
 /**
  * 开关控件：滑动轨道 + 滑块 + 标签，点击/键盘切换选中状态。
+ *
+ * <p>颜色默认取主题角色，{@link #colors} 可字面量覆盖。</p>
  */
 public final class ToggleSwitchWidget extends AbstractToggleWidget {
 
@@ -15,13 +20,10 @@ public final class ToggleSwitchWidget extends AbstractToggleWidget {
     private int trackHeight = 12;
     private int knobInset = 2;
     private int gap = 4;
-    private int trackOffColor = 0xFF3A3A3A;
-    private int trackOnColor = 0xFF3F7F5F;
-    private int knobColor = 0xFFE6E6E6;
-    private int borderColor = 0xFF8A8A8A;
-    private int hoverBorderColor = 0xFFB8C8D8;
-    private int textColor = 0xFFE6E6E6;
-    private int disabledTextColor = 0xFF8A8A8A;
+    private ThemeColor trackOffColor = ThemeColor.role(ThemeColorRole.SWITCH_TRACK_OFF);
+    private ThemeColor trackOnColor = ThemeColor.role(ThemeColorRole.SWITCH_TRACK_ON);
+    private ThemeColor knobColor = ThemeColor.role(ThemeColorRole.SWITCH_KNOB);
+    private ThemeColor textColor = ThemeColor.role(ThemeColorRole.TEXT);
 
     public ToggleSwitchWidget(String label, TextMetrics metrics, BooleanConsumer onChange) {
         super(label, metrics, onChange);
@@ -58,10 +60,11 @@ public final class ToggleSwitchWidget extends AbstractToggleWidget {
         return this;
     }
 
+    /** 字面量覆盖轨道 / 滑块颜色（不随主题变化）。 */
     public ToggleSwitchWidget colors(int trackOffColor, int trackOnColor, int knobColor) {
-        this.trackOffColor = trackOffColor;
-        this.trackOnColor = trackOnColor;
-        this.knobColor = knobColor;
+        this.trackOffColor = ThemeColor.literal(trackOffColor);
+        this.trackOnColor = ThemeColor.literal(trackOnColor);
+        this.knobColor = ThemeColor.literal(knobColor);
         return this;
     }
 
@@ -106,17 +109,25 @@ public final class ToggleSwitchWidget extends AbstractToggleWidget {
         if (box.isEmpty()) {
             return;
         }
+        Theme theme = context.theme();
         int trackY = centeredY(box, trackHeight);
         Rect track = Rect.of(box.x(), trackY, Math.min(trackWidth, box.width()), trackHeight);
         context.fill(track.x(), track.y(), track.width(), track.height(),
-                !enabled ? 0xFF2A2A2A : checked ? trackOnColor : trackOffColor);
-        drawBorder(context, track, 1, !enabled ? 0xFF555555 : hovered || pressed ? hoverBorderColor : borderColor);
+                !enabled ? theme.color(ThemeColorRole.BACKGROUND_DISABLED)
+                        : checked ? trackOnColor.resolve(theme)
+                        : trackOffColor.resolve(theme));
+        int border = !enabled ? theme.color(ThemeColorRole.BORDER_DISABLED)
+                : hovered || pressed ? theme.color(ThemeColorRole.BORDER_HOVERED)
+                : theme.color(ThemeColorRole.BORDER);
+        drawBorder(context, track, 1, border);
         Rect knob = knobBounds();
         if (knob.width() > 0 && knob.height() > 0) {
-            context.fill(knob.x(), knob.y(), knob.width(), knob.height(), enabled ? knobColor : 0xFF6A6A6A);
+            context.fill(knob.x(), knob.y(), knob.width(), knob.height(),
+                    enabled ? knobColor.resolve(theme) : theme.color(ThemeColorRole.SWITCH_KNOB_DISABLED));
         }
         int textX = box.x() + track.width() + gap;
         int textY = centeredY(box, context.textLineHeight());
-        context.text(label, textX, textY, enabled ? textColor : disabledTextColor, false);
+        context.text(label, textX, textY,
+                enabled ? textColor.resolve(theme) : theme.color(ThemeColorRole.TEXT_DISABLED), false);
     }
 }

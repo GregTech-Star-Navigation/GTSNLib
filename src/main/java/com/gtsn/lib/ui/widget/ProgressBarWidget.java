@@ -5,13 +5,17 @@ import com.gtsn.lib.ui.layout.Rect;
 import com.gtsn.lib.ui.layout.Size;
 import com.gtsn.lib.ui.layout.Sizing;
 import com.gtsn.lib.ui.render.RenderContext;
+import com.gtsn.lib.ui.theme.Theme;
+import com.gtsn.lib.ui.theme.ThemeColor;
+import com.gtsn.lib.ui.theme.ThemeColorRole;
 
 import java.util.function.DoubleFunction;
 
 /**
  * 进度条控件：数值驱动的比例填充，支持任意区间、边框、渐变与自定义标签。
  *
- * <p>状态逻辑（区间钳制、比例映射）与渲染解耦，可在无 MC 环境中测试。</p>
+ * <p>颜色默认取主题角色（{@code PROGRESS_*} / {@code BORDER}），{@link #colors} 可字面量覆盖；
+ * 状态逻辑（区间钳制、比例映射）与渲染解耦，可在无 MC 环境中测试。</p>
  */
 public final class ProgressBarWidget extends AbstractWidget {
 
@@ -19,10 +23,11 @@ public final class ProgressBarWidget extends AbstractWidget {
     private double max = 1.0;
     private double value;
 
-    private int background = 0xFF101010;
-    private int fillColor = 0xFF3F9F4F;
-    private int borderColor = 0xFF5A5A5A;
-    private int labelColor = 0xFFFFFFFF;
+    private ThemeColor background = ThemeColor.role(ThemeColorRole.PROGRESS_TRACK);
+    private ThemeColor fillColor = ThemeColor.role(ThemeColorRole.PROGRESS_FILL);
+    private ThemeColor fillTopColor = ThemeColor.role(ThemeColorRole.PROGRESS_FILL_TOP);
+    private ThemeColor borderColor = ThemeColor.role(ThemeColorRole.BORDER);
+    private ThemeColor labelColor = ThemeColor.role(ThemeColorRole.TEXT_ON_ACCENT);
     private int borderWidth = 1;
     private boolean gradient;
     private DoubleFunction<String> label;
@@ -69,11 +74,13 @@ public final class ProgressBarWidget extends AbstractWidget {
         return (clamp(value) - min) / (max - min);
     }
 
+    /** 字面量覆盖（不随主题变化）；渐变顶色按填充色自动提亮，保持既有视觉。 */
     public ProgressBarWidget colors(int background, int fillColor, int borderColor, int labelColor) {
-        this.background = background;
-        this.fillColor = fillColor;
-        this.borderColor = borderColor;
-        this.labelColor = labelColor;
+        this.background = ThemeColor.literal(background);
+        this.fillColor = ThemeColor.literal(fillColor);
+        this.fillTopColor = ThemeColor.literal(lighten(fillColor));
+        this.borderColor = ThemeColor.literal(borderColor);
+        this.labelColor = ThemeColor.literal(labelColor);
         return this;
     }
 
@@ -123,29 +130,31 @@ public final class ProgressBarWidget extends AbstractWidget {
         if (box.isEmpty()) {
             return;
         }
-        context.fill(box.x(), box.y(), box.width(), box.height(), background);
+        Theme theme = context.theme();
+        context.fill(box.x(), box.y(), box.width(), box.height(), background.resolve(theme));
         int thickness = Math.min(borderWidth, Math.min(box.width(), box.height()));
-        if (thickness > 0 && (borderColor >>> 24) != 0) {
-            context.fill(box.x(), box.y(), box.width(), thickness, borderColor);
-            context.fill(box.x(), box.bottom() - thickness, box.width(), thickness, borderColor);
-            context.fill(box.x(), box.y() + thickness, thickness, box.height() - 2 * thickness, borderColor);
+        int border = borderColor.resolve(theme);
+        if (thickness > 0 && (border >>> 24) != 0) {
+            context.fill(box.x(), box.y(), box.width(), thickness, border);
+            context.fill(box.x(), box.bottom() - thickness, box.width(), thickness, border);
+            context.fill(box.x(), box.y() + thickness, thickness, box.height() - 2 * thickness, border);
             context.fill(box.right() - thickness, box.y() + thickness, thickness,
-                    box.height() - 2 * thickness, borderColor);
+                    box.height() - 2 * thickness, border);
         }
         Rect inner = box.inset(Insets.all(thickness));
         int fillWidth = (int) Math.round(progress() * inner.width());
         if (fillWidth > 0 && inner.height() > 0) {
             if (gradient) {
                 context.fillGradient(inner.x(), inner.y(), fillWidth, inner.height(),
-                        lighten(fillColor), fillColor);
+                        fillTopColor.resolve(theme), fillColor.resolve(theme));
             } else {
-                context.fill(inner.x(), inner.y(), fillWidth, inner.height(), fillColor);
+                context.fill(inner.x(), inner.y(), fillWidth, inner.height(), fillColor.resolve(theme));
             }
         }
         if (label != null) {
             String text = label.apply(progress());
             int textY = box.y() + Math.max(0, (box.height() - context.textLineHeight()) / 2);
-            context.centeredText(text, box.x() + box.width() / 2, textY, labelColor, false);
+            context.centeredText(text, box.x() + box.width() / 2, textY, labelColor.resolve(theme), false);
         }
     }
 

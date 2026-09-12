@@ -5,20 +5,23 @@ import com.gtsn.lib.ui.layout.Rect;
 import com.gtsn.lib.ui.layout.Size;
 import com.gtsn.lib.ui.layout.Sizing;
 import com.gtsn.lib.ui.render.RenderContext;
+import com.gtsn.lib.ui.theme.Theme;
+import com.gtsn.lib.ui.theme.ThemeColor;
+import com.gtsn.lib.ui.theme.ThemeColorRole;
 
 /**
  * 复选框控件：方形勾选框 + 标签，点击/键盘切换选中状态。
+ *
+ * <p>颜色默认取主题角色，{@link #colors} 可字面量覆盖。</p>
  */
 public final class CheckboxWidget extends AbstractToggleWidget {
 
     private int boxSize = 12;
     private int gap = 4;
-    private int boxBackground = 0xFF1E1E1E;
-    private int borderColor = 0xFF8A8A8A;
-    private int hoverBorderColor = 0xFFB8C8D8;
-    private int checkColor = 0xFF6FD08A;
-    private int textColor = 0xFFE6E6E6;
-    private int disabledTextColor = 0xFF8A8A8A;
+    private ThemeColor boxBackground = ThemeColor.role(ThemeColorRole.CHECKBOX_BACKGROUND);
+    private ThemeColor borderColor = ThemeColor.role(ThemeColorRole.BORDER);
+    private ThemeColor checkColor = ThemeColor.role(ThemeColorRole.CHECK_MARK);
+    private ThemeColor textColor = ThemeColor.role(ThemeColorRole.TEXT);
 
     public CheckboxWidget(String label, TextMetrics metrics, BooleanConsumer onChange) {
         super(label, metrics, onChange);
@@ -49,11 +52,12 @@ public final class CheckboxWidget extends AbstractToggleWidget {
         return this;
     }
 
+    /** 字面量覆盖（不随主题变化）。 */
     public CheckboxWidget colors(int boxBackground, int borderColor, int checkColor, int textColor) {
-        this.boxBackground = boxBackground;
-        this.borderColor = borderColor;
-        this.checkColor = checkColor;
-        this.textColor = textColor;
+        this.boxBackground = ThemeColor.literal(boxBackground);
+        this.borderColor = ThemeColor.literal(borderColor);
+        this.checkColor = ThemeColor.literal(checkColor);
+        this.textColor = ThemeColor.literal(textColor);
         return this;
     }
 
@@ -83,21 +87,27 @@ public final class CheckboxWidget extends AbstractToggleWidget {
         if (box.isEmpty()) {
             return;
         }
+        Theme theme = context.theme();
         int size = Math.min(boxSize, Math.min(box.width(), box.height()));
         int boxY = box.y() + Math.max(0, (box.height() - size) / 2);
         Rect boxRect = Rect.of(box.x(), boxY, size, size);
-        context.fill(boxRect.x(), boxRect.y(), size, size, enabled ? boxBackground : 0xFF242424);
-        drawBorder(context, boxRect, 1, !enabled ? 0xFF555555 : hovered || pressed ? hoverBorderColor : borderColor);
+        context.fill(boxRect.x(), boxRect.y(), size, size,
+                enabled ? boxBackground.resolve(theme) : theme.color(ThemeColorRole.CHECKBOX_DISABLED_BACKGROUND));
+        int border = !enabled ? theme.color(ThemeColorRole.BORDER_DISABLED)
+                : hovered || pressed ? theme.color(ThemeColorRole.BORDER_HOVERED)
+                : borderColor.resolve(theme);
+        drawBorder(context, boxRect, 1, border);
         if (checked) {
-            drawCheck(context, boxRect);
+            drawCheck(context, boxRect, checkColor.resolve(theme));
         }
         int textX = box.x() + size + gap;
         int textY = centeredY(box, context.textLineHeight());
-        context.text(label, textX, textY, enabled ? textColor : disabledTextColor, false);
+        context.text(label, textX, textY,
+                enabled ? textColor.resolve(theme) : theme.color(ThemeColorRole.TEXT_DISABLED), false);
     }
 
     /** 用 4 个短填充近似勾勒对勾（不依赖字体字形）。 */
-    private void drawCheck(RenderContext context, Rect box) {
+    private void drawCheck(RenderContext context, Rect box, int checkColor) {
         int unit = Math.max(1, box.width() / 6);
         int x = box.x() + unit;
         int y = box.y();

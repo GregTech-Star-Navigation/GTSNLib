@@ -6,12 +6,14 @@ import com.gtsn.lib.ui.layout.Insets;
 import com.gtsn.lib.ui.layout.Rect;
 import com.gtsn.lib.ui.layout.Sizing;
 import com.gtsn.lib.ui.render.RenderContext;
+import com.gtsn.lib.ui.theme.ThemeColorRole;
 import com.gtsn.lib.ui.widget.AbstractWidget;
 
 import java.util.Objects;
 
 /**
  * 键盘探针控件：可聚焦，展示最近按键与字符输入（内核输入模型的演示部件，非通用组件）。
+ * 颜色取主题角色（输入框背景 / 边框 / 聚焦环 / 强文本）。
  */
 public final class KeypadWidget extends AbstractWidget {
 
@@ -36,8 +38,11 @@ public final class KeypadWidget extends AbstractWidget {
     @Override
     protected void onRender(RenderContext context) {
         Rect box = bounds();
-        context.fill(box.x(), box.y(), box.width(), box.height(), 0xFF1E1E1E);
-        int border = focused ? 0xFF7FB8FF : 0xFF8A8A8A;
+        context.fill(box.x(), box.y(), box.width(), box.height(),
+                context.theme().color(ThemeColorRole.INPUT_BACKGROUND));
+        int border = focused
+                ? context.theme().color(ThemeColorRole.FOCUS_RING)
+                : context.theme().color(ThemeColorRole.BORDER);
         if (box.width() > 0 && box.height() > 0) {
             context.fill(box.x(), box.y(), box.width(), 1, border);
             context.fill(box.x(), box.bottom() - 1, box.width(), 1, border);
@@ -49,7 +54,8 @@ public final class KeypadWidget extends AbstractWidget {
                 : "点击聚焦后按键";
         String line = "按键: " + state.lastKey() + "  |  " + hint;
         context.text(line, box.x() + 5,
-                box.y() + Math.max(0, (box.height() - context.textLineHeight()) / 2), 0xFFF0F0F0, false);
+                box.y() + Math.max(0, (box.height() - context.textLineHeight()) / 2),
+                context.theme().color(ThemeColorRole.TEXT_STRONG), false);
     }
 
     @Override

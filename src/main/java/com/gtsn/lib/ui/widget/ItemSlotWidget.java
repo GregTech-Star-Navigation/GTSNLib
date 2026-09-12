@@ -8,13 +8,16 @@ import com.gtsn.lib.ui.layout.Size;
 import com.gtsn.lib.ui.layout.Sizing;
 import com.gtsn.lib.ui.render.RenderContext;
 import com.gtsn.lib.ui.render.SlotIcon;
+import com.gtsn.lib.ui.theme.Theme;
+import com.gtsn.lib.ui.theme.ThemeColorRole;
 
 import java.util.Objects;
 
 /**
  * 物品槽控件：槽底（原版风格内凹边框）+ 可插拔图标 + 悬停/按下/选中/禁用状态。
  *
- * <p>内容通过 {@link SlotIcon} 绘制（客户端可传入 {@code ItemStackIcon} 渲染真实物品堆叠）；
+ * <p>槽底与状态覆盖色取自当前主题的 {@code SLOT_*} / {@code OVERLAY_*} / {@code FOCUS_RING} 角色；
+ * 内容通过 {@link SlotIcon} 绘制（客户端可传入 {@code ItemStackIcon} 渲染真实物品堆叠）；
  * 槽位本身不依赖 Minecraft，状态逻辑可无 MC 测试。</p>
  *
  * <p>交互模式：默认纯展示（不聚焦、不消费输入）；{@link #selectable(boolean)} 或
@@ -203,7 +206,8 @@ public final class ItemSlotWidget extends AbstractWidget {
         if (box.isEmpty()) {
             return;
         }
-        drawSlotBackground(context, box);
+        Theme theme = context.theme();
+        drawSlotBackground(context, box, theme);
         SlotIcon current = icon;
         if (current != null) {
             Rect iconArea = box.inset(Insets.all(1));
@@ -212,28 +216,28 @@ public final class ItemSlotWidget extends AbstractWidget {
             }
         }
         if (enabled && hovered) {
-            context.fill(box.x(), box.y(), box.width(), box.height(), 0x40FFFFFF);
+            context.fill(box.x(), box.y(), box.width(), box.height(), theme.color(ThemeColorRole.OVERLAY_HOVER));
         }
         if (enabled && pressed) {
-            context.fill(box.x(), box.y(), box.width(), box.height(), 0x30000000);
+            context.fill(box.x(), box.y(), box.width(), box.height(), theme.color(ThemeColorRole.OVERLAY_PRESSED));
         }
         if (!enabled) {
-            context.fill(box.x(), box.y(), box.width(), box.height(), 0x80000000);
+            context.fill(box.x(), box.y(), box.width(), box.height(), theme.color(ThemeColorRole.OVERLAY_DISABLED));
         }
         if (selected) {
-            drawBorder(context, box, 1, 0xFFFFFFFF);
+            drawBorder(context, box, 1, theme.color(ThemeColorRole.SLOT_SELECTED_BORDER));
         } else if (focused) {
-            drawBorder(context, box, 1, 0xFF7FB8FF);
+            drawBorder(context, box, 1, theme.color(ThemeColorRole.FOCUS_RING));
         }
     }
 
-    /** 原版背包槽风格：浅灰底 + 上左暗边 + 下右亮边。 */
-    private static void drawSlotBackground(RenderContext context, Rect box) {
-        context.fill(box.x(), box.y(), box.width(), box.height(), 0xFF8B8B8B);
-        context.fill(box.x(), box.y(), box.width(), 1, 0xFF373737);
-        context.fill(box.x(), box.y(), 1, box.height(), 0xFF373737);
-        context.fill(box.x(), box.bottom() - 1, box.width(), 1, 0xFFFFFFFF);
-        context.fill(box.right() - 1, box.y(), 1, box.height(), 0xFFFFFFFF);
+    /** 原版背包槽风格：浅灰底 + 上左暗边 + 下右亮边（颜色取主题角色）。 */
+    private static void drawSlotBackground(RenderContext context, Rect box, Theme theme) {
+        context.fill(box.x(), box.y(), box.width(), box.height(), theme.color(ThemeColorRole.SLOT_BACKGROUND));
+        context.fill(box.x(), box.y(), box.width(), 1, theme.color(ThemeColorRole.SLOT_EDGE_DARK));
+        context.fill(box.x(), box.y(), 1, box.height(), theme.color(ThemeColorRole.SLOT_EDGE_DARK));
+        context.fill(box.x(), box.bottom() - 1, box.width(), 1, theme.color(ThemeColorRole.SLOT_EDGE_LIGHT));
+        context.fill(box.right() - 1, box.y(), 1, box.height(), theme.color(ThemeColorRole.SLOT_EDGE_LIGHT));
     }
 
     private static void drawBorder(RenderContext context, Rect box, int thickness, int color) {

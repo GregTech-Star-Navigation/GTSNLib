@@ -8,6 +8,9 @@ import com.gtsn.lib.ui.layout.Rect;
 import com.gtsn.lib.ui.layout.Size;
 import com.gtsn.lib.ui.layout.Sizing;
 import com.gtsn.lib.ui.render.RenderContext;
+import com.gtsn.lib.ui.theme.Theme;
+import com.gtsn.lib.ui.theme.ThemeColor;
+import com.gtsn.lib.ui.theme.ThemeColorRole;
 
 /**
  * 滚动容器：单内容子控件、垂直滚动（滚轮 / 滚动条拖拽）、视口裁剪与偏移重排。
@@ -15,18 +18,19 @@ import com.gtsn.lib.ui.render.RenderContext;
  * <p>滚动通过重排内容子树实现（内容包围盒随滚动量整体上移），因此渲染裁剪与
  * 命中测试天然一致——滚出视口的子控件既不会被绘制也不会被命中。</p>
  *
- * <p>内容测量在视口高度上不受 AT_MOST 钳制（按自然高度测量），保证长内容可完整滚动。</p>
+ * <p>颜色默认取主题 {@code SCROLL_*} 角色，{@link #colors} 可字面量覆盖；内容测量在视口高度上
+ * 不受 AT_MOST 钳制（按自然高度测量），保证长内容可完整滚动。</p>
  */
 public final class ScrollPanelWidget extends AbstractWidget {
 
     private int scrollbarWidth = 6;
     private int scrollStep = 16;
     private int minThumbHeight = 10;
-    private int background = 0xFF141414;
-    private int borderColor = 0xFF3C4654;
-    private int trackColor = 0xFF1E1E1E;
-    private int thumbColor = 0xFF5A6470;
-    private int activeThumbColor = 0xFF8FB0C8;
+    private ThemeColor background = ThemeColor.role(ThemeColorRole.SCROLL_BACKGROUND);
+    private ThemeColor borderColor = ThemeColor.role(ThemeColorRole.SCROLL_BORDER);
+    private ThemeColor trackColor = ThemeColor.role(ThemeColorRole.SCROLL_TRACK);
+    private ThemeColor thumbColor = ThemeColor.role(ThemeColorRole.SCROLL_THUMB);
+    private ThemeColor activeThumbColor = ThemeColor.role(ThemeColorRole.SCROLL_THUMB_ACTIVE);
 
     private int scrollY;
     private int contentHeight;
@@ -69,12 +73,13 @@ public final class ScrollPanelWidget extends AbstractWidget {
         return this;
     }
 
+    /** 字面量覆盖（不随主题变化）。 */
     public ScrollPanelWidget colors(int background, int border, int track, int thumb, int activeThumb) {
-        this.background = background;
-        this.borderColor = border;
-        this.trackColor = track;
-        this.thumbColor = thumb;
-        this.activeThumbColor = activeThumb;
+        this.background = ThemeColor.literal(background);
+        this.borderColor = ThemeColor.literal(border);
+        this.trackColor = ThemeColor.literal(track);
+        this.thumbColor = ThemeColor.literal(thumb);
+        this.activeThumbColor = ThemeColor.literal(activeThumb);
         return this;
     }
 
@@ -215,14 +220,17 @@ public final class ScrollPanelWidget extends AbstractWidget {
         if (box.isEmpty()) {
             return;
         }
+        Theme theme = context.theme();
+        int background = this.background.resolve(theme);
         if ((background >>> 24) != 0) {
             context.fill(box.x(), box.y(), box.width(), box.height(), background);
         }
-        if ((borderColor >>> 24) != 0) {
-            context.fill(box.x(), box.y(), box.width(), 1, borderColor);
-            context.fill(box.x(), box.bottom() - 1, box.width(), 1, borderColor);
-            context.fill(box.x(), box.y() + 1, 1, box.height() - 2, borderColor);
-            context.fill(box.right() - 1, box.y() + 1, 1, box.height() - 2, borderColor);
+        int border = borderColor.resolve(theme);
+        if ((border >>> 24) != 0) {
+            context.fill(box.x(), box.y(), box.width(), 1, border);
+            context.fill(box.x(), box.bottom() - 1, box.width(), 1, border);
+            context.fill(box.x(), box.y() + 1, 1, box.height() - 2, border);
+            context.fill(box.right() - 1, box.y() + 1, 1, box.height() - 2, border);
         }
     }
 
@@ -234,11 +242,12 @@ public final class ScrollPanelWidget extends AbstractWidget {
         if (track.isEmpty()) {
             return;
         }
-        context.fill(track.x(), track.y(), track.width(), track.height(), trackColor);
+        Theme theme = context.theme();
+        context.fill(track.x(), track.y(), track.width(), track.height(), trackColor.resolve(theme));
         Rect thumb = thumbBounds();
         if (thumb.height() > 0) {
             context.fill(thumb.x(), thumb.y(), thumb.width(), thumb.height(),
-                    draggingThumb ? activeThumbColor : thumbColor);
+                    draggingThumb ? activeThumbColor.resolve(theme) : thumbColor.resolve(theme));
         }
     }
 

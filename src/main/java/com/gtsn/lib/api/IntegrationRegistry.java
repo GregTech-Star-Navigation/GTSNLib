@@ -10,6 +10,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
+
 /**
  * 联动注册表：登记已知联动目标与联动模块工厂，查询在场状态，并在目标 mod 在场时延迟初始化。
  *
@@ -21,6 +24,8 @@ import java.util.function.Supplier;
  * {@link #failures()} 并跳过，不阻断其它模块。</p>
  */
 public final class IntegrationRegistry {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private final ModPresence presence;
     private final List<String> targets = new ArrayList<>();
@@ -112,7 +117,19 @@ public final class IntegrationRegistry {
                 module.init();
                 initialized.put(modId, module);
                 count++;
-            } catch (Throwable failure) {
+            } catch (Exception failure) {
+                // 模块实例化 / 初始化抛出的常规异常：记录并跳过，不阻断其它模块。
+                LOGGER.error("[GTSNLib] integration {} failed to initialize", modId, failure);
+                failures.put(modId, failure);
+            } catch (LinkageError failure) {
+                // 目标 mod 类型缺席导致的类链接失败（NoClassDefFoundError / ExceptionInInitializerError 等）：
+                // 显式记录，绝不静默吞掉真实的链接错误。
+                LOGGER.error("[GTSNLib] integration {} could not be linked (missing target classes?)",
+                        modId, failure);
+                failures.put(modId, failure);
+            } catch (Error failure) {
+                // 其它 JVM 级错误（如 OOM）同样显式记录后再抛出范围外的处理。
+                LOGGER.error("[GTSNLib] integration {} failed with a JVM error", modId, failure);
                 failures.put(modId, failure);
             }
         }

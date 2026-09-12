@@ -87,7 +87,13 @@
 
 ## 5. 装/未装两态联动矩阵
 
-| 观测项 | 未装态（默认依赖） | 装 Mekanism 态（临时 `modRuntimeOnly`） |
+> **注意（运行时覆盖范围）**：本矩阵的两个运行时态为 **(A) 未安装任何联动目标**（`0/6`）与
+> **(B) 仅临时安装 Mekanism**（`1/6`）。**只有 Mekanism 的在场面在运行时被实际验证**；其余五个目标
+> （Immersive Engineering / Create / AE2 / Ender IO / Ad Astra）的**在场面未做运行时验证**——其在场面
+> 检测逻辑由单元测试以假 `ModPresence` 覆盖，其缺席行为由态 (A) 的运行时覆盖。**不得**将本矩阵读作
+> “六个目标均已运行时验证 present”。
+
+| 观测项 | 态 (A)：未装态（运行时，`0/6`） | 态 (B)：仅装 Mekanism 态（运行时，`1/6`） |
 | --- | --- | --- |
 | 启动摘要日志 | `integrations detected: 0/6` | `integrations detected: 1/6 [mekanism]` |
 | `MekanismIntegration.init()` | 未实例化（无日志） | `mekanism integration initialized; chemical registrations: 1` |
@@ -99,7 +105,7 @@
 
 - 关键测试 `mekanismChemicalRegistrationMatchesPresence` 按真实 `ModList` 走两个分支：缺席时要求后端不可用且命令报 `backend unavailable`；在场时要求 DSL 注册的化学物质存在于 Mekanism 注册表且命令可查询（`mekanism:gas`）。两态各 38/38 通过即两分支均被覆盖。
 - **临时依赖已还原**：验收时在 `build.gradle` 临时加入 `modRuntimeOnly("mekanism:Mekanism:1.20.1-10.4.16.80")`，采集完成后 `git checkout -- build.gradle` 还原；最终提交不含该依赖（工作树对 `build.gradle` 无差异）。
-- 其余五个目标本轮未做运行时在场验证（Create `:slim`、AE2、Ad Astra 依赖图较重），其隔离与缺席行为已由单元测试（假 `ModPresence` 两态）与上述未装态运行时覆盖。
+- 其余五个目标（Immersive Engineering / Create / AE2 / Ender IO / Ad Astra）本轮**未做运行时在场验证**（Create `:slim`、AE2、Ad Astra 依赖图较重）；其**在场面**仅由单元测试（假 `ModPresence`）覆盖，**缺席行为**由态 (A) 的运行时覆盖。
 
 ## 6. UI 实测
 

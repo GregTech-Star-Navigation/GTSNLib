@@ -152,7 +152,9 @@ final class GtsnUiSyncAutotest {
         String label = screen.content().progressLabel().text();
         boolean updated = sampleB != sampleA;
         boolean matches = sampleB == latestServerProgress;
-        boolean labelShowsValue = label.contains(String.valueOf(sampleB));
+        // 精确比对完整进度文本，避免 "3" 误匹配 "30 / 100" 这类子串弱断言。
+        String expectedLabel = "进度 " + sampleB + " / " + DemoSync.PROGRESS_MAX;
+        boolean labelShowsValue = label.equals(expectedLabel);
         boolean progressBarShowsValue = Math.abs(screen.content().progressBar().value() - sampleB) < 1e-9;
         LOGGER.info("[GTSNLib] sync autotest sample B: client={} server={} display='{}'",
                 sampleB, latestServerProgress, label);

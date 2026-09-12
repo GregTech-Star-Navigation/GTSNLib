@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -92,6 +95,68 @@ class FontResourceFilesTest {
         assertTrue(cmap.covers('×'), "乘号");
         assertTrue(cmap.covers('①'), "带圈数字");
         assertTrue(cmap.covers('≤'), "数学比较符");
+    }
+
+    @Test
+    void bundledTtfHasTablesRequiredByStbRasterizer() throws IOException {
+        // MC 1.20.1 用 STB（stbtt_InitFont / stbtt_FindGlyphIndex / 光栅化）消费 ttf provider。
+        // 子集器若丢掉 STB 必需表，FontManager 会静默丢弃该 provider（无异常日志），只剩 reference
+        // 层 → 全部字形回退原版像素字。此测试在 headless 下锁住随包 ttf 的结构完整性（#23）。
+        byte[] bytes = readBytes(FONT_TTF);
+        Set<String> tables = sfntTableTags(bytes);
+        for (String required : List.of(
+                "cmap", "glyf", "loca", "head", "hhea", "hmtx", "maxp", "name", "OS/2", "post")) {
+            assertTrue(tables.contains(required),
+                    "STB 光栅化所需表缺失: " + required + "（现有表: " + tables + "）");
+        }
+        assertTrue(hasCmapFormat4(bytes), "缺少 STB stbtt_FindGlyphIndex 可解析的 cmap format 4 子表");
+    }
+
+    /** 读取 sfnt 表目录中的 tag 集合。 */
+    private static Set<String> sfntTableTags(byte[] bytes) {
+        Set<String> tags = new HashSet<>();
+        int numTables = u16(bytes, 4);
+        for (int i = 0; i < numTables; i++) {
+            int record = 12 + i * 16;
+            tags.add(new String(bytes, record, 4, StandardCharsets.ISO_8859_1));
+        }
+        return tags;
+    }
+
+    /** 是否存在 STB 可解析的 cmap format 4 子表。 */
+    private static boolean hasCmapFormat4(byte[] bytes) {
+        int numTables = u16(bytes, 4);
+        int cmapOffset = -1;
+        for (int i = 0; i < numTables; i++) {
+            int record = 12 + i * 16;
+            String tag = new String(bytes, record, 4, StandardCharsets.ISO_8859_1);
+            if (tag.equals("cmap")) {
+                cmapOffset = (int) u32(bytes, record + 8);
+            }
+        }
+        if (cmapOffset < 0) {
+            return false;
+        }
+        int subtableCount = u16(bytes, cmapOffset + 2);
+        for (int i = 0; i < subtableCount; i++) {
+            int record = cmapOffset + 4 + i * 8;
+            int subtable = cmapOffset + (int) u32(bytes, record + 4);
+            if (u16(bytes, subtable) == 4) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static int u16(byte[] bytes, int offset) {
+        return ((bytes[offset] & 0xFF) << 8) | (bytes[offset + 1] & 0xFF);
+    }
+
+    private static long u32(byte[] bytes, int offset) {
+        return ((long) (bytes[offset] & 0xFF) << 24)
+                | ((long) (bytes[offset + 1] & 0xFF) << 16)
+                | ((long) (bytes[offset + 2] & 0xFF) << 8)
+                | (bytes[offset + 3] & 0xFF);
     }
 
     @Test

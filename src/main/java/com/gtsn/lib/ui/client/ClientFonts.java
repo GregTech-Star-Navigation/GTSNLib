@@ -137,6 +137,15 @@ public final class ClientFonts {
         return requested;
     }
 
+    /**
+     * 供日志 / 探针使用的“实际生效字体 id”：{@link #effective(FontId)} 为空（原版请求或安全回退）
+     * 时归一化为 {@link FontId#VANILLA}，保证日志里始终能看到一个确定的字体 id（#23 可观测性）。
+     */
+    public static FontId effectiveOrVanilla(FontId requested) {
+        FontId applied = effective(requested);
+        return applied == null ? FontId.VANILLA : applied;
+    }
+
     /** 以 {@code font} 样式包装文本；字体不可应用时返回无样式组件。 */
     public static Component styled(String text, FontId requested) {
         Objects.requireNonNull(text, "text");

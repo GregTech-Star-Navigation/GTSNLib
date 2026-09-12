@@ -1,5 +1,6 @@
 package com.gtsn.lib.ui.screen;
 
+import com.gtsn.lib.ui.client.ClientFonts;
 import com.gtsn.lib.ui.client.ThemeFontMetrics;
 import com.gtsn.lib.ui.demo.DemoContent;
 import com.gtsn.lib.ui.demo.DemoIcons;
@@ -96,6 +97,10 @@ public final class GtsnUiTestScreen extends GtsnScreen {
     protected void init() {
         super.init();
         LOGGER.info("[GTSNLib] UI test screen init: {}x{} theme={}", width, height, ThemeContext.activeId());
+        // 可观测性（#23）：明确记录实际生效的文本字体，自动测试据此证明“用的是自定义字体而非回退原版”。
+        LOGGER.info("[GTSNLib] UI effective font = {} (theme={}, requested={})",
+                ClientFonts.effectiveOrVanilla(ThemeContext.active().textStyle().fontId()).location(),
+                ThemeContext.activeId(), ThemeContext.active().textStyle().fontId().location());
     }
 
     @Override

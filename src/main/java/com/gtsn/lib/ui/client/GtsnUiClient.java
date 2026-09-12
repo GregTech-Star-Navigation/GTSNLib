@@ -6,6 +6,7 @@ import com.gtsn.lib.ui.demo.DemoContent;
 import com.gtsn.lib.ui.layout.Rect;
 import com.gtsn.lib.ui.screen.GtsnUiTestScreen;
 import com.gtsn.lib.ui.screen.MachineStatusScreen;
+import com.gtsn.lib.ui.theme.FontId;
 import com.gtsn.lib.ui.theme.ThemeContext;
 import com.gtsn.lib.ui.widget.Widget;
 import com.mojang.logging.LogUtils;
@@ -192,6 +193,7 @@ public final class GtsnUiClient {
         }
         if (screenTicks >= 180 && themeShots == 6) {
             themeShots = 7;
+            logAndVerifyEffectiveFont(minecraft);
             grab(minecraft, FONT_THEME_SCREENSHOT);
             return;
         }
@@ -214,6 +216,20 @@ public final class GtsnUiClient {
 
     private static String themeScreenshotName() {
         return SCREENSHOT_PREFIX + ThemeContext.activeId().path() + SCREENSHOT_SUFFIX;
+    }
+
+    /**
+     * 正向验证（#23）：记录实际生效字体，并断言自定义字体真的换了字库
+     * （{@link GtsnUiFontProbe} 比较同一样例在主题 / 原版下的宽度，必须不同）。
+     * 断言失败会抛出异常，使自动测试无需肉眼比对截图即可捕获“静默回退原版”的回归。
+     */
+    private static void logAndVerifyEffectiveFont(Minecraft minecraft) {
+        FontId requested = ThemeContext.active().textStyle().fontId();
+        GtsnUiFontProbe.Result probe = GtsnUiFontProbe.verifyActiveTheme(minecraft.font);
+        LOGGER.info("[GTSNLib] UI effective font = {} (requested={}, themeWidth={}, vanillaWidth={}, delta={})",
+                probe.effective() == null ? FontId.VANILLA.location() + "(fallback)" : probe.effective().location(),
+                requested.location(), probe.themeWidth(), probe.vanillaWidth(),
+                probe.themeWidth() - probe.vanillaWidth());
     }
 
     private static void grab(Minecraft minecraft, String name) {

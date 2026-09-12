@@ -22,6 +22,9 @@ _Avoid_: 子模组、插件
 **注册简化层（Registration Layer）**:
 GTSNLib 对 GTCEu 材料 / 流体与 Mekanism 化学物质等注册 API 的声明式封装，用更短的代码完成注册及衍生件、矿词（tag）生成。
 
+**命名空间材料注册表（Namespace Material Registry）**:
+GTCEu 为每个 ModID 维护的材料注册表，附带其绑定的 `GTRegistrate`。附属 mod 的注册简化层 helper（方块/物品/机器/流体/材料）均要求其命名空间已存在该注册表——即使不注册材料，也须在 `MaterialRegistryEvent` 期间经 `GtAdapter.createRegistrate(modId)` 建立。详见 `docs/registration.md`。
+
 **GTSN UI**:
 GTSNLib 自研的、不依赖 LDLib 的界面框架（布局 / 组件 / 输入 / 主题 / 数据同步）。
 

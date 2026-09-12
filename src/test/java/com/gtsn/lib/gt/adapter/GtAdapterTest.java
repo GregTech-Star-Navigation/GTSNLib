@@ -65,6 +65,11 @@ class GtAdapterTest {
             }
 
             @Override
+            public GtRegistrateHandle createRegistrate(String modId) {
+                throw new UnsupportedOperationException("not needed for lookup tests");
+            }
+
+            @Override
             public MaterialRegistration registerMaterial(MaterialSpec spec) {
                 Map<String, String> fluids = new LinkedHashMap<>();
                 for (FluidState state : spec.fluidStates()) {

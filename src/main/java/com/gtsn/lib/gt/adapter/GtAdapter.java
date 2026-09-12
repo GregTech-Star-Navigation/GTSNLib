@@ -186,12 +186,29 @@ public final class GtAdapter {
     }
 
     /**
-     * 获取给定 ModID 的 GT 注册入口（{@link GtRegistrateHandle}），供 #13（流体/气体/等离子体）使用。
-     * 材料注册（#12）已由 {@link #registerMaterial(MaterialSpec)} 提供，材料注册表另行经
-     * {@code GTCEuAPI.materialManager} 建立。
+     * 获取给定 ModID 的 GT 注册入口（{@link GtRegistrateHandle}），供通用注册简化层使用。
+     *
+     * <p><b>前置条件</b>：该命名空间必须已存在 GTCEu {@code MaterialRegistry}（否则抛出可诊断的
+     * {@link IllegalStateException}）。附属 mod 须在 GTCEu {@code MaterialRegistryEvent} 期间调用
+     * {@link #createRegistrate(String)} 建立注册表；即使只用方块 / 物品 / 机器 helper、不注册材料，也必须建立。
+     * 详见 {@code docs/registration.md}。</p>
      */
     public GtRegistrateHandle registrate(String modId) {
         return backend.registrate(modId);
+    }
+
+    /**
+     * 在 GTCEu {@code MaterialRegistryEvent} 期间为给定 ModID 建立命名空间材料注册表，并返回其注册入口。
+     *
+     * <p>GTCEu 仅在 registry manager 的 {@code Phase.PRE}（即 {@code MaterialRegistryEvent}）允许
+     * {@code createRegistry}。这是附属 mod 使用 {@link #registrate(String)} 或任何方块 / 物品 / 机器 /
+     * 材料 / 流体 helper 之前的**前置条件**，且每个命名空间只应调用一次。详见 {@code docs/registration.md}。</p>
+     *
+     * @return 该命名空间材料注册表自带的 {@link GtRegistrateHandle}
+     * @throws IllegalStateException registry manager 未就绪、非 PRE 阶段或注册表已存在
+     */
+    public GtRegistrateHandle createRegistrate(String modId) {
+        return backend.createRegistrate(modId);
     }
 
     /**

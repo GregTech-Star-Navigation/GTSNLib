@@ -35,6 +35,16 @@ interface GtBackend {
      */
     GtRegistrateHandle registrate(String modId);
 
+    /**
+     * 在 GTCEu {@code MaterialRegistryEvent} 期间为给定 ModID 建立命名空间材料注册表，并返回其 registrate。
+     *
+     * <p>GTCEu 仅在 registry manager 的 {@code Phase.PRE}（即 {@code MaterialRegistryEvent}）允许
+     * {@code createRegistry}；这是附属 mod 使用任何注册 helper 之前的前置条件。详见 {@code docs/registration.md}。</p>
+     *
+     * @throws IllegalStateException registry manager 未就绪、或非 PRE 阶段 / 注册表已存在时
+     */
+    GtRegistrateHandle createRegistrate(String modId);
+
     /** 将声明式材料翻译并注册进 GTCEu，返回结果视图（材料注册简化层的翻译点）。 */
     MaterialRegistration registerMaterial(MaterialSpec spec);
 

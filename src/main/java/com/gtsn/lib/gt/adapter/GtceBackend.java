@@ -147,6 +147,26 @@ final class GtceBackend implements GtBackend {
     }
 
     @Override
+    public GtRegistrateHandle createRegistrate(String modId) {
+        IMaterialRegistryManager manager = GTCEuAPI.materialManager;
+        if (manager == null) {
+            throw new IllegalStateException("cannot create GTCEu material registry for '" + modId
+                    + "': the material registry manager is unavailable. MaterialRegistryEvent only fires after"
+                    + " GTCEu has initialized during Construction; call createRegistrate from that event."
+                    + " See docs/registration.md.");
+        }
+        try {
+            manager.createRegistry(modId);
+        } catch (RuntimeException failure) {
+            throw new IllegalStateException("failed to create GTCEu material registry for namespace '" + modId
+                    + "'. createRegistrate must be called exactly once from MaterialRegistryEvent, the only phase"
+                    + " in which GTCEu permits createRegistry (registry manager Phase.PRE). See docs/registration.md.",
+                    failure);
+        }
+        return registrate(modId);
+    }
+
+    @Override
     public MaterialRegistration registerMaterial(MaterialSpec spec) {
         requireRegistry(spec.namespace());
         Material material = buildMaterial(spec);
@@ -334,12 +354,20 @@ final class GtceBackend implements GtBackend {
     private static MaterialRegistry requireRegistry(String namespace) {
         IMaterialRegistryManager manager = GTCEuAPI.materialManager;
         if (manager == null) {
-            throw new IllegalStateException("GTCEu material registry is unavailable");
+            throw new IllegalStateException("GTCEu material registry manager is unavailable; GTSNLib registration"
+                    + " helpers require GTCEu to have initialized its registry manager (Construction)."
+                    + " See docs/registration.md.");
         }
         MaterialRegistry registry = manager.getRegistry(namespace);
         if (registry == null || !namespace.equals(registry.getModid())) {
             throw new IllegalStateException("no GTCEu material registry for namespace '" + namespace
-                    + "'; create it during MaterialRegistryEvent before registering materials");
+                    + "'. Every GTSNLib registration helper (registerBlock/registerItem/registerMachine/"
+                    + "registerFluid/registerMaterial) resolves the namespace's GTCEu MaterialRegistry first,"
+                    + " even when registering no materials. A namespace must create its registry during GTCEu"
+                    + " MaterialRegistryEvent—the only phase in which GTCEuAPI.materialManager.createRegistry is"
+                    + " allowed (registry manager Phase.PRE). Handle MaterialRegistryEvent on the mod event bus and"
+                    + " call GtAdapter.get().createRegistrate(\"" + namespace + "\") (or"
+                    + " GTCEuAPI.materialManager.createRegistry(\"" + namespace + "\")). See docs/registration.md.");
         }
         return registry;
     }

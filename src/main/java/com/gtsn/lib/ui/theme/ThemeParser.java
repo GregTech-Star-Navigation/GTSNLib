@@ -100,6 +100,9 @@ public final class ThemeParser {
         if (text.has("line_spacing")) {
             builder.textLineSpacing(requireNonNegativeInt(text, "line_spacing", "text.line_spacing"));
         }
+        if (text.has("font")) {
+            builder.textFont(parseFontId(requireString(text, "font", "text.font"), "text.font"));
+        }
     }
 
     private static void parseSpacing(JsonObject root, ThemeDefinition.Builder builder) {
@@ -162,6 +165,14 @@ public final class ThemeParser {
             return ThemeId.parse(raw);
         } catch (IllegalArgumentException error) {
             throw new ThemeParseException(context + " is not a valid id: " + raw, error);
+        }
+    }
+
+    private static FontId parseFontId(String raw, String context) {
+        try {
+            return FontId.parse(raw);
+        } catch (IllegalArgumentException error) {
+            throw new ThemeParseException(context + " is not a valid font id: " + raw, error);
         }
     }
 

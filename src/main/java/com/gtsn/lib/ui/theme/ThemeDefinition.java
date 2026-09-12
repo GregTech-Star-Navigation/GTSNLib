@@ -20,6 +20,7 @@ public final class ThemeDefinition {
     private final Map<ThemeColorRole, Integer> colors;
     private final Boolean textShadow;
     private final Integer textLineSpacing;
+    private final FontId textFont;
     private final Map<Spacing, Integer> spacing;
     private final Map<RoundingSize, Integer> rounding;
     private final Map<ThemeTextureRole, ThemeId> textures;
@@ -31,6 +32,7 @@ public final class ThemeDefinition {
         this.colors = Collections.unmodifiableMap(new EnumMap<>(builder.colors));
         this.textShadow = builder.textShadow;
         this.textLineSpacing = builder.textLineSpacing;
+        this.textFont = builder.textFont;
         this.spacing = Collections.unmodifiableMap(new EnumMap<>(builder.spacing));
         this.rounding = Collections.unmodifiableMap(new EnumMap<>(builder.rounding));
         this.textures = Collections.unmodifiableMap(new EnumMap<>(builder.textures));
@@ -46,7 +48,8 @@ public final class ThemeDefinition {
                 .name(name)
                 .parent(parentId)
                 .textShadow(textShadow)
-                .textLineSpacing(textLineSpacing);
+                .textLineSpacing(textLineSpacing)
+                .textFont(textFont);
         colors.forEach(builder::color);
         spacing.forEach(builder::spacing);
         rounding.forEach(builder::rounding);
@@ -83,6 +86,11 @@ public final class ThemeDefinition {
         return textLineSpacing != null ? OptionalInt.of(textLineSpacing) : OptionalInt.empty();
     }
 
+    /** 声明的文本字体资源 id（{@code text.font}）；未声明为空。 */
+    public Optional<FontId> textFont() {
+        return Optional.ofNullable(textFont);
+    }
+
     public OptionalInt spacing(Spacing step) {
         Integer value = spacing.get(Objects.requireNonNull(step, "step"));
         return value != null ? OptionalInt.of(value) : OptionalInt.empty();
@@ -110,6 +118,7 @@ public final class ThemeDefinition {
         private final Map<ThemeColorRole, Integer> colors = new EnumMap<>(ThemeColorRole.class);
         private Boolean textShadow;
         private Integer textLineSpacing;
+        private FontId textFont;
         private final Map<Spacing, Integer> spacing = new EnumMap<>(Spacing.class);
         private final Map<RoundingSize, Integer> rounding = new EnumMap<>(RoundingSize.class);
         private final Map<ThemeTextureRole, ThemeId> textures = new EnumMap<>(ThemeTextureRole.class);
@@ -143,6 +152,12 @@ public final class ThemeDefinition {
                 throw new IllegalArgumentException("line spacing must be non-negative: " + lineSpacing);
             }
             this.textLineSpacing = lineSpacing;
+            return this;
+        }
+
+        /** 声明文本字体资源 id；{@code null} 保持“未设”语义。 */
+        public Builder textFont(FontId font) {
+            this.textFont = font;
             return this;
         }
 

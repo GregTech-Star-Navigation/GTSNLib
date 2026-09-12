@@ -69,7 +69,8 @@ public final class Theme {
         Integer lineSpacing = inheritedLineSpacing();
         return new ThemeTextStyle(
                 shadow != null ? shadow : ThemeTextStyle.DEFAULT.shadow(),
-                lineSpacing != null ? lineSpacing : ThemeTextStyle.DEFAULT.lineSpacing());
+                lineSpacing != null ? lineSpacing : ThemeTextStyle.DEFAULT.lineSpacing(),
+                inheritedFont());
     }
 
     public int spacing(Spacing step) {
@@ -108,6 +109,14 @@ public final class Theme {
             return definition.textLineSpacing().orElseThrow();
         }
         return parent != null ? parent.inheritedLineSpacing() : null;
+    }
+
+    /** 沿继承链解析文本字体；链上均未声明时为原版默认字体（{@link FontId#VANILLA}）。 */
+    private FontId inheritedFont() {
+        if (definition != null && definition.textFont().isPresent()) {
+            return definition.textFont().orElseThrow();
+        }
+        return parent != null ? parent.inheritedFont() : FontId.VANILLA;
     }
 
     private Integer inheritedSpacing(Spacing step) {

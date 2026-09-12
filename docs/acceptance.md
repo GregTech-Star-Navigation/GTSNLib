@@ -30,7 +30,7 @@
 | `docs/acceptance/build-test.txt` | 门禁构建 + 单测汇总（402 项） | `.\gradlew.bat clean build` / `.\gradlew.bat cleanTest test` |
 | `docs/acceptance/gametest-absent.txt` | 未装态 GameTest 关键行（38/38） | `.\gradlew.bat runGameTestServer` |
 | `docs/acceptance/gametest-present.txt` | 装 Mekanism 态 GameTest 关键行（38/38） | `.\gradlew.bat runGameTestServer`（临时 `modRuntimeOnly`） |
-| `docs/acceptance/server-absent.txt` | 未装态 RCON `/gtsnlib` 全命令原始输出 | `.\gradlew.bat runServer` + RCON（脚本 `logs/acceptance/rcon-sweep.ps1`） |
+| `docs/acceptance/server-absent.txt` | 未装态 RCON `/gtsnlib` 全命令原始输出 | `.\gradlew.bat runServer` + RCON（脚本 `docs/acceptance/rcon-sweep.ps1`） |
 | `docs/acceptance/server-present.txt` | 装 Mekanism 态 RCON 全命令原始输出 | 同上（临时 `modRuntimeOnly`） |
 | `docs/acceptance/client-ui-autotest.txt` | `GTSNLIB_UI_AUTOTEST=1` 自动测试关键日志 | `$env:GTSNLIB_UI_AUTOTEST="1"; .\gradlew.bat runClient` |
 | `docs/acceptance/client-sync-autotest.txt` | `GTSNLIB_UI_AUTOTEST=sync` 数据同步/进世界关键日志 | `$env:GTSNLIB_UI_AUTOTEST="sync"; .\gradlew.bat runClient` |
@@ -148,7 +148,7 @@
 .\gradlew.bat runGameTestServer
 
 # /gtsnlib 命令树（专职服务端 + RCON；先把 run/server/server.properties 的 enable-rcon 设为 true 并设置 rcon.password）
-powershell -NoProfile -ExecutionPolicy Bypass -File logs\acceptance\rcon-sweep.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File docs\acceptance\rcon-sweep.ps1
 
 # UI 自动测试
 $env:GTSNLIB_UI_AUTOTEST="1";    .\gradlew.bat runClient; Remove-Item Env:\GTSNLIB_UI_AUTOTEST

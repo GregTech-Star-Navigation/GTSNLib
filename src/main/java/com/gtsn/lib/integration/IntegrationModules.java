@@ -21,5 +21,7 @@ public final class IntegrationModules {
                 () -> () -> new com.gtsn.lib.integration.mekanism.MekanismIntegration());
         registry.register(IntegrationTargets.IMMERSIVE_ENGINEERING.modId(),
                 () -> () -> new com.gtsn.lib.integration.immersiveengineering.ImmersiveEngineeringIntegration());
+        registry.register(IntegrationTargets.CREATE.modId(),
+                () -> () -> new com.gtsn.lib.integration.create.CreateIntegration());
     }
 }

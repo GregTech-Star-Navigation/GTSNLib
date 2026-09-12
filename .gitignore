@@ -21,6 +21,9 @@ Thumbs.db
 run/
 runs/
 
+# Dev/test log output (log4j default file appender)
+logs/
+
 # Local maven-style repo output
 mcmodsrepo/
 

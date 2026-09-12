@@ -6,6 +6,7 @@ import com.gtsn.lib.api.ModPresence;
 import com.gtsn.lib.core.IntegrationSummary.TargetState;
 import com.gtsn.lib.core.config.GtsnCommonConfig;
 import com.gtsn.lib.core.config.GtsnServerConfig;
+import com.gtsn.lib.integration.IntegrationModules;
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 
@@ -31,7 +32,8 @@ public final class GtsnIntegrations {
         if (registry == null) {
             IntegrationRegistry created = new IntegrationRegistry(Objects.requireNonNull(presence, "presence"));
             created.addTargets(IntegrationTargets.modIds());
-            // T4：本票不注册具体联动模块；#5–#10 将在此处以双层 supplier 登记各 mod 模块。
+            // 经 com.gtsn.lib.integration 以双层 supplier 登记 #5–#10 的隔离模块（ADR-0003）。
+            IntegrationModules.registerAll(created);
             registry = created;
         }
         return registry;

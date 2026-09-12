@@ -21,16 +21,20 @@ import com.gtsn.lib.gt.registration.MachineRegistration;
 import com.gtsn.lib.gt.registration.MaterialPart;
 import com.gtsn.lib.gt.registration.MaterialRegistration;
 import com.gtsn.lib.gt.registration.RegistrationKind;
+import com.gtsn.lib.ui.demo.DemoMenu;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
+import net.minecraftforge.network.NetworkHooks;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -69,7 +73,9 @@ public final class GtsnCommand {
                         .executes(GtsnCommand::executeMek)
                         .then(Commands.literal("chemical")
                                 .then(Commands.argument("id", StringArgumentType.greedyString())
-                                        .executes(GtsnCommand::executeMekChemical)))));
+                                        .executes(GtsnCommand::executeMekChemical))))
+                .then(Commands.literal("ui")
+                        .executes(GtsnCommand::executeUi)));
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {
@@ -163,6 +169,17 @@ public final class GtsnCommand {
                 adapter.blocks().size(), adapter.items().size(), adapter.machines().size())) {
             context.getSource().sendSuccess(() -> Component.literal(line), false);
         }
+        return 1;
+    }
+
+    /**
+     * {@code /gtsnlib ui}：为执行者打开数据同步演示菜单（#19 的游戏内入口）。
+     *
+     * <p>菜单由服务端创建并经 {@code NetworkHooks.openScreen} 打开；需玩家执行。</p>
+     */
+    private static int executeUi(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+        NetworkHooks.openScreen(player, DemoMenu.provider());
         return 1;
     }
 

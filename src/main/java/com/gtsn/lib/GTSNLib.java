@@ -6,6 +6,7 @@ import com.gtsn.lib.core.GtsnBuildInfo;
 import com.gtsn.lib.core.GtsnIntegrations;
 import com.gtsn.lib.core.config.GtsnConfig;
 import com.gtsn.lib.gt.adapter.GtContentRegistration;
+import com.gtsn.lib.ui.demo.DemoMenus;
 import com.mojang.logging.LogUtils;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
@@ -26,6 +27,8 @@ public class GTSNLib {
         // 通用注册简化层（#15）：机器必须在 GTCEu 冻结 gtceu:machine 之前的 GenericEvent 窗口注册，
         // 该事件需经 addGenericListener 订阅；经适配层接线，入口不接触 GTCEu 类型（ADR-0005）。
         GtContentRegistration.subscribe(modEventBus);
+        // UI 数据同步演示菜单类型（#19）：两端一致注册；客户端屏幕由 Dist.CLIENT 侧的 GtsnUiScreens 绑定。
+        DemoMenus.register(modEventBus);
         GtsnConfig.init();
         ForgeModPresence presence = new ForgeModPresence();
         GtsnIntegrations.bootstrap(presence);

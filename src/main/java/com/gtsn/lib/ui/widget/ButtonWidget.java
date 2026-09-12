@@ -56,6 +56,36 @@ public final class ButtonWidget extends AbstractWidget {
         return this;
     }
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public boolean isHovered() {
+        return hovered;
+    }
+
+    public boolean isPressed() {
+        return pressed;
+    }
+
+    public boolean isFocused() {
+        return focused;
+    }
+
+    /** 当前交互状态（禁用 > 按下 > 悬停 > 常规）。 */
+    public ButtonState state() {
+        if (!enabled) {
+            return ButtonState.DISABLED;
+        }
+        if (pressed) {
+            return ButtonState.PRESSED;
+        }
+        if (hovered) {
+            return ButtonState.HOVERED;
+        }
+        return ButtonState.NORMAL;
+    }
+
     public ButtonWidget colors(int idleFill, int hoverFill, int pressedFill, int textColor) {
         this.idleFill = idleFill;
         this.hoverFill = hoverFill;

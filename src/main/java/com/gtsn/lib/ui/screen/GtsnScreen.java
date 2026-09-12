@@ -46,6 +46,7 @@ public class GtsnScreen extends Screen {
         renderBackground(graphics);
         RenderContext context = new GuiGraphicsRenderContext(graphics, font, width, height);
         host().render(context);
+        host().renderTooltips(context);
     }
 
     @Override

@@ -26,6 +26,9 @@ public final class InputRouter {
     private final FocusManager focus = new FocusManager();
     private Widget root;
     private Widget hovered;
+    private List<Widget> hoveredPath = List.of();
+    private double mouseX;
+    private double mouseY;
     private Widget pressed;
     private List<Widget> pressedPath = List.of();
 
@@ -45,6 +48,20 @@ public final class InputRouter {
         return Optional.ofNullable(hovered);
     }
 
+    /** 最近一次鼠标位置（GUI 像素；宿主渲染工具提示等覆盖层用）。 */
+    public double mouseX() {
+        return mouseX;
+    }
+
+    public double mouseY() {
+        return mouseY;
+    }
+
+    /** 当前悬停命中路径（根 → 最深层）；无悬停时为空。 */
+    public List<Widget> hoveredPath() {
+        return hoveredPath;
+    }
+
     public Optional<Widget> pressedWidget() {
         return Optional.ofNullable(pressed);
     }
@@ -53,6 +70,7 @@ public final class InputRouter {
     public void setRoot(Widget root) {
         this.root = Objects.requireNonNull(root, "root");
         this.hovered = null;
+        this.hoveredPath = List.of();
         this.pressed = null;
         this.pressedPath = List.of();
         this.focus.setFocusOrder(collectFocusable(root));
@@ -95,12 +113,17 @@ public final class InputRouter {
     }
 
     private boolean dispatchMouseMoved(InputEvent.MouseMoved event) {
+        mouseX = event.x();
+        mouseY = event.y();
         List<Widget> path = hitPath(event.x(), event.y());
+        hoveredPath = path;
         updateHover(path.isEmpty() ? null : path.get(path.size() - 1));
         return bubble(path, event);
     }
 
     private boolean dispatchMousePressed(InputEvent.MousePressed event) {
+        mouseX = event.x();
+        mouseY = event.y();
         List<Widget> path = hitPath(event.x(), event.y());
         if (path.isEmpty()) {
             focus.clearFocus();
@@ -115,6 +138,8 @@ public final class InputRouter {
     }
 
     private boolean dispatchMouseReleased(InputEvent.MouseReleased event) {
+        mouseX = event.x();
+        mouseY = event.y();
         if (pressed == null) {
             return false;
         }
@@ -125,6 +150,8 @@ public final class InputRouter {
     }
 
     private boolean dispatchMouseDragged(InputEvent.MouseDragged event) {
+        mouseX = event.x();
+        mouseY = event.y();
         if (pressed == null) {
             return false;
         }
@@ -132,6 +159,8 @@ public final class InputRouter {
     }
 
     private boolean dispatchMouseScrolled(InputEvent.MouseScrolled event) {
+        mouseX = event.x();
+        mouseY = event.y();
         return bubble(hitPath(event.x(), event.y()), event);
     }
 

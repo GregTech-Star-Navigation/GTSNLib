@@ -18,10 +18,23 @@ public abstract class AbstractWidget implements Widget {
 
     private final LayoutNode node = new LayoutNode();
     private final List<Widget> children = new ArrayList<>();
+    private Tooltip tooltip;
 
     @Override
     public LayoutNode node() {
         return node;
+    }
+
+    @Override
+    public Tooltip tooltip() {
+        return tooltip;
+    }
+
+    /** 设置工具提示（返回子类型以便链式构建）。 */
+    @SuppressWarnings("unchecked")
+    public <T extends AbstractWidget> T tooltip(Tooltip tooltip) {
+        this.tooltip = tooltip;
+        return (T) this;
     }
 
     @Override

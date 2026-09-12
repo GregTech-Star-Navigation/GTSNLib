@@ -57,4 +57,9 @@ public interface Widget {
     /** 悬停状态变化回调。 */
     default void onHoverChanged(boolean hovered) {
     }
+
+    /** 工具提示；{@code null} 表示无。悬停时由宿主沿命中路径向上解析最近的非空提示。 */
+    default Tooltip tooltip() {
+        return null;
+    }
 }

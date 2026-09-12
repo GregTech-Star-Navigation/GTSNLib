@@ -1,5 +1,8 @@
 package com.gtsn.lib.ui.render;
 
+import com.gtsn.lib.ui.theme.Theme;
+import com.gtsn.lib.ui.theme.ThemeContext;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
@@ -21,12 +24,18 @@ public final class GuiGraphicsRenderContext implements RenderContext {
     private final Font font;
     private final int width;
     private final int height;
+    private final Theme theme;
 
     public GuiGraphicsRenderContext(GuiGraphics graphics, Font font, int width, int height) {
+        this(graphics, font, width, height, ThemeContext.active());
+    }
+
+    public GuiGraphicsRenderContext(GuiGraphics graphics, Font font, int width, int height, Theme theme) {
         this.graphics = Objects.requireNonNull(graphics, "graphics");
         this.font = Objects.requireNonNull(font, "font");
         this.width = width;
         this.height = height;
+        this.theme = Objects.requireNonNull(theme, "theme");
     }
 
     /** 底层 {@link GuiGraphics}（供客户端专用扩展如物品渲染使用）。 */
@@ -79,6 +88,22 @@ public final class GuiGraphicsRenderContext implements RenderContext {
                      int textureWidth, int textureHeight) {
         ResourceLocation location = new ResourceLocation(texture.namespace(), texture.path());
         graphics.blit(location, x, y, w, h, (float) u, (float) v, w, h, textureWidth, textureHeight);
+    }
+
+    @Override
+    public Theme theme() {
+        return theme;
+    }
+
+    @Override
+    public boolean textureReady(TextureRef texture) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null || minecraft.getResourceManager() == null) {
+            return false;
+        }
+        return minecraft.getResourceManager()
+                .getResource(new ResourceLocation(texture.namespace(), texture.path()))
+                .isPresent();
     }
 
     @Override

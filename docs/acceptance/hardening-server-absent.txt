@@ -1,0 +1,22 @@
+GTSNLib 评审加固 pass — runServer 原始关键行（未装态，全新世界）
+命令：.\gradlew.bat runServer
+采集：先删除 run/server/world 与 run/server/logs/latest.log（避免读到旧证据），启动后轮询到
+      `integrations detected: 0/6` 且 `Done (` 即停止进程树并抓取关键行。
+
+[03:46:50] [GTSNLib] Loading GTSNLib 0.1.0
+[03:46:51] [GTSNLib] created GTCEu material registry for gtsnlib
+[03:46:51] [GTSNLib] registered demo block gtsnlib:test_block (item gtsnlib:test_block) and item gtsnlib:test_item via registration helper
+[03:46:51] [GTSNLib] recipe hook invoked for gtsnlib:star_alloy (parts: [rod, ingot, plate, dust])
+[03:46:51] [GTSNLib] registered GTCEu material gtsnlib:star_alloy | derived parts: {...} | ore tags: [forge:ingots/star_alloy, forge:plates/star_alloy, forge:dusts/star_alloy, forge:rods/star_alloy] | fluids: {plasma=gtsnlib:star_alloy_plasma, gas=gtsnlib:star_alloy_gas, liquid=gtsnlib:star_alloy}
+[03:46:51] [GTSNLib] registered standalone GTCEu fluid gtsnlib:stellar_air | state: gas | bucket: true
+[03:46:52] [GTSNLib] registered demo machine gtsnlib:test_machine via registration helper
+[03:46:54] [GTSNLib] integrations detected: 0/6
+[03:47:24] [Server thread/INFO] [net.minecraft.server.dedicated.DedicatedServer]: Done (20.138s)! For help, type "help"
+[03:47:25] [GTSNLib] GT adapter probe: material iron present @ gtceu:iron | tag prefixes: 95
+
+判定：
+- `integrations detected: 0/6`（未装态，与加固前一致）。
+- 无 NoClassDefFoundError / ClassNotFoundException / LinkageError / GTSNLib ERROR / Unidentified mapping。
+  （上一轮旧世界曾出现 Forge `Unidentified mapping` 世界重映射告警，系旧存档内含此前临时装 Mekanism 态
+   的条目；删除旧世界后全新存档无该告警，确认非本库代码引入。）
+- dev 运行 production=false，演示门控恒开，故演示内容照常登记；生产安装默认不登记（见 DemoContentGate）。

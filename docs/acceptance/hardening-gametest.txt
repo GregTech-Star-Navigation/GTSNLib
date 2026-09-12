@@ -1,0 +1,12 @@
+GTSNLib 评审加固 pass — GameTest 原始关键行
+命令：.\gradlew.bat runGameTestServer
+运行态：开发态（production=false）→ 演示门控恒开，全部演示内容登记，既有 38 项 GameTest 不受门控影响。
+
+[03:44:24] [Server thread/INFO] [minecraft/GameTestBatchRunner]: Running test batch 'defaultBatch:1' (38 tests)...
+[03:44:24] [Server thread/INFO] [minecraft/GameTestServer]: 38 tests are now running!
+[03:44:25] [Server thread/INFO] [minecraft/GameTestServer]: ========= 38 GAME TESTS COMPLETE ======================
+[03:44:25] [Server thread/INFO] [minecraft/GameTestServer]: All 38 required tests passed :)
+[03:44:27] [Server thread/INFO] [minecraft/GameTestServer]: Game test server shutting down
+BUILD SUCCESSFUL in 47s
+
+结论：38/38 通过，与加固前一致（要求 ≥38）。

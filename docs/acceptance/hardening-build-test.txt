@@ -1,0 +1,39 @@
+GTSNLib 评审加固 pass — 门禁原始输出
+生成时间：2026-09-13（UTC+8）
+仓库：C:\Users\zh134\Desktop\gtsn\GTSNLib
+代码提交：5ac72d2（加固五连提交 5b6c84f / ce74c1a / 2bfbddc / b6acfbd / 5ac72d2，均引用 (#21)）
+
+================================================================
+1) .\gradlew.bat clean build
+----------------------------------------------------------------
+> Task :compileJava
+> Task :processResources
+> Task :jarJar NO-SOURCE
+> Task :jar
+> Task :reobfJar
+> Task :sourcesJar          <-- 新增：withSourcesJar()
+> Task :assemble
+> Task :compileTestJava
+> Task :test
+> Task :check
+> Task :build
+BUILD SUCCESSFUL in 56s
+9 actionable tasks: 9 executed
+
+================================================================
+2) .\gradlew.bat cleanTest test
+----------------------------------------------------------------
+> Task :cleanTest
+> Task :test
+BUILD SUCCESSFUL in 17s
+6 actionable tasks: 2 executed, 4 up-to-date
+
+JUnit5 汇总（build/test-results/test/*.xml）：
+  suites=57 tests=405 failures=0 errors=0 skipped=0
+新增门控测试：
+  com.gtsn.lib.core.DemoContentGateTest | tests=3 failures=0 errors=0
+    productionSkipsByDefault()
+    devEnvironmentAlwaysRegisters()
+    productionRegistersOnlyWhenOptedIn()
+
+（计数由 PowerShell 解析 build\test-results\test\*.xml 的 testsuite.tests/.failures/.errors/.skipped 累加得到）

@@ -163,3 +163,31 @@ $env:GTSNLIB_UI_AUTOTEST="sync"; .\gradlew.bat runClient; Remove-Item Env:\GTSNL
 # 装 Mekanism 态（验收专用，勿提交）：在 build.gradle 加一行后运行，再 git checkout -- build.gradle
 #   modRuntimeOnly("mekanism:Mekanism:1.20.1-10.4.16.80")
 ```
+
+## 9. 评审加固 pass（#21）
+
+独立架构评审的靶向加固（不新增功能、不重开 ticket）。代码提交：`5b6c84f`（演示内容门控）、`ce74c1a`（GTCEu 版本区间 + AFTER）、`2bfbddc`（注册耦合文档 + `createRegistrate`）、`b6acfbd`（机器窗口错误路径）、`5ac72d2`（清理）。均引用 `(#21)`。
+
+| 发现 | 修复 | 位置 |
+| --- | --- | --- |
+| 演示内容随生产安装无条件登记 | `DemoContentGate.shouldRegister(production, configOptIn)=!production\|\|configOptIn`；生产默认关闭，`GtsnCommonConfig.registerDemoContent`（默认 false）可显式选择加入；开发态恒开 | `core/DemoContentGate.java`、`core/DemoContentRuntime.java`、`core/config/GtsnCommonConfig.java`、`gt/adapter/GtMaterialRegistration.java`、`gt/adapter/GtContentRegistration.java`、`integration/mekanism/MekanismChemicalRegistration.java` |
+| GTCEu 版本区间与 ADR-0005 不符 | `versionRange` `[7.5.3,)` → `[7.5.3,8.0.0)` | `src/main/resources/META-INF/mods.toml` |
+| 通用 helper 与材料注册表耦合未文档化 | 异常信息可操作化；适配层新增 `GtAdapter.createRegistrate(modId)`；新增 `docs/registration.md`；`CONTEXT.md` 增加术语 | `gt/adapter/GtceBackend.java`、`gt/adapter/GtAdapter.java`、`gt/adapter/GtBackend.java`、`docs/registration.md`、`CONTEXT.md` |
+| 机器注册窗口健壮性 | gtceu 依赖 `ordering="AFTER"`；冻结失败路径给出可操作错误（说明 RegisterEvent/freeze 窗口） | `src/main/resources/META-INF/mods.toml`、`gt/adapter/GtContentRegistration.java` |
+| 廉价清理 | `IntegrationRegistry` 收窄 `catch(Throwable)`（分 Exception/LinkageError/Error 显式日志）；`withSourcesJar()`；本文件 §5 措辞纠正；自动测试弱断言改精确比对 | `api/IntegrationRegistry.java`、`build.gradle`、本文件 §5、`ui/client/GtsnUiSyncAutotest.java` |
+
+### 9.1 门控谓词 TDD（RED → GREEN）
+
+- **RED**：先新增 `DemoContentGateTest`（3 测试 / 4 断言），`.\gradlew.bat test --tests "com.gtsn.lib.core.DemoContentGateTest"` → `:compileTestJava` 失败，4 处 `找不到符号 DemoContentGate`。
+- **GREEN**：实现 `DemoContentGate` + `DemoContentRuntime` + 配置项后同命令 → `BUILD SUCCESSFUL`；全量 `cleanTest test` → suites=57 / tests=405 / failures=0 / errors=0 / skipped=0。
+
+### 9.2 加固后 QA 复跑
+
+| 命令 | 结果 | 证据 |
+| --- | --- | --- |
+| `.\gradlew.bat clean build` | `BUILD SUCCESSFUL in 56s`，9 tasks executed（含新增 `:sourcesJar`） | `docs/acceptance/hardening-build-test.txt` |
+| `.\gradlew.bat cleanTest test` | `suites=57 tests=405 failures=0 errors=0 skipped=0` | `docs/acceptance/hardening-build-test.txt` |
+| `.\gradlew.bat runGameTestServer` | `All 38 required tests passed :)` | `docs/acceptance/hardening-gametest.txt` |
+| `.\gradlew.bat runServer` | 全新世界干净启动，`integrations detected: 0/6`，无类加载错误 | `docs/acceptance/hardening-server-absent.txt` |
+
+> 说明：开发态 `production=false`，演示门控恒开，故 GameTest / runServer 的演示内容行为与加固前一致；生产安装默认不再登记演示内容。

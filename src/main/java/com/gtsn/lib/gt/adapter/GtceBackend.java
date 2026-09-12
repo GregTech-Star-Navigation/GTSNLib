@@ -7,6 +7,7 @@ import com.gtsn.lib.gt.registration.MaterialComponent;
 import com.gtsn.lib.gt.registration.MaterialPart;
 import com.gtsn.lib.gt.registration.MaterialRegistration;
 import com.gtsn.lib.gt.registration.MaterialSpec;
+import com.gtsn.lib.gt.registration.RegistrationKind;
 
 import com.gregtechceu.gtceu.api.GTCEuAPI;
 import com.gregtechceu.gtceu.api.data.chemical.ChemicalHelper;
@@ -22,6 +23,7 @@ import com.gregtechceu.gtceu.api.data.tag.TagPrefix;
 import com.gregtechceu.gtceu.api.fluids.GTFluid;
 import com.gregtechceu.gtceu.api.fluids.store.FluidStorageKey;
 import com.gregtechceu.gtceu.api.fluids.store.FluidStorageKeys;
+import com.gregtechceu.gtceu.api.registry.GTRegistries;
 import com.gregtechceu.gtceu.api.registry.registrate.GTRegistrate;
 import com.gregtechceu.gtceu.api.registry.registrate.IGTFluidBuilder;
 import com.gregtechceu.gtceu.common.data.GTElements;
@@ -52,7 +54,12 @@ import java.util.Set;
  *   <li>{@code IMaterialRegistryManager#getRegisteredMaterials()} / {@code #getMaterial(String)}</li>
  *   <li>{@code Material#getName()/getResourceLocation()/getUnlocalizedName()/getChemicalFormula()}</li>
  *   <li>{@code TagPrefix.values()} / {@code TagPrefix#name} / {@code #getLowerCaseName()} / {@code #getUnlocalizedName()}</li>
- *   <li>{@code GTRegistrate.create(String)}</li>
+ *   <li>{@code IMaterialRegistryManager#getRegistry(String)} → {@code MaterialRegistry#getRegistrate()}
+ *       （#15 通用注册入口；GTCEu 7.5.3 {@code CommonProxy#init()} 会对 {@code getRegistries()} 逐个调用
+ *       {@code GTRegistrate#registerEventListeners(IEventBus)}，故该实例的条目会被真正注册；孤立的
+ *       {@code GTRegistrate.create(String)} 仅构造实例、不挂事件总线）</li>
+ *   <li>{@code GTRegistries.MACHINES}（{@code GTRegistry$RL<MachineDefinition>}，查询方法
+ *       {@code containKey(ResourceLocation)}；7.5.3 无 {@code MATERIALS}/{@code TAG_PREFIXES} 字段）</li>
  * </ul>
  *
  * <p>材料注册简化层的翻译点（#12）在本类补齐，全部经真实源码核对：</p>
@@ -70,6 +77,15 @@ import java.util.Set;
  *   <li>矿词：{@code ChemicalHelper.getTag(TagPrefix, Material)} → {@code TagKey<Item>}；
  *       物品：{@code ChemicalHelper.get(TagPrefix, Material, int)}</li>
  * </ul>
+ *
+ * <p>通用注册简化层的翻译点（#15）亦经真实签名核对：方块
+ * {@code GTRegistrate#block(String, NonNullFunction)} → {@code GTBlockBuilder}
+ * （{@code properties/lang/defaultLang/defaultLoot/simpleItem/register}）；物品
+ * {@code AbstractRegistrate#item(String, NonNullFunction)} → {@code ItemBuilder}
+ * （{@code properties/defaultModel/defaultLang/lang/register}）；机器
+ * {@code GTRegistrate#machine(String, Function<IMachineBlockEntity, MetaMachine>)} →
+ * {@code MachineBuilder}（{@code tier/rotationState/langValue/register}，{@code register()} 返回
+ * {@code MachineDefinition}）。</p>
  *
  * <p>注意：7.5.3 的 {@code GTRegistries} **没有** {@code MATERIALS}/{@code TAG_PREFIXES} 字段
  * （已用 {@code javap} 对解析到的 slim jar 验证）；材料注册表经 {@code GTCEuAPI.materialManager} 访问。
@@ -235,6 +251,24 @@ final class GtceBackend implements GtBackend {
         return List.copyOf(statuses);
     }
 
+    @Override
+    public GtContentStatus contentStatus(RegistrationKind kind, String id) {
+        String query = id == null ? "" : id.trim();
+        boolean available = kind != RegistrationKind.MACHINE || GTRegistries.MACHINES != null;
+        ResourceLocation location = parseContentLocation(query);
+        if (location == null) {
+            return GtContentStatus.missing(kind, query, available);
+        }
+        boolean present = switch (kind) {
+            case BLOCK -> ForgeRegistries.BLOCKS.containsKey(location);
+            case ITEM -> ForgeRegistries.ITEMS.containsKey(location);
+            case MACHINE -> GTRegistries.MACHINES.containKey(location);
+        };
+        return present
+                ? GtContentStatus.present(kind, query, location.toString(), available)
+                : GtContentStatus.missing(kind, query, available);
+    }
+
     /** 把声明式规格翻译为 GTCEu 的 {@code Material.Builder} 链并注册。 */
     private static Material buildMaterial(MaterialSpec spec) {
         Material.Builder builder = new Material.Builder(new ResourceLocation(spec.namespace(), spec.id()));
@@ -330,6 +364,16 @@ final class GtceBackend implements GtBackend {
 
     /** 解析流体资源位置；裸路径默认补全 GTSNLib 命名空间。非法输入返回 {@code null}。 */
     private static ResourceLocation parseFluidLocation(String query) {
+        String raw = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
+        if (raw.isEmpty()) {
+            return null;
+        }
+        String candidate = raw.indexOf(':') >= 0 ? raw : "gtsnlib:" + raw;
+        return ResourceLocation.tryParse(candidate);
+    }
+
+    /** 解析通用注册条目的资源位置；裸路径默认补全 GTSNLib 命名空间。非法输入返回 {@code null}。 */
+    private static ResourceLocation parseContentLocation(String query) {
         String raw = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
         if (raw.isEmpty()) {
             return null;

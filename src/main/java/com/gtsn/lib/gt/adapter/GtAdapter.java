@@ -1,12 +1,20 @@
 package com.gtsn.lib.gt.adapter;
 
+import com.gtsn.lib.gt.registration.BlockRegistration;
+import com.gtsn.lib.gt.registration.BlockSpec;
 import com.gtsn.lib.gt.registration.FluidRegistration;
 import com.gtsn.lib.gt.registration.FluidRegistrar;
 import com.gtsn.lib.gt.registration.FluidSpec;
+import com.gtsn.lib.gt.registration.ItemRegistration;
+import com.gtsn.lib.gt.registration.ItemSpec;
+import com.gtsn.lib.gt.registration.MachineRegistration;
+import com.gtsn.lib.gt.registration.MachineSpec;
 import com.gtsn.lib.gt.registration.MaterialPart;
 import com.gtsn.lib.gt.registration.MaterialRegistration;
 import com.gtsn.lib.gt.registration.MaterialRegistrar;
 import com.gtsn.lib.gt.registration.MaterialSpec;
+import com.gtsn.lib.gt.registration.RegistrationKind;
+import com.gtsn.lib.gt.registration.RegistrationRegistrar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,14 +59,49 @@ public final class GtAdapter {
     /** 演示用一次性流体完整键 {@code gtsnlib:stellar_air}。 */
     public static final String DEMO_FLUID = "gtsnlib:" + DEMO_FLUID_ID;
 
+    /** 通用注册简化层（#15）游戏内证明用演示方块路径。 */
+    public static final String DEMO_BLOCK_ID = "test_block";
+
+    /** 演示方块完整键 {@code gtsnlib:test_block}。 */
+    public static final String DEMO_BLOCK = "gtsnlib:" + DEMO_BLOCK_ID;
+
+    /** 通用注册简化层（#15）游戏内证明用演示物品路径。 */
+    public static final String DEMO_ITEM_ID = "test_item";
+
+    /** 演示物品完整键 {@code gtsnlib:test_item}。 */
+    public static final String DEMO_ITEM = "gtsnlib:" + DEMO_ITEM_ID;
+
+    /** 通用注册简化层（#15）游戏内证明用演示机器路径。 */
+    public static final String DEMO_MACHINE_ID = "test_machine";
+
+    /** 演示机器完整键 {@code gtsnlib:test_machine}。 */
+    public static final String DEMO_MACHINE = "gtsnlib:" + DEMO_MACHINE_ID;
+
     private final GtBackend backend;
     private final MaterialRegistrar registrar;
     private final FluidRegistrar fluidRegistrar;
+    private final RegistrationRegistrar registrationRegistrar;
 
     GtAdapter(GtBackend backend) {
         this.backend = Objects.requireNonNull(backend, "backend");
         this.registrar = new MaterialRegistrar(backend::registerMaterial);
         this.fluidRegistrar = new FluidRegistrar(backend::registerFluid);
+        this.registrationRegistrar = new RegistrationRegistrar(new RegistrationRegistrar.Sink() {
+            @Override
+            public BlockRegistration registerBlock(BlockSpec spec) {
+                return backend.registrate(spec.namespace()).registerBlock(spec);
+            }
+
+            @Override
+            public ItemRegistration registerItem(ItemSpec spec) {
+                return backend.registrate(spec.namespace()).registerItem(spec);
+            }
+
+            @Override
+            public MachineRegistration registerMachine(MachineSpec spec) {
+                return backend.registrate(spec.namespace()).registerMachine(spec);
+            }
+        });
     }
 
     /** 生产门面单例（惰性建立 {@link GtceBackend}）。 */
@@ -290,6 +333,78 @@ public final class GtAdapter {
     public List<GtPartStatus> partStatus(String materialId, Set<MaterialPart> parts) {
         Objects.requireNonNull(parts, "parts");
         return backend.partStatus(materialId, parts);
+    }
+
+    // ---- #15: generic block / item / machine registration ----
+
+    /**
+     * 注册一个声明式方块：翻译为 GTCEu {@code GTRegistrate} 方块注册链、记录结果并回调钩子。
+     *
+     * <p>同一 {@code namespace:id} 重复注册会被拒绝；当声明 {@link BlockSpec#withItem()} 时，其自动生成的
+     * 方块物品会占用同名物品键。GT 注册失败时不会记录、也不会回调钩子。</p>
+     *
+     * <p><b>样板对比（#15）</b>：直接在 GTCEu 上注册一个可获取方块要写
+     * {@code registry.getRegistrate().block(id, Block::new).properties(p -> p.strength(2F, 3F))
+     * .defaultLang().defaultLoot().simpleItem().register()} 一长串上游链；经本 helper 只需
+     * {@code GtAdapter.get().registerBlock(BlockSpec.builder("mymod", "test_block")
+     * .strength(2F, 3F).build())} 一行声明，且声明与校验可完全离线单测。</p>
+     */
+    public BlockRegistration registerBlock(BlockSpec spec) {
+        return registrationRegistrar.registerBlock(spec);
+    }
+
+    /** 注册一个声明式物品：翻译为 GTCEu 物品注册链、记录结果并回调钩子。 */
+    public ItemRegistration registerItem(ItemSpec spec) {
+        return registrationRegistrar.registerItem(spec);
+    }
+
+    /** 注册一台声明式机器：翻译为 GTCEu {@code MachineBuilder} 注册链、记录结果并回调钩子。 */
+    public MachineRegistration registerMachine(MachineSpec spec) {
+        return registrationRegistrar.registerMachine(spec);
+    }
+
+    /** 给定种类与 {@code namespace:id} 是否已经本适配层注册。 */
+    public boolean isRegistered(RegistrationKind kind, String key) {
+        return registrationRegistrar.isRegistered(kind, key);
+    }
+
+    /** 按 {@code namespace:id} 查询已注册方块的结果视图。 */
+    public Optional<BlockRegistration> registeredBlock(String key) {
+        return registrationRegistrar.block(key);
+    }
+
+    /** 按 {@code namespace:id} 查询已注册物品的结果视图。 */
+    public Optional<ItemRegistration> registeredItem(String key) {
+        return registrationRegistrar.item(key);
+    }
+
+    /** 按 {@code namespace:id} 查询已注册机器的结果视图。 */
+    public Optional<MachineRegistration> registeredMachine(String key) {
+        return registrationRegistrar.machine(key);
+    }
+
+    /** 已注册方块的只读快照（按注册顺序）。 */
+    public List<BlockRegistration> blocks() {
+        return registrationRegistrar.blocks();
+    }
+
+    /** 已注册物品的只读快照（按注册顺序）。 */
+    public List<ItemRegistration> items() {
+        return registrationRegistrar.items();
+    }
+
+    /** 已注册机器的只读快照（按注册顺序）。 */
+    public List<MachineRegistration> machines() {
+        return registrationRegistrar.machines();
+    }
+
+    /**
+     * 实时查询通用注册条目（方块 / 物品 / 机器）在真实注册表中的存在性（#15）。
+     *
+     * <p>接受 {@code namespace:path} 或裸 path（默认补全 GTSNLib 命名空间）。</p>
+     */
+    public GtContentStatus contentStatus(RegistrationKind kind, String id) {
+        return backend.contentStatus(kind, id);
     }
 
     private static final class Holder {

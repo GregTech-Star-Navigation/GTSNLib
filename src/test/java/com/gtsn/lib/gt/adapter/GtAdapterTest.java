@@ -6,6 +6,7 @@ import com.gtsn.lib.gt.registration.FluidState;
 import com.gtsn.lib.gt.registration.MaterialPart;
 import com.gtsn.lib.gt.registration.MaterialRegistration;
 import com.gtsn.lib.gt.registration.MaterialSpec;
+import com.gtsn.lib.gt.registration.RegistrationKind;
 
 import org.junit.jupiter.api.Test;
 
@@ -97,6 +98,11 @@ class GtAdapterTest {
             @Override
             public List<GtPartStatus> partStatus(String materialId, Set<MaterialPart> parts) {
                 throw new UnsupportedOperationException("not needed for lookup tests");
+            }
+
+            @Override
+            public GtContentStatus contentStatus(RegistrationKind kind, String id) {
+                return GtContentStatus.missing(kind, id == null ? "" : id, available);
             }
         };
     }

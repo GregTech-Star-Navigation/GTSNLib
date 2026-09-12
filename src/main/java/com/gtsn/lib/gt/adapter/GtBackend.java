@@ -5,6 +5,7 @@ import com.gtsn.lib.gt.registration.FluidSpec;
 import com.gtsn.lib.gt.registration.MaterialPart;
 import com.gtsn.lib.gt.registration.MaterialRegistration;
 import com.gtsn.lib.gt.registration.MaterialSpec;
+import com.gtsn.lib.gt.registration.RegistrationKind;
 
 import java.util.Collection;
 import java.util.List;
@@ -27,7 +28,11 @@ interface GtBackend {
     /** 当前 GTCEu 已登记的全部 tag prefix 视图。 */
     Collection<GtTagPrefixRef> tagPrefixes();
 
-    /** 为给定 ModID 创建 GT 注册入口（{@code GTRegistrate.create}）。 */
+    /**
+     * 为给定 ModID 获取 GT 注册入口。生产实现取该命名空间材料注册表自带的 registrate
+     * （{@code GTCEuAPI.materialManager.getRegistry(modId).getRegistrate()}），该实例已由 GTCEu
+     * {@code CommonProxy#init()} 挂接 {@code RegisterEvent}，因此其条目会被真正注册。
+     */
     GtRegistrateHandle registrate(String modId);
 
     /** 将声明式材料翻译并注册进 GTCEu，返回结果视图（材料注册简化层的翻译点）。 */
@@ -53,4 +58,12 @@ interface GtBackend {
      * @return 逐部件状态；材料不存在时为空列表
      */
     List<GtPartStatus> partStatus(String materialId, Set<MaterialPart> parts);
+
+    /**
+     * 实时查询通用注册条目（方块 / 物品 / 机器）在真实注册表中的存在性（#15）。
+     *
+     * @param kind 注册种类
+     * @param id   资源位置（{@code namespace:path}）或裸路径（默认补全 GTSNLib 命名空间）
+     */
+    GtContentStatus contentStatus(RegistrationKind kind, String id);
 }

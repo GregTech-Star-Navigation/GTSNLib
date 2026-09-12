@@ -8,12 +8,17 @@ import com.gtsn.lib.core.ForgeModPresence;
 import com.gtsn.lib.core.GtsnIntegrations;
 import com.gtsn.lib.core.config.GtsnCommonConfig;
 import com.gtsn.lib.gt.adapter.GtAdapter;
+import com.gtsn.lib.gt.adapter.GtContentStatus;
 import com.gtsn.lib.gt.adapter.GtFluidStatus;
 import com.gtsn.lib.gt.adapter.GtPartStatus;
 import com.gtsn.lib.gt.adapter.GtQueryResult;
+import com.gtsn.lib.gt.registration.BlockRegistration;
 import com.gtsn.lib.gt.registration.FluidRegistration;
+import com.gtsn.lib.gt.registration.ItemRegistration;
+import com.gtsn.lib.gt.registration.MachineRegistration;
 import com.gtsn.lib.gt.registration.MaterialPart;
 import com.gtsn.lib.gt.registration.MaterialRegistration;
+import com.gtsn.lib.gt.registration.RegistrationKind;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.gametest.framework.GameTest;
@@ -333,6 +338,93 @@ public final class GtsnGameTests {
                         && line.contains("[material gtsnlib:star_alloy]"));
         if (!present) {
             helper.fail("/gtsnlib gt fluid output was " + output.messages());
+            return;
+        }
+        helper.succeed();
+    }
+
+    /** 通用注册 helper 的游戏内证据：演示方块（含物品）、物品与机器均进入真实注册表（#15）。 */
+    @GameTest(template = "empty")
+    public static void genericRegistrationHelperRegistersBlockItemAndMachine(GameTestHelper helper) {
+        GtAdapter adapter = GtAdapter.get();
+
+        BlockRegistration block = adapter.registeredBlock(GtAdapter.DEMO_BLOCK).orElse(null);
+        if (block == null) {
+            helper.fail("block " + GtAdapter.DEMO_BLOCK + " was not registered through the GTSN registrar");
+            return;
+        }
+        if (!block.hasItem()) {
+            helper.fail("block " + GtAdapter.DEMO_BLOCK + " did not generate a block item");
+            return;
+        }
+        GtContentStatus blockStatus = adapter.contentStatus(RegistrationKind.BLOCK, GtAdapter.DEMO_BLOCK);
+        if (!blockStatus.present()) {
+            helper.fail("block " + GtAdapter.DEMO_BLOCK + " absent from Minecraft block registry: " + blockStatus);
+            return;
+        }
+        GtContentStatus blockItemStatus =
+                adapter.contentStatus(RegistrationKind.ITEM, block.itemResourceLocation());
+        if (!blockItemStatus.present()) {
+            helper.fail("block item " + block.itemResourceLocation()
+                    + " absent from Minecraft item registry: " + blockItemStatus);
+            return;
+        }
+
+        ItemRegistration item = adapter.registeredItem(GtAdapter.DEMO_ITEM).orElse(null);
+        if (item == null) {
+            helper.fail("item " + GtAdapter.DEMO_ITEM + " was not registered through the GTSN registrar");
+            return;
+        }
+        GtContentStatus itemStatus = adapter.contentStatus(RegistrationKind.ITEM, GtAdapter.DEMO_ITEM);
+        if (!itemStatus.present()) {
+            helper.fail("item " + GtAdapter.DEMO_ITEM + " absent from Minecraft item registry: " + itemStatus);
+            return;
+        }
+
+        MachineRegistration machine = adapter.registeredMachine(GtAdapter.DEMO_MACHINE).orElse(null);
+        if (machine == null) {
+            helper.fail("machine " + GtAdapter.DEMO_MACHINE + " was not registered through the GTSN registrar");
+            return;
+        }
+        GtContentStatus machineStatus = adapter.contentStatus(RegistrationKind.MACHINE, GtAdapter.DEMO_MACHINE);
+        if (!machineStatus.present()) {
+            helper.fail("machine " + GtAdapter.DEMO_MACHINE + " absent from GT machine registry: " + machineStatus);
+            return;
+        }
+        helper.succeed();
+    }
+
+    /** {@code /gtsnlib reg} 在真实环境下报告已登记内容及其存在性（#15 的游戏内证据）。 */
+    @GameTest(template = "empty")
+    public static void gtsnlibRegCommandReportsRegisteredContent(GameTestHelper helper) {
+        CommandOutput output = runCommand(helper, "gtsnlib reg");
+
+        if (output.result() != 1) {
+            helper.fail("/gtsnlib reg returned " + output.result());
+            return;
+        }
+        boolean header = output.messages().stream()
+                .anyMatch(line -> line.equals("GTSNLib registrations | blocks: 1 | items: 1 | machines: 1"));
+        boolean block = output.messages().stream()
+                .anyMatch(line -> line.contains("block gtsnlib:test_block: present=true"));
+        boolean item = output.messages().stream()
+                .anyMatch(line -> line.contains("item gtsnlib:test_item: present=true"));
+        boolean machine = output.messages().stream()
+                .anyMatch(line -> line.contains("machine gtsnlib:test_machine: present=true"));
+        if (!header || !block || !item || !machine) {
+            helper.fail("/gtsnlib reg output was " + output.messages());
+            return;
+        }
+        helper.succeed();
+    }
+
+    /** 未登记的资源位置在真实注册表中报告为缺席（负向覆盖，#15）。 */
+    @GameTest(template = "empty")
+    public static void contentStatusReportsAbsentForUnknownId(GameTestHelper helper) {
+        GtContentStatus status = GtAdapter.get()
+                .contentStatus(RegistrationKind.BLOCK, "gtsnlib:not_a_real_block");
+        if (status.present()) {
+            helper.fail("unknown block reported as present: " + status);
             return;
         }
         helper.succeed();

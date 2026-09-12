@@ -7,12 +7,18 @@ import com.gtsn.lib.core.GtsnIntegrations;
 import com.gtsn.lib.core.IntegrationSummary;
 import com.gtsn.lib.gt.adapter.GtAdapter;
 import com.gtsn.lib.gt.adapter.GtAdapterReport;
+import com.gtsn.lib.gt.adapter.GtContentStatus;
 import com.gtsn.lib.gt.adapter.GtFluidReport;
 import com.gtsn.lib.gt.adapter.GtFluidStatus;
 import com.gtsn.lib.gt.adapter.GtPartStatus;
 import com.gtsn.lib.gt.adapter.GtQueryResult;
+import com.gtsn.lib.gt.adapter.GtRegistrationReport;
+import com.gtsn.lib.gt.registration.BlockRegistration;
+import com.gtsn.lib.gt.registration.ItemRegistration;
+import com.gtsn.lib.gt.registration.MachineRegistration;
 import com.gtsn.lib.gt.registration.MaterialPart;
 import com.gtsn.lib.gt.registration.MaterialRegistration;
+import com.gtsn.lib.gt.registration.RegistrationKind;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -54,7 +60,9 @@ public final class GtsnCommand {
                                         .executes(GtsnCommand::executeGtMaterial)))
                         .then(Commands.literal("fluid")
                                 .then(Commands.argument("id", StringArgumentType.greedyString())
-                                        .executes(GtsnCommand::executeGtFluid)))));
+                                        .executes(GtsnCommand::executeGtFluid))))
+                .then(Commands.literal("reg")
+                        .executes(GtsnCommand::executeReg)));
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {
@@ -123,6 +131,29 @@ public final class GtsnCommand {
         String id = StringArgumentType.getString(context, "id");
         GtFluidStatus status = GtAdapter.get().fluidStatus(id);
         for (String line : GtFluidReport.commandLines(status)) {
+            context.getSource().sendSuccess(() -> Component.literal(line), false);
+        }
+        return 1;
+    }
+
+    /**
+     * {@code /gtsnlib reg}：列出经通用注册简化层登记的方块 / 物品 / 机器，并逐一查询其在真实注册表中的
+     * 存在性（#15 的游戏内证据）。
+     */
+    private static int executeReg(CommandContext<CommandSourceStack> context) {
+        GtAdapter adapter = GtAdapter.get();
+        List<GtContentStatus> statuses = new ArrayList<>();
+        for (BlockRegistration registration : adapter.blocks()) {
+            statuses.add(adapter.contentStatus(RegistrationKind.BLOCK, registration.resourceLocation()));
+        }
+        for (ItemRegistration registration : adapter.items()) {
+            statuses.add(adapter.contentStatus(RegistrationKind.ITEM, registration.resourceLocation()));
+        }
+        for (MachineRegistration registration : adapter.machines()) {
+            statuses.add(adapter.contentStatus(RegistrationKind.MACHINE, registration.resourceLocation()));
+        }
+        for (String line : GtRegistrationReport.commandLines(statuses,
+                adapter.blocks().size(), adapter.items().size(), adapter.machines().size())) {
             context.getSource().sendSuccess(() -> Component.literal(line), false);
         }
         return 1;

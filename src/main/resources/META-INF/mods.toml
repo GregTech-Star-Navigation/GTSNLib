@@ -53,41 +53,41 @@ side="BOTH"
 [[dependencies.gtsnlib]]
 modId="mekanism"
 mandatory=false
-versionRange=""
+versionRange="[0,)"
 ordering="AFTER"
 side="BOTH"
 
 [[dependencies.gtsnlib]]
 modId="immersiveengineering"
 mandatory=false
-versionRange=""
+versionRange="[0,)"
 ordering="AFTER"
 side="BOTH"
 
 [[dependencies.gtsnlib]]
 modId="create"
 mandatory=false
-versionRange=""
+versionRange="[0,)"
 ordering="AFTER"
 side="BOTH"
 
 [[dependencies.gtsnlib]]
 modId="ae2"
 mandatory=false
-versionRange=""
+versionRange="[0,)"
 ordering="AFTER"
 side="BOTH"
 
 [[dependencies.gtsnlib]]
 modId="enderio"
 mandatory=false
-versionRange=""
+versionRange="[0,)"
 ordering="AFTER"
 side="BOTH"
 
 [[dependencies.gtsnlib]]
 modId="ad_astra"
 mandatory=false
-versionRange=""
+versionRange="[0,)"
 ordering="AFTER"
 side="BOTH"

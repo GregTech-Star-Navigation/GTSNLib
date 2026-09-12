@@ -134,3 +134,5 @@
 .\gradlew.bat runClient          # 数据同步端到端：$env:GTSNLIB_UI_AUTOTEST=sync 创建/载入存档、游戏内打开演示菜单、
                                  #   验证客户端值=服务端值且数值推进、抓图 run/screenshots/gtsnlib-ui-sync-demo.png、退出
 ```
+
+上述两种自动测试的结果、截图与判定见 `docs/acceptance.md`（#20 集成验收，证据留档于 `docs/acceptance/`）。

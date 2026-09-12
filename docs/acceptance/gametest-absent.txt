@@ -1,0 +1,25 @@
+> Task :writeGameTestServerLegacyClasspath
+> Task :prepareGameTestServerRun
+> Task :runGameTestServer
+ModLauncher running: args [--launchTarget, forgegametestserveruserdev, --gameDir, ., --fml.forgeVersion, 47.4.0, --fml.mcVersion, 1.20.1, --fml.forgeGroup, net.minecraftforge, --fml.mcpVersion, 20230612.114412, --mixin.config, mixins.gtsnlib.json]
+ImmediateWindowProvider not loading because launch target is forgegametestserveruserdev
+Launching target 'forgegametestserveruserdev' with arguments [--gameDir, .]
+2026-09-13 03:17:45,954 main WARN Error parsing URI C:\\Users\\zh134\\Desktop\\gtsn\\GTSNLib\\build\\moddev\\gameTestServerLog4j2.xml
+[GTSNLib] Loading GTSNLib 0.1.0
+[GTSNLib] created GTCEu material registry for gtsnlib
+[GTSNLib] registered demo block gtsnlib:test_block (item gtsnlib:test_block) and item gtsnlib:test_item via registration helper
+[GTSNLib] recipe hook invoked for gtsnlib:star_alloy (parts: [plate, ingot, rod, dust])
+[GTSNLib] registered GTCEu material gtsnlib:star_alloy | derived parts: {plate=star_alloy_plate, ingot=star_alloy_ingot, rod=star_alloy_rod, dust=star_alloy_dust} | ore tags: [forge:ingots/star_alloy, forge:plates/star_alloy, forge:dusts/star_alloy, forge:rods/star_alloy] | fluids: {plasma=gtsnlib:star_alloy_plasma, liquid=gtsnlib:star_alloy, gas=gtsnlib:star_alloy_gas}
+[GTSNLib] registered standalone GTCEu fluid gtsnlib:stellar_air | state: gas | bucket: true
+[GTSNLib] registered demo machine gtsnlib:test_machine via registration helper
+[GTSNLib] integrations detected: 0/6
+Enabled Gametest Namespaces: [gtsnlib]
+Started game test server
+[GTSNLib] GT adapter probe: material iron present @ gtceu:iron | tag prefixes: 95
+38 tests are now running!
+[++++++++++++++++++++++++++++++++++++++]
+========= 38 GAME TESTS COMPLETE ======================
+All 38 required tests passed :)
+====================================================
+Game test server shutting down
+BUILD SUCCESSFUL in 49s

@@ -1,0 +1,32 @@
+[GTSNLib] Loading GTSNLib 0.1.0
+[GTSNLib] created GTCEu material registry for gtsnlib
+[GTSNLib] registered demo block gtsnlib:test_block (item gtsnlib:test_block) and item gtsnlib:test_item via registration helper
+[GTSNLib] recipe hook invoked for gtsnlib:star_alloy (parts: [ingot, plate, dust, rod])
+[GTSNLib] registered GTCEu material gtsnlib:star_alloy | derived parts: {ingot=star_alloy_ingot, plate=star_alloy_plate, dust=star_alloy_dust, rod=star_alloy_rod} | ore tags: [forge:ingots/star_alloy, forge:plates/star_alloy, forge:dusts/star_alloy, forge:rods/star_alloy] | fluids: {plasma=gtsnlib:star_alloy_plasma, gas=gtsnlib:star_alloy_gas, liquid=gtsnlib:star_alloy}
+[GTSNLib] registered standalone GTCEu fluid gtsnlib:stellar_air | state: gas | bucket: true
+[GTSNLib] registered demo machine gtsnlib:test_machine via registration helper
+Enabled Gametest Namespaces: [gtsnlib]
+[GTSNLib] integrations detected: 0/6
+[GTSNLib] sync demo menu screen registered
+[GTSNLib] UI 主题已加�? [gtsnlib:default, gtsnlib:amber, gtsnlib:light]（激�? gtsnlib:default�?
+[GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[GTSNLib] autotest window prepared: 1280x720 guiScale=2
+[GTSNLib] GTSNLIB_UI_AUTOTEST=1 -> opening UI dev test screen
+[GTSNLib] UI test screen init: 640x360 theme=gtsnlib:default
+[GTSNLib] UI test screen rendered: frame=1 theme=gtsnlib:default clicks=0 typed=
+[GTSNLib] autotest synthetic input: clicks=1 toggled=false checkbox=true switch=true progress=0.30000000000000004 slot1=true scrollY=32 lastKey=K typed=A
+[GTSNLib] autotest grabbing screenshot gtsnlib-ui-theme-default.png (theme=gtsnlib:default)
+[GTSNLib] autotest screenshot: 已将截图保存为gtsnlib-ui-theme-default.png
+[GTSNLib] UI test screen rebuilt for theme gtsnlib:amber (琥珀)
+[GTSNLib] UI test screen rendered: frame=120 theme=gtsnlib:amber clicks=1 typed=A
+[GTSNLib] autotest grabbing screenshot gtsnlib-ui-theme-amber.png (theme=gtsnlib:amber)
+[GTSNLib] autotest screenshot: 已将截图保存为gtsnlib-ui-theme-amber.png
+[GTSNLib] UI test screen rebuilt for theme gtsnlib:light (浅色)
+[GTSNLib] autotest grabbing screenshot gtsnlib-ui-theme-light.png (theme=gtsnlib:light)
+[GTSNLib] autotest screenshot: 已将截图保存为gtsnlib-ui-theme-light.png
+[GTSNLib] UI test screen rendered: frame=240 theme=gtsnlib:light clicks=1 typed=A
+[GTSNLib] autotest complete (themes captured: 5), stopping client

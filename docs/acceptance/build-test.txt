@@ -1,0 +1,37 @@
+GTSNLib 集成验收 — 门禁原始输出
+生成时间：2026-09-13 03:15–03:26 (+08:00)
+仓库：C:\Users\zh134\Desktop\gtsn\GTSNLib @ 8b83ddc (HEAD，提交前)
+
+================================================================
+1) .\gradlew.bat clean build --console=plain
+----------------------------------------------------------------
+> Task :compileJava
+> Task :processResources
+> Task :classes
+> Task :jar
+> Task :reobfJar
+> Task :assemble
+> Task :compileTestJava
+> Task :test
+> Task :check
+> Task :build
+
+BUILD SUCCESSFUL in 28s
+8 actionable tasks: 8 executed
+
+（reobf jar：build/libs/gtsnlib-0.1.0.jar）
+
+================================================================
+2) .\gradlew.bat cleanTest test --console=plain
+----------------------------------------------------------------
+> Task :cleanTest
+> Task :test
+
+BUILD SUCCESSFUL in 16s
+6 actionable tasks: 2 executed, 4 up-to-date
+
+JUnit5 汇总（build/test-results/test/*.xml）：
+  suites=56 tests=402 failures=0 errors=0 skipped=0
+（测试计数由 PowerShell 直接解析 XML 得到：
+  $xml = Get-ChildItem build\test-results\test\*.xml
+  foreach 累加 testsuite.tests / .failures / .errors / .skipped）

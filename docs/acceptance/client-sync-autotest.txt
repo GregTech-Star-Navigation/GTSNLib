@@ -1,0 +1,41 @@
+[GTSNLib] Loading GTSNLib 0.1.0
+[GTSNLib] created GTCEu material registry for gtsnlib
+[GTSNLib] registered demo block gtsnlib:test_block (item gtsnlib:test_block) and item gtsnlib:test_item via registration helper
+[GTSNLib] recipe hook invoked for gtsnlib:star_alloy (parts: [plate, ingot, rod, dust])
+[GTSNLib] registered GTCEu material gtsnlib:star_alloy | derived parts: {plate=star_alloy_plate, ingot=star_alloy_ingot, rod=star_alloy_rod, dust=star_alloy_dust} | ore tags: [forge:ingots/star_alloy, forge:plates/star_alloy, forge:dusts/star_alloy, forge:rods/star_alloy] | fluids: {liquid=gtsnlib:star_alloy, gas=gtsnlib:star_alloy_gas, plasma=gtsnlib:star_alloy_plasma}
+[GTSNLib] registered standalone GTCEu fluid gtsnlib:stellar_air | state: gas | bucket: true
+[GTSNLib] registered demo machine gtsnlib:test_machine via registration helper
+Enabled Gametest Namespaces: [gtsnlib]
+[GTSNLib] integrations detected: 0/6
+[GTSNLib] sync demo menu screen registered
+[GTSNLib] UI 主题已加�? [gtsnlib:default, gtsnlib:amber, gtsnlib:light]（激�? gtsnlib:default�?
+[GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[GTSNLib] MixinTitleScreen injected (mixin infrastructure online)
+[GTSNLib] sync autotest window prepared: 1280x720 guiScale=2
+[GTSNLib] sync autotest: loading existing world 'gtsnlib-sync-autotest'
+[GTSNLib] GT adapter probe: material iron present @ gtceu:iron | tag prefixes: 95
+[GTSNLib] client command /gtsnui registered
+[GTSNLib] client command /gtsnui registered
+[GTSNLib] sync autotest: world ready, opening demo menu
+[GTSNLib] sync demo screen opened: slots=5 progress=0
+[GTSNLib] sync autotest: demo screen open (slots=5)
+[GTSNLib] sync demo applied 2 slot change(s): progress=5 phase=RUNNING tier=0 active=true
+[GTSNLib] sync demo applied 1 slot change(s): progress=10 phase=RUNNING tier=0 active=true
+[GTSNLib] sync autotest sample A: client=10 server=10 display='进度 10 / 100'
+[GTSNLib] sync demo applied 1 slot change(s): progress=15 phase=RUNNING tier=0 active=true
+[GTSNLib] sync demo applied 1 slot change(s): progress=20 phase=RUNNING tier=0 active=true
+[GTSNLib] sync demo applied 1 slot change(s): progress=25 phase=RUNNING tier=0 active=true
+[GTSNLib] sync demo applied 1 slot change(s): progress=30 phase=RUNNING tier=0 active=true
+[GTSNLib] sync autotest sample B: client=30 server=30 display='进度 30 / 100'
+[GTSNLib] sync autotest PASS: client value advanced 10 -> 30; equals server 30; display='进度 30 / 100'
+[GTSNLib] sync demo applied 1 slot change(s): progress=35 phase=RUNNING tier=0 active=true
+[GTSNLib] sync autotest grabbing screenshot gtsnlib-ui-sync-demo.png (window=1280x720 target=1280x720)
+[GTSNLib] sync autotest screenshot: 已将截图保存为gtsnlib-ui-sync-demo.png
+[GTSNLib] sync demo applied 1 slot change(s): progress=40 phase=RUNNING tier=0 active=true
+[GTSNLib] sync demo applied 1 slot change(s): progress=45 phase=RUNNING tier=0 active=true
+[GTSNLib] sync demo applied 1 slot change(s): progress=50 phase=RUNNING tier=0 active=true
+[GTSNLib] sync demo applied 1 slot change(s): progress=55 phase=RUNNING tier=0 active=true
+[GTSNLib] sync autotest finished (DONE), stopping client

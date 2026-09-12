@@ -1,7 +1,10 @@
 package com.gtsn.lib.core.command;
 
 import com.gtsn.lib.GTSNLib;
+import com.gtsn.lib.api.IntegrationRegistry;
 import com.gtsn.lib.core.GtsnBuildInfo;
+import com.gtsn.lib.core.GtsnIntegrations;
+import com.gtsn.lib.core.IntegrationSummary;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -13,9 +16,9 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
 /**
- * {@code /gtsnlib} 诊断命令：打印库版本与当前联动数。
+ * {@code /gtsnlib} 诊断命令：打印库版本、已登记联动数与各目标 mod 的在场/缺席状态。
  *
- * <p>按 ADR-0003，事件订阅类不得引用任何可选联动 mod 的类型；仅使用纯静态 {@link GtsnBuildInfo}。</p>
+ * <p>按 ADR-0003，事件订阅类不得引用任何可选联动 mod 的类型；此处只依赖纯库类型。</p>
  */
 @Mod.EventBusSubscriber(modid = GTSNLib.MOD_ID, bus = Bus.FORGE)
 public final class GtsnCommand {
@@ -29,9 +32,11 @@ public final class GtsnCommand {
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {
-        // T1: 尚无联动模块，固定为 0；T2 起由 IntegrationRegistry 提供真实计数。
-        String status = GtsnBuildInfo.formatStatus(GtsnBuildInfo.VERSION, 0);
-        context.getSource().sendSuccess(() -> Component.literal(status), false);
+        IntegrationRegistry registry = GtsnIntegrations.registry();
+        for (String line : IntegrationSummary.commandLines(
+                GtsnBuildInfo.VERSION, registry.registeredCount(), GtsnIntegrations.targetStates(registry))) {
+            context.getSource().sendSuccess(() -> Component.literal(line), false);
+        }
         return 1;
     }
 }

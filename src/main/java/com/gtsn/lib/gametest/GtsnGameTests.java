@@ -1,6 +1,7 @@
 package com.gtsn.lib.gametest;
 
 import com.gtsn.lib.GTSNLib;
+import com.gtsn.lib.core.config.GtsnCommonConfig;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.gametest.framework.GameTest;
@@ -66,8 +67,27 @@ public final class GtsnGameTests {
             helper.fail("/gtsnlib returned " + result);
             return;
         }
-        if (!messages.contains("GTSNLib 0.1.0 | integrations: 0")) {
-            helper.fail("/gtsnlib output was " + messages);
+        if (!messages.contains("GTSNLib 0.1.0 | integrations: 0 | targets present: 0/6")) {
+            helper.fail("/gtsnlib status line was " + messages);
+            return;
+        }
+        for (String modId : List.of("mekanism", "immersiveengineering", "create", "ae2", "enderio", "ad_astra")) {
+            if (!messages.contains(modId + ": absent")) {
+                helper.fail("/gtsnlib did not report target " + modId + ": " + messages);
+                return;
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void commonConfigIsLoaded(GameTestHelper helper) {
+        if (GtsnCommonConfig.INSTANCE == null) {
+            helper.fail("common config was not registered");
+            return;
+        }
+        if (!GtsnCommonConfig.INSTANCE.logIntegrationSummary) {
+            helper.fail("common config example option has unexpected value");
             return;
         }
         helper.succeed();

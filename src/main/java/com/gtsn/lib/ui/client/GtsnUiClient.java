@@ -100,11 +100,12 @@ public final class GtsnUiClient {
         }
     }
 
-    /** 通过 {@link GtsnUiTestScreen} 的真实输入入口注入合成事件，覆盖 点击 → 状态更新 与 聚焦 → 字符输入 链路。 */
+    /** 通过 {@link GtsnUiTestScreen} 的真实输入入口注入合成事件，覆盖 点击 → 状态更新 与 聚焦 → 键盘/字符输入 链路。 */
     private static void injectSyntheticInput(GtsnUiTestScreen screen) {
         DemoContent demo = screen.demo();
         click(screen, demo.clickButton());
         click(screen, demo.keypad());
+        screen.keyPressed('K', 0, 0);
         screen.charTyped('A', 0);
         LOGGER.info("[GTSNLib] autotest synthetic input: clicks={} lastKey={} typed={}",
                 demo.state().clicks(), demo.state().lastKey(), demo.state().typed());

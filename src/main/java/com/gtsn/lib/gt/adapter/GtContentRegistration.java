@@ -112,23 +112,23 @@ public final class GtContentRegistration {
      *
      * <p>{@code GTRegistries.MACHINES} 的 {@code frozen} 初值为 {@code true}；GTCEu 仅在自身机器注册期
      * （发出 {@link GTCEuAPI.RegisterEvent} 时）解冻，并在事件之后立即冻结。窗口一旦关闭，任何
-     * {@code registerMachine(...)} 都会被拒绝——本方法把该情形翻译成可操作的错误（说明窗口与文档位置），
-     * 而不是只抛出 GTCEu 原始的 {@code "[register] registry gtceu:machine has been frozen"}。</p>
+     * {@code registerMachine(...)} 都会被拒绝——本方法先检查冻结态，把该情形翻译成可操作的错误
+     * （说明窗口与文档位置），而不是只抛出 GTCEu 原始的
+     * {@code "[register] registry gtceu:machine has been frozen"}。</p>
      *
-     * @throws IllegalStateException 机器注册窗口已关闭，或 GTCEu 拒绝注册（均附带可操作说明）
+     * <p>注册本身抛出的其它运行时异常（规格非法、重复登记等）保持原样向上传播，不做二次包装，
+     * 避免被误诊为「窗口已关闭」。</p>
+     *
+     * @throws IllegalStateException 机器注册窗口已关闭（附带可操作说明）
      */
     static MachineRegistration registerDemoMachine(GtAdapter adapter) {
         if (GTRegistries.MACHINES.isFrozen()) {
             throw new IllegalStateException(frozenWindowMessage(NAMESPACE));
         }
-        try {
-            return adapter.registerMachine(MachineSpec.builder(NAMESPACE, GtAdapter.DEMO_MACHINE_ID)
-                    .tier(1)
-                    .displayName("Test Machine")
-                    .build());
-        } catch (RuntimeException failure) {
-            throw new IllegalStateException(frozenWindowMessage(NAMESPACE), failure);
-        }
+        return adapter.registerMachine(MachineSpec.builder(NAMESPACE, GtAdapter.DEMO_MACHINE_ID)
+                .tier(1)
+                .displayName("Test Machine")
+                .build());
     }
 
     /** 机器注册窗口已关闭时的可操作错误说明。 */

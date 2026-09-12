@@ -23,5 +23,7 @@ public final class IntegrationModules {
                 () -> () -> new com.gtsn.lib.integration.immersiveengineering.ImmersiveEngineeringIntegration());
         registry.register(IntegrationTargets.CREATE.modId(),
                 () -> () -> new com.gtsn.lib.integration.create.CreateIntegration());
+        registry.register(IntegrationTargets.AE2.modId(),
+                () -> () -> new com.gtsn.lib.integration.ae2.Ae2Integration());
     }
 }

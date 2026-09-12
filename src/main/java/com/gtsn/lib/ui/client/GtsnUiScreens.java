@@ -16,7 +16,8 @@ import org.slf4j.Logger;
  * 客户端菜单屏幕注册（仅客户端加载，{@code bus = MOD} 订阅 {@link FMLClientSetupEvent}）。
  *
  * <p>把 {@link DemoMenus#SYNC_DEMO} 绑定到 {@link DemoMenuScreen}，使服务端打开菜单时客户端
- * 能创建对应界面。专职服务端不加载本类（类加载纪律，见 ADR-0003/0004）。</p>
+ * 能创建对应界面。演示门控关闭时该菜单类型未注册，此处跳过绑定（容忍缺席）。专职服务端不加载
+ * 本类（类加载纪律，见 ADR-0003/0004）。</p>
  */
 @Mod.EventBusSubscriber(modid = GTSNLib.MOD_ID, bus = Bus.MOD, value = Dist.CLIENT)
 public final class GtsnUiScreens {
@@ -29,6 +30,10 @@ public final class GtsnUiScreens {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
+            if (!DemoMenus.SYNC_DEMO.isPresent()) {
+                LOGGER.info("[GTSNLib] demo content disabled; skipping sync demo menu screen registration");
+                return;
+            }
             MenuScreens.register(DemoMenus.SYNC_DEMO.get(), DemoMenuScreen::new);
             LOGGER.info("[GTSNLib] sync demo menu screen registered");
         });

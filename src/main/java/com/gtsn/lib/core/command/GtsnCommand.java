@@ -22,6 +22,7 @@ import com.gtsn.lib.gt.registration.MaterialPart;
 import com.gtsn.lib.gt.registration.MaterialRegistration;
 import com.gtsn.lib.gt.registration.RegistrationKind;
 import com.gtsn.lib.ui.demo.DemoMenu;
+import com.gtsn.lib.ui.demo.DemoMenus;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -175,10 +176,17 @@ public final class GtsnCommand {
     /**
      * {@code /gtsnlib ui}：为执行者打开数据同步演示菜单（#19 的游戏内入口）。
      *
-     * <p>菜单由服务端创建并经 {@code NetworkHooks.openScreen} 打开；需玩家执行。</p>
+     * <p>菜单由服务端创建并经 {@code NetworkHooks.openScreen} 打开；需玩家执行。演示门控关闭时
+     * 菜单类型未登记，此处返回可读失败信息，而不是让 {@code SYNC_DEMO.get()} 抛错。</p>
      */
     private static int executeUi(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
+        if (!DemoMenus.SYNC_DEMO.isPresent()) {
+            context.getSource().sendFailure(Component.literal(
+                    "[GTSNLib] demo content is disabled; sync demo menu is not registered"
+                            + " (set registerDemoContent=true to enable)."));
+            return 0;
+        }
         NetworkHooks.openScreen(player, DemoMenu.provider());
         return 1;
     }

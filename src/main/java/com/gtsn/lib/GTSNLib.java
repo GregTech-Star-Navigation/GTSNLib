@@ -27,9 +27,12 @@ public class GTSNLib {
         // 通用注册简化层（#15）：机器必须在 GTCEu 冻结 gtceu:machine 之前的 GenericEvent 窗口注册，
         // 该事件需经 addGenericListener 订阅；经适配层接线，入口不接触 GTCEu 类型（ADR-0005）。
         GtContentRegistration.subscribe(modEventBus);
-        // UI 数据同步演示菜单类型（#19）：两端一致注册；客户端屏幕由 Dist.CLIENT 侧的 GtsnUiScreens 绑定。
-        DemoMenus.register(modEventBus);
+        // 配置须先就绪：演示门控（DemoContentRuntime.enabled）读取 common 配置项，
+        // 之后才能决定是否挂接演示菜单类型的 DeferredRegister（生产安装默认不登记）。
         GtsnConfig.init();
+        // UI 数据同步演示菜单类型（#19）：两端一致注册（受演示门控约束）；
+        // 客户端屏幕由 Dist.CLIENT 侧的 GtsnUiScreens 绑定。
+        DemoMenus.register(modEventBus);
         ForgeModPresence presence = new ForgeModPresence();
         GtsnIntegrations.bootstrap(presence);
         // Mekanism 化学注册（#14）：其化学注册表经 Forge RegisterEvent 填充，必须在注册事件前接线，

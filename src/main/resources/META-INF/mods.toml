@@ -31,8 +31,8 @@ side="BOTH"
 [[dependencies.gtsnlib]]
 modId="gtceu"
 mandatory=true
-versionRange="[7.5.3,)"
-ordering="NONE"
+versionRange="[7.5.3,8.0.0)"
+ordering="AFTER"
 side="BOTH"
 
 [[dependencies.gtsnlib]]

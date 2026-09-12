@@ -1,5 +1,6 @@
 package com.gtsn.lib.ui.screen;
 
+import com.gtsn.lib.ui.client.ThemeFontMetrics;
 import com.gtsn.lib.ui.demo.DemoMenu;
 import com.gtsn.lib.ui.demo.DemoSync;
 import com.gtsn.lib.ui.demo.SyncDemoContent;
@@ -82,16 +83,6 @@ public final class DemoMenuScreen extends GtsnScreen implements MenuAccess<DemoM
     }
 
     private static TextMetrics fontMetrics() {
-        return new TextMetrics() {
-            @Override
-            public int width(String text) {
-                return Minecraft.getInstance().font.width(text);
-            }
-
-            @Override
-            public int lineHeight() {
-                return Minecraft.getInstance().font.lineHeight;
-            }
-        };
+        return new ThemeFontMetrics(Minecraft.getInstance().font);
     }
 }

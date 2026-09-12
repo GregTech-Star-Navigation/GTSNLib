@@ -2,6 +2,7 @@ package com.gtsn.lib.ui;
 
 import com.gtsn.lib.ui.render.RenderContext;
 import com.gtsn.lib.ui.render.TextureRef;
+import com.gtsn.lib.ui.theme.FontId;
 import com.gtsn.lib.ui.theme.Theme;
 import com.gtsn.lib.ui.theme.ThemeContext;
 
@@ -68,6 +69,12 @@ public final class RecordingRenderContext implements RenderContext {
         return text.length() * 6;
     }
 
+    /** 字体感知宽度（#23）：自定义字体按 11px/字符记录，用于断言度量来源。 */
+    @Override
+    public int textWidth(String text, FontId font) {
+        return font != null && !FontId.VANILLA.equals(font) ? text.length() * 11 : text.length() * 6;
+    }
+
     @Override
     public int textLineHeight() {
         return 9;
@@ -87,6 +94,13 @@ public final class RecordingRenderContext implements RenderContext {
     @Override
     public void text(String text, int x, int y, int argb, boolean shadow) {
         ops.add("text(" + text + "@" + x + "," + y + "," + Integer.toHexString(argb) + ",shadow=" + shadow + ")");
+    }
+
+    /** 字体感知绘制（#23）：显式字体追加 {@code font=<id>} 供断言（null = 未指定）。 */
+    @Override
+    public void text(String text, int x, int y, int argb, boolean shadow, FontId font) {
+        ops.add("text(" + text + "@" + x + "," + y + "," + Integer.toHexString(argb) + ",shadow=" + shadow
+                + (font != null ? ",font=" + font : "") + ")");
     }
 
     @Override

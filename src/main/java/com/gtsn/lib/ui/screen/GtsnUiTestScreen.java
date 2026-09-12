@@ -1,5 +1,6 @@
 package com.gtsn.lib.ui.screen;
 
+import com.gtsn.lib.ui.client.ThemeFontMetrics;
 import com.gtsn.lib.ui.demo.DemoContent;
 import com.gtsn.lib.ui.demo.DemoIcons;
 import com.gtsn.lib.ui.demo.DemoState;
@@ -121,16 +122,6 @@ public final class GtsnUiTestScreen extends GtsnScreen {
     }
 
     private static TextMetrics fontMetrics() {
-        return new TextMetrics() {
-            @Override
-            public int width(String text) {
-                return Minecraft.getInstance().font.width(text);
-            }
-
-            @Override
-            public int lineHeight() {
-                return Minecraft.getInstance().font.lineHeight;
-            }
-        };
+        return new ThemeFontMetrics(Minecraft.getInstance().font);
     }
 }

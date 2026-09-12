@@ -1,5 +1,6 @@
 package com.gtsn.lib.ui.render;
 
+import com.gtsn.lib.ui.theme.FontId;
 import com.gtsn.lib.ui.theme.Theme;
 import com.gtsn.lib.ui.theme.ThemeContext;
 
@@ -11,6 +12,10 @@ import com.gtsn.lib.ui.theme.ThemeContext;
  * <p>主题接入（#18）：控件默认颜色 / 度量经 {@link #theme()} 取值（缺省跟随
  * {@link ThemeContext} 当前主题）；纹理型绘制先经 {@link #textureReady(TextureRef)}
  * 判定可绘制性，缺纹理时回退纯色。</p>
+ *
+ * <p>字体接入（#23）：无字体的 {@code text} / {@code textWidth} 使用当前主题字体
+ * （由客户端后端套 {@code Style.withFont}；无字体能力的上下文忽略）；带 {@link FontId}
+ * 参数的重载为逐控件显式覆盖（{@code null} = 原版默认字体）。</p>
  */
 public interface RenderContext {
 
@@ -20,6 +25,14 @@ public interface RenderContext {
 
     /** 文本渲染宽度（用于固有尺寸测量与居中）。 */
     int textWidth(String text);
+
+    /**
+     * 字体感知文本宽度：{@code font} 为显式字体（{@code null} 视为原版默认字体）。
+     * 默认忽略字体（无字体能力的上下文），客户端后端按 {@code Style.withFont} 语义度量。
+     */
+    default int textWidth(String text, FontId font) {
+        return textWidth(text);
+    }
 
     /** 单行文本高度。 */
     int textLineHeight();
@@ -31,9 +44,22 @@ public interface RenderContext {
 
     void text(String text, int x, int y, int argb, boolean shadow);
 
+    /**
+     * 字体感知文本绘制：{@code font} 为显式字体（{@code null} 视为原版默认字体）。
+     * 默认忽略字体；客户端后端把字体套进 {@code Style.withFont} 再绘制。
+     */
+    default void text(String text, int x, int y, int argb, boolean shadow, FontId font) {
+        text(text, x, y, argb, shadow);
+    }
+
     /** 以 centerX 为中心的水平居中文本。 */
     default void centeredText(String text, int centerX, int y, int argb, boolean shadow) {
         text(text, centerX - textWidth(text) / 2, y, argb, shadow);
+    }
+
+    /** 字体感知的居中文本：起点按字体感知宽度计算。 */
+    default void centeredText(String text, int centerX, int y, int argb, boolean shadow, FontId font) {
+        text(text, centerX - textWidth(text, font) / 2, y, argb, shadow, font);
     }
 
     /**

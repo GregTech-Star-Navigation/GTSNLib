@@ -5,12 +5,14 @@ import com.gtsn.lib.ui.layout.Rect;
 import com.gtsn.lib.ui.layout.Size;
 import com.gtsn.lib.ui.layout.Sizing;
 import com.gtsn.lib.ui.render.RenderContext;
+import com.gtsn.lib.ui.theme.FontId;
 import com.gtsn.lib.ui.theme.Theme;
 import com.gtsn.lib.ui.theme.ThemeColor;
 import com.gtsn.lib.ui.theme.ThemeColorRole;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * 文本控件：内容宽度/行高来自 {@link TextMetrics}，作为固有尺寸参与布局；可换色与阴影。
@@ -19,6 +21,10 @@ import java.util.Objects;
  * 阴影默认取主题文本度量，{@link #shadow(boolean)} 显式覆盖。支持多行文本：
  * {@link #wrap(int)} 按像素宽度自动换行（超长单词硬断），{@link #lineSpacing(int)} 增加行距，
  * {@link #align(TextAlign)} 控制行在包围盒内的水平对齐。</p>
+ *
+ * <p>字体（#23）：默认跟随主题文本字体（{@code ThemeTextStyle.fontId()}，由渲染上下文落实）；
+ * {@link #font(FontId)} / {@link #vanillaFont()} 可逐控件覆盖，覆盖同时驱动度量与渲染，
+ * 保证换行与固有尺寸按实际字体计算。</p>
  */
 public final class TextWidget extends AbstractWidget {
 
@@ -30,17 +36,21 @@ public final class TextWidget extends AbstractWidget {
     private TextAlign align = TextAlign.LEFT;
     private int wrapWidth;
     private int lineSpacing;
+    private FontId fontOverride;
+    private TextMetrics cachedMetrics;
+    private FontId cachedMetricsFont;
 
     public TextWidget(String text, TextMetrics metrics) {
         this.text = Objects.requireNonNull(text, "text");
         this.metrics = Objects.requireNonNull(metrics, "metrics");
         node().contentMeasurer((widthSpec, heightSpec) -> {
             List<String> measurementLines = lines();
+            TextMetrics measure = effectiveMetrics();
             int width = 0;
             for (String line : measurementLines) {
-                width = Math.max(width, metrics.width(line));
+                width = Math.max(width, measure.width(line));
             }
-            int height = measurementLines.size() * metrics.lineHeight()
+            int height = measurementLines.size() * measure.lineHeight()
                     + Math.max(0, measurementLines.size() - 1) * lineSpacing;
             return Size.of(widthSpec.resolve(width), heightSpec.resolve(height));
         });
@@ -114,6 +124,54 @@ public final class TextWidget extends AbstractWidget {
         return lineSpacing;
     }
 
+    /** 逐控件字体覆盖：度量与渲染均按该字体（覆盖主题字体）。 */
+    public TextWidget font(FontId font) {
+        this.fontOverride = Objects.requireNonNull(font, "font");
+        return this;
+    }
+
+    /** 强制原版默认字体（{@link FontId#VANILLA}）：度量与渲染均回退原版。 */
+    public TextWidget vanillaFont() {
+        return font(FontId.VANILLA);
+    }
+
+    /** 取消逐控件覆盖，恢复跟随主题字体（默认）。 */
+    public TextWidget useThemeFont() {
+        this.fontOverride = null;
+        return this;
+    }
+
+    /** 当前逐控件字体覆盖；空表示跟随主题。 */
+    public Optional<FontId> fontOverride() {
+        return Optional.ofNullable(fontOverride);
+    }
+
+    /**
+     * 实际用于度量 / 换行的字体度量：有覆盖时包一层 {@link TextMetrics#width(String, FontId)}，
+     * 其余方法与注入度量一致。
+     */
+    private TextMetrics effectiveMetrics() {
+        if (fontOverride == null) {
+            return metrics;
+        }
+        if (cachedMetrics == null || !fontOverride.equals(cachedMetricsFont)) {
+            FontId font = fontOverride;
+            cachedMetricsFont = font;
+            cachedMetrics = new TextMetrics() {
+                @Override
+                public int width(String value) {
+                    return metrics.width(value, font);
+                }
+
+                @Override
+                public int lineHeight() {
+                    return metrics.lineHeight();
+                }
+            };
+        }
+        return cachedMetrics;
+    }
+
     public TextWidget margin(Insets margin) {
         node().params().margin(margin);
         return this;
@@ -131,7 +189,7 @@ public final class TextWidget extends AbstractWidget {
 
     /** 当前换行结果；未启用换行时为单行。 */
     public List<String> lines() {
-        return TextWrapper.wrap(text, metrics, wrapWidth);
+        return TextWrapper.wrap(text, effectiveMetrics(), wrapWidth);
     }
 
     @Override
@@ -145,12 +203,17 @@ public final class TextWidget extends AbstractWidget {
         int totalHeight = lines.size() * lineHeight + Math.max(0, lines.size() - 1) * lineSpacing;
         int y = box.y() + Math.max(0, (box.height() - totalHeight) / 2);
         for (String line : lines) {
+            int lineWidth = fontOverride == null ? context.textWidth(line) : context.textWidth(line, fontOverride);
             int x = switch (align) {
                 case LEFT -> box.x();
-                case CENTER -> box.x() + (box.width() - context.textWidth(line)) / 2;
-                case RIGHT -> box.right() - context.textWidth(line);
+                case CENTER -> box.x() + (box.width() - lineWidth) / 2;
+                case RIGHT -> box.right() - lineWidth;
             };
-            context.text(line, x, y, renderedColor, renderedShadow);
+            if (fontOverride == null) {
+                context.text(line, x, y, renderedColor, renderedShadow);
+            } else {
+                context.text(line, x, y, renderedColor, renderedShadow, fontOverride);
+            }
             y += lineHeight + lineSpacing;
         }
     }

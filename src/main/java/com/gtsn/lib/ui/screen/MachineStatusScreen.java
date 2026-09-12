@@ -2,6 +2,7 @@ package com.gtsn.lib.ui.screen;
 
 import com.gtsn.lib.api.GtMachineSnapshot;
 import com.gtsn.lib.gt.adapter.GtMachineSnapshots;
+import com.gtsn.lib.ui.client.ThemeFontMetrics;
 import com.gtsn.lib.ui.layout.CrossAxisAlign;
 import com.gtsn.lib.ui.layout.Insets;
 import com.gtsn.lib.ui.layout.MainAxisAlign;
@@ -92,16 +93,6 @@ public final class MachineStatusScreen extends GtsnScreen {
     }
 
     private static TextMetrics fontMetrics() {
-        return new TextMetrics() {
-            @Override
-            public int width(String text) {
-                return Minecraft.getInstance().font.width(text);
-            }
-
-            @Override
-            public int lineHeight() {
-                return Minecraft.getInstance().font.lineHeight;
-            }
-        };
+        return new ThemeFontMetrics(Minecraft.getInstance().font);
     }
 }

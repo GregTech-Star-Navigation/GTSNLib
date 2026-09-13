@@ -64,4 +64,35 @@ class ProgressArrowWidgetTest {
         assertTrue(ctx.ops.contains("pushClip(0,0,8,16)"), "按比例 8px 裁剪: " + ctx.ops);
         assertTrue(ctx.ops.contains("popClip"), "裁剪必须闭合: " + ctx.ops);
     }
+
+    /**
+     * 工作态真的影响渲染（#22 评审 F1-6）：空闲（默认 false）把填充色 alpha 减半，运行中用完整填充色。
+     */
+    @Test
+    void idleFillIsDimmedWhileWorkingFillIsFull() {
+        RecordingRenderContext idle = renderArrow(false);
+        RecordingRenderContext working = renderArrow(true);
+
+        assertTrue(idle.ops.stream().anyMatch(op -> op.endsWith(",8000a0ff)")),
+                "空闲态应为半透明填充: " + idle.ops);
+        assertFalse(idle.ops.stream().anyMatch(op -> op.endsWith(",ff00a0ff)")), "空闲态不应整色填充: " + idle.ops);
+
+        assertTrue(working.ops.stream().anyMatch(op -> op.endsWith(",ff00a0ff)")),
+                "工作态应为完整填充色: " + working.ops);
+    }
+
+    private static RecordingRenderContext renderArrow(boolean working) {
+        Stack root = Stack.vertical();
+        ProgressArrowWidget arrow = root.add(new ProgressArrowWidget()
+                .colors(0xFF101010, 0xFF00A0FF, 0xFF555555)
+                .working(working)
+                .fixedSize(40, 16)
+                .progress(20, 100));
+        WidgetHost host = new WidgetHost(root);
+        host.resize(40, 16);
+        RecordingRenderContext ctx = new RecordingRenderContext(40, 16);
+        host.render(ctx);
+        assertEquals(0.2, arrow.ratio(), 1e-9);
+        return ctx;
+    }
 }

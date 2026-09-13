@@ -1,12 +1,15 @@
 package com.gtsn.lib.ui.screen;
 
+import com.gtsn.lib.ui.client.ThemeFontMetrics;
 import com.gtsn.lib.ui.input.InputEvent;
 import com.gtsn.lib.ui.render.GuiGraphicsRenderContext;
 import com.gtsn.lib.ui.render.RenderContext;
 import com.gtsn.lib.ui.theme.Theme;
 import com.gtsn.lib.ui.theme.ThemeColorRole;
 import com.gtsn.lib.ui.theme.ThemeContext;
+import com.gtsn.lib.ui.widget.TextMetrics;
 import com.gtsn.lib.ui.widget.Widget;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -45,6 +48,22 @@ public class GtsnScreen extends Screen {
     /** 屏幕级主题覆盖；{@code null}（默认）表示跟随 {@link ThemeContext} 当前主题。 */
     public void setTheme(Theme theme) {
         this.themeOverride = theme;
+        onThemeChanged();
+    }
+
+    /**
+     * 屏幕级主题变更钩子：子类可据此用新主题重建控件树，使文本度量绑定到新主题字体。
+     * 默认空实现（无构造期度量的屏幕无需处理）。
+     */
+    protected void onThemeChanged() {
+    }
+
+    /**
+     * 文本度量：绑定**本屏生效主题**（含 {@link #setTheme} 覆盖）的字体，使布局测量 / 换行与
+     * {@link #render} 中 {@link GuiGraphicsRenderContext} 的渲染字体一致（#22 评审 F2-1 接缝修正）。
+     */
+    protected TextMetrics textMetrics() {
+        return new ThemeFontMetrics(Minecraft.getInstance().font, theme());
     }
 
     /** 当前生效主题（渲染上下文与背景绘制共用）。 */

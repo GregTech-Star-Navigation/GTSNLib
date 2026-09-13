@@ -67,13 +67,21 @@ public final class MachineSlotsPanel extends AbstractWidget {
         return rows;
     }
 
-    /** 第 {@code index} 个槽位的图标（可能为 {@code null}）。 */
+    /** 第 {@code index} 个槽位的图标（可能为 {@code null}）；越界抛 {@link IndexOutOfBoundsException}。 */
     public SlotIcon icon(int index) {
+        if (index < 0 || index >= icons.size()) {
+            throw new IndexOutOfBoundsException(
+                    "icon index out of range [0, " + icons.size() + "): " + index);
+        }
         return icons.get(index);
     }
 
     /** 第 {@code index} 个槽位控件；越界抛 {@link IndexOutOfBoundsException}。 */
     public ItemSlotWidget slot(int index) {
+        if (index < 0 || index >= slots.size()) {
+            throw new IndexOutOfBoundsException(
+                    "slot index out of range [0, " + slots.size() + "): " + index);
+        }
         return slots.get(index);
     }
 

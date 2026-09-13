@@ -60,6 +60,7 @@ class MachineSlotsPanelTest {
         assertEquals(0, panel.slotCount());
         assertEquals(0, panel.rows());
         assertThrows(IndexOutOfBoundsException.class, () -> panel.slot(0));
+        assertThrows(IndexOutOfBoundsException.class, () -> panel.icon(0));
     }
 
     @Test

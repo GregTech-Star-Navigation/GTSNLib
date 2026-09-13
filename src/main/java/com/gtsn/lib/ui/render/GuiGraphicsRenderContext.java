@@ -109,6 +109,8 @@ public final class GuiGraphicsRenderContext implements RenderContext {
 
     /** 字体感知绘制：{@code requested} 不可应用（原版 / 资源缺失）时按无样式绘制。 */
     private void renderText(String text, int x, int y, int argb, boolean shadow, FontId requested) {
+        // TODO(#24 F2-2): 每帧为每个文本构造 Component.withStyle 会产生临时分配；当前文本规模可接受。
+        // 若后续（方案 B / 大量仪表盘文本）分配成为瓶颈，改按 (text, fontId) 缓存 Component 或 Styles。
         graphics.drawString(font, ClientFonts.styled(text, requested), x, y, argb, shadow);
     }
 

@@ -14,8 +14,14 @@ import com.gtsn.lib.ui.theme.ThemeColorRole;
  *
  * <p>状态逻辑（进度钳制、比例映射、工作态）与渲染解耦，可在无游戏环境测试。箭头以纯矩形
  * 拼出（不依赖字体 / 纹理）；未填充部分取轨道色，已填充部分按比例裁剪后取填充色。</p>
+ *
+ * <p>工作态（{@link #working(boolean)}）：{@code true} 用完整填充色；{@code false}（空闲 / 暂停）
+ * 把填充色按 {@value #IDLE_ALPHA_SCALE} 降低 alpha，呈现「变暗」的空闲视觉，避免把暂停态误读为运行中。</p>
  */
 public final class ProgressArrowWidget extends AbstractWidget {
+
+    /** 空闲态填充色 alpha 缩放（{@code false} 时）。 */
+    private static final float IDLE_ALPHA_SCALE = 0.5f;
 
     private int progress;
     private int maxProgress;
@@ -124,9 +130,20 @@ public final class ProgressArrowWidget extends AbstractWidget {
         int fillWidth = (int) Math.round(ratio() * box.width());
         if (fillWidth > 0) {
             context.pushClip(box.x(), box.y(), fillWidth, box.height());
-            drawArrow(context, inner, fillColor.resolve(theme));
+            drawArrow(context, inner, fillColor(theme));
             context.popClip();
         }
+    }
+
+    /** 填充色：工作中用完整色，空闲态降低 alpha。 */
+    private int fillColor(Theme theme) {
+        int argb = fillColor.resolve(theme);
+        return working ? argb : scaleAlpha(argb, IDLE_ALPHA_SCALE);
+    }
+
+    private static int scaleAlpha(int argb, float scale) {
+        int alpha = Math.round(((argb >>> 24) & 0xFF) * scale);
+        return (Math.max(0, Math.min(255, alpha)) << 24) | (argb & 0x00FFFFFF);
     }
 
     /** 以矩形拼出右向箭头（箭杆 + 三角箭头），不依赖字体 / 纹理。 */

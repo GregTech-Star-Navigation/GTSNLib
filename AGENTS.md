@@ -4,6 +4,7 @@ GTSNLib 是 **GTSN（GregTech Star Navigation）** 项目群的前置库 mod（M
 
 - 全局偏好见 `~/.config/opencode/AGENTS.md`
 - 领域词汇见 `CONTEXT.md`；架构决策见 `docs/adr/`
+- **硬性约束见 `docs/constraints.md`**（依赖版本区间 / import 隔离 / 类加载纪律 / 发布与提交规则）——改代码前先读
 
 ## Agent skills
 

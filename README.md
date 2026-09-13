@@ -10,6 +10,7 @@
 > GT 自身的机器界面保持原渲染（不做接管）。库不含具体游戏内容。
 
 - 领域词汇：`CONTEXT.md` ｜ 架构决策：`docs/adr/`
+- **约束清单：`docs/constraints.md`**（依赖 / 架构 / 发布 / 工程硬约束）
 - 开发文档：`docs/ui.md` · `docs/registration.md` · `docs/gt-machine-bridge.md` · `docs/acceptance.md`
 - License：**LGPL-3.0**
 

@@ -41,6 +41,14 @@ GTSNLib 提供一条**只读**通道，把 GTCEu（7.5.3）机器状态读进 GT
 `getItemHandler` / `getFluidHandler`；机器身份与 tier 取 `MetaMachine#getDefinition()`。
 缺失能力的机器返回 0 / 空列表，不失败。
 
+### 调试写入（同步证据用）
+
+`com.gtsn.lib.gt.adapter.GtMachineDebug.charge(Level, BlockPos, long)` 是适配层**唯一的写操作**：
+向坐标处能量容器 `changeEnergy(delta)`，成功后调用 `MetaMachine#onChanged()` 触发 LDLib 推送。
+（`NotifiableEnergyContainer.changeEnergy` 只改字段、不标脏，若不显式 `onChanged`，客户端的
+`@DescSynced` 镜像永远停在旧值——这正是 #24 F1-1 暴露的同步证据缺口。）它只服务开发命令
+`/gtsnlib debug charge <x> <y> <z> <eu>` 与自动测试；只读展示路径不使用。
+
 ### 客户端同步语义
 
 GT 机器状态由 **LDLib 托管同步**（`IManaged` / `FieldManagedStorage` / `@Persisted` / `@DescSynced`）：
@@ -60,18 +68,25 @@ GT 机器状态由 **LDLib 托管同步**（`IManaged` / `FieldManagedStorage` /
 | --- | --- | --- |
 | `EnergyBarWidget` | `energy(stored, capacity)`、`ratio()`（存量钳制到容量）、`labelText()` | 水平比例条，内置标签 `stored/capacity EU` |
 | `TankWidget` | `tank(amount, capacity)`、`ratio()`、`fluidName()` | 垂直罐，自底向上填充（不持有 `FluidStack`，由界面翻译为存量 / 容量 / 名称） |
-| `ProgressArrowWidget` | `progress(progress, maxProgress)`、`ratio()`、`working()` | 向右箭头，按比例裁剪填充 |
-| `MachineSlotsPanel` | `slotCount()` / `columns()` / `rows()` / `icon(i)` / `slot(i)` | 图标网格（每格 `ItemSlotWidget`），空槽用 `null` 图标 |
-| `MachineStatusPanel` | 从 `GtMachineSnapshot` 装配上述组件 + 标题 / 状态文本 | `PanelWidget` 容器，标题为机器 id；物品图标经注入的 `ItemStack→SlotIcon` 映射器翻译 |
+| `ProgressArrowWidget` | `progress(progress, maxProgress)`、`ratio()`、`working()` | 向右箭头，按比例裁剪填充；空闲（`working=false`）降低填充 alpha 变暗，区分运行 / 暂停 |
+| `MachineSlotsPanel` | `slotCount()` / `columns()` / `rows()` / `icon(i)` / `slot(i)` | 图标网格（每格 `ItemSlotWidget`），空槽用 `null` 图标；`icon(i)` / `slot(i)` 越界统一抛 `IndexOutOfBoundsException` |
+| `MachineStatusPanel` | 从 MC-free 的 `MachineStatusView` 装配上述组件 + 标题 / 状态文本 | `PanelWidget` 容器，标题为机器 id；`ui.widget` **无 MC 依赖** |
 
-`MachineStatusPanel` 的映射器让客户端用 `ItemStackIcon::of` 渲染真实物品图标，而组件本身与 MC 类型解耦。
+`MachineStatusView`（MC-free 视图模型，`ui.widget`）：槽位 = `Slot(index, SlotIcon)`（图标无关载荷，
+空槽 `null`），流体罐 = `Tank(amount, capacity, name)`。`GtMachineSnapshot`（含 `ItemStack` /
+`FluidStack`）→ 视图模型的翻译由**客户端 binder** `com.gtsn.lib.ui.client.MachineStatusViewBinder`
+完成（`ItemStackIcon::of` 渲染真实物品图标、`FluidStack#getDisplayName` 取罐名），故组件层与 MC 类型解耦、
+可在无游戏环境测试，同时依赖 mod 可用纯视图复用 `MachineStatusPanel`。
 
 ## 4. 机器状态界面与开发入口
 
 - `com.gtsn.lib.ui.screen.MachineStatusScreen`（客户端）：只读展示一台机器的实时快照，每 5 tick 从
-  客户端镜像机器重取快照并重建控件树。界面无可操作控件。
+  客户端镜像机器重取快照并重建控件树。界面无可操作控件。文本度量绑定本屏**生效主题**字体
+  （`GtsnScreen#textMetrics()`，含屏幕级覆盖），换行与渲染字体一致（#24 F2-1）。
 - **`/gtsnui machine`**（客户端命令，本地执行、不发往服务器）：对玩家注视的 GT 机器（8 格内）打开该界面；
   未注视 GT 机器时给出提示。命令与自动测试接线见 `com.gtsn.lib.ui.client.GtsnUiClient`。
+- **`/gtsnlib debug charge <x> <y> <z> <eu>`**（服务端命令，权限 ≥ 2）：调试 / 自动测试用，向坐标处机器
+  能量容器注入（或移除）能量并触发客户端镜像同步；不用于正常游玩。
 
 ## 5. 自动测试（无人值守证据）
 
@@ -80,10 +95,14 @@ $env:GTSNLIB_UI_AUTOTEST="machine"; .\gradlew.bat runClient; Remove-Item Env:\GT
 ```
 
 客户端进入标题界面后固定窗口，创建 / 载入存档 `gtsnlib-machine-autotest`，服务端在玩家旁
-`setblock gtsnlib:test_machine`，等待客户端镜像机器同步到能量容量后打开 `MachineStatusScreen`，
-校验界面快照的机器 id / tier / 能量字段，抓图 `run/screenshots/gtsnlib-ui-machine-status.png` 并退出。
-`gtsnlib:test_machine` 继承 GTCEu `TieredEnergyMachine`（tier 1 / LV，能量容量 2048 EU），故该测试同时
-证明**客户端 `@DescSynced` 能量读取**。
+`setblock gtsnlib:test_machine`。随后**服务端经集成服务端执行 `/gtsnlib debug charge`**：先把存量排空到 0，
+等客户端镜像读到 0（清除复用存档里的历史值），再注入 512 EU，客户端轮询到 `energyStored() > 0` 才算通过；
+超时即 FAIL（#24 F1-1）。然后打开 `MachineStatusScreen`，校验界面快照的机器 id / tier / 非零能量，抓图
+`run/screenshots/gtsnlib-ui-machine-status.png` 并退出。
+
+> **能量容量 2048 不是同步证据**：它是 `GTValues.V[tier]*64*amperage` 的 tier 派生值，两端一致；
+> 只有「服务端注入后客户端从 0 变为非零」的跃迁才证明 `@DescSynced` 镜像读取。该断言可失败——
+> 去掉注入（或去掉 `GtMachineDebug` 的 `onChanged`）时客户端保持 0，测试 RED。
 
 ## 6. 纪律与边界
 
@@ -93,7 +112,10 @@ $env:GTSNLIB_UI_AUTOTEST="machine"; .\gradlew.bat runClient; Remove-Item Env:\GT
 - **不引入 GT 类型到 `api`**：`GtMachineSnapshot` 只含 MC 公共类型（`ItemStack` / `FluidStack`）。
 - **客户端类不在专职服务端加载**：`MachineStatusScreen` / `GtsnUiClient` / `GtsnUiMachineAutotest` 均
   由 `@EventBusSubscriber(Dist.CLIENT)` 或客户端 Screen 链路限定；`runServer` 日志无客户端类加载。
-- **只读**：适配层只调读取方法；界面无写回，不打开 GT 原生机器界面。
+- **只读展示**：`GtMachineSnapshots`（含界面链路）只调读取方法；界面无写回，不打开 GT 原生机器界面。
+  唯一的适配层写操作是 `GtMachineDebug.charge`，仅服务调试命令 / 自动测试。
+- **`ui.widget` 无 MC 依赖**（#24 F1-3）：机器面板经 MC-free 的 `MachineStatusView` 消费数据，
+  MC 类型翻译收敛在客户端 binder `MachineStatusViewBinder` 与 `ItemStackIcon`。
 
 ## 7. 验证
 

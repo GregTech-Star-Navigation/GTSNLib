@@ -45,6 +45,7 @@ GitHub Issues（`gh` CLI），仓库 `GregTech-Star-Navigation/GTSNLib`。见 `d
 /gtsnlib mek                              # Mekanism 化学后端可用性 + 已登记数量
 /gtsnlib mek chemical <id>                # 化学物质存在性/种类/颜色（Mekanism 缺席时报 backend unavailable）
 /gtsnlib ui                               # （需玩家）打开容器数据同步演示菜单
+/gtsnlib debug charge <x> <y> <z> <eu>    # 调试：向坐标处 GT 机器能量容器注入/移除能量（权限 ≥2，供同步证据与自动测试）
 ```
 
 - 客户端命令 `/gtsnui`：打开组件库开发测试界面（本地执行、不发往服务器）。
@@ -52,7 +53,7 @@ GitHub Issues（`gh` CLI），仓库 `GregTech-Star-Navigation/GTSNLib`。见 `d
 - UI 自动测试（开发专用，无人值守证据，详见 `docs/ui.md`）：
   - `$env:GTSNLIB_UI_AUTOTEST="1"`：自动打开测试界面 + 合成交互 + 逐主题截图。
   - `$env:GTSNLIB_UI_AUTOTEST="sync"`：创建/载入存档进入世界 + 打开数据同步演示 + 采样校验 + 截图。
-  - `$env:GTSNLIB_UI_AUTOTEST="machine"`：创建/载入存档 + 放置 `test_machine` + 打开机器状态界面 + 校验快照 + 截图（#22）。
+  - `$env:GTSNLIB_UI_AUTOTEST="machine"`：创建/载入存档 + 放置 `test_machine` + 服务端注入能量 + 客户端 0→非零同步跃迁校验 + 打开机器状态界面 + 校验快照 + 截图（#22）。
 - 开发态 jar 在 `build/devlibs/`，可分发的 reobf jar 在 `build/libs/`。
 - Mixin refmap 生成于 `build/mixin/mixins.gtsnlib.refmap.json`；开发运行的 `--mixin.config` 由 `mixinConfigJar` 任务打包后加入 run classpath。
 - `gradle.properties` 固定 JDK 17（`org.gradle.java.home`），Gradle wrapper 为 8.14。

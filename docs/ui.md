@@ -22,10 +22,10 @@
 | `com.gtsn.lib.ui.theme` | 主题模型：`Theme` / `ThemeColorRole` / `ThemeColor` / `ThemeTextStyle`（含字体 id `FontId`）/ `FontId` / `ThemeSpacing` / `ThemeRounding` / `ThemeTextureRole`、JSON 解析器、继承解析器、注册表与全局上下文 | 无 |
 | `com.gtsn.lib.ui.sync` | 容器数据同步：`IntStore` / `SyncCodec` / `SyncCodecs` / `SyncSlot` / `SyncLayout` / `MenuSync` / `SyncSubscription`（纯）；`MenuSyncData` / `SyncedMenu`（原版 `AbstractContainerMenu` 数据槽适配） | 适配器引用原版公共类 |
 | `com.gtsn.lib.ui.sync.bind` | 绑定层：`SyncBinding` / `AbstractSyncBinding` / `LabelBinding` / `ProgressBarBinding` / `SyncBindings` / `SyncBindingGroup` | 无 |
-| `com.gtsn.lib.ui.widget` | `Widget` / `AbstractWidget` 与组件库：`Stack`、`PanelWidget`、`TextWidget`（换行/对齐/行距/字体覆盖）、`ButtonWidget`、`ProgressBarWidget`、`ItemSlotWidget`、`ScrollPanelWidget`、`CheckboxWidget`、`ToggleSwitchWidget`、`DividerWidget`、`SpacerWidget`、`Tooltip`、`TextMetrics`（字体感知度量） | 无 |
+| `com.gtsn.lib.ui.widget` | `Widget` / `AbstractWidget` 与组件库：`Stack`、`PanelWidget`、`TextWidget`（换行/对齐/行距/字体覆盖）、`ButtonWidget`、`ProgressBarWidget`、`ItemSlotWidget`、`ScrollPanelWidget`、`CheckboxWidget`、`ToggleSwitchWidget`、`DividerWidget`、`SpacerWidget`、`Tooltip`、`TextMetrics`（字体感知度量）、`ThemedTextMetrics`（绑定生效主题字体的度量接缝，#24 F2-1）、`MachineStatusView`（MC-free 机器面板视图，#24 F1-3） | 无 |
 | `com.gtsn.lib.ui.screen` | `WidgetHost`（布局/渲染/输入/工具提示覆盖层泊点，纯逻辑）；`GtsnScreen`（Screen 基类）；`GtsnUiTestScreen`（开发测试界面）；`DemoMenuScreen`（数据同步演示屏幕） | Screen 类客户端 |
 | `com.gtsn.lib.ui.demo` | 开发测试界面装配：`DemoContent`（组件画廊）、`DemoState`、`DemoIcons`（客户端图标接缝）、`KeypadWidget`、`ThemeControl`（主题切换接缝）；数据同步演示：`DemoSync`（槽位与推进规则）、`DemoMenu`（演示菜单）、`DemoMenus`（菜单类型注册）、`SyncDemoContent`（演示装配，纯） | 菜单类公共侧 |
-| `com.gtsn.lib.ui.client` | 客户端接线：`/gtsnui` 客户端命令与自动测试开关、`ThemeResources`（资源重载加载主题）、`GtsnUiThemeEvents`（重载事件注册）、`GtsnUiScreens`（菜单屏幕注册）、`GtsnUiSyncAutotest`（数据同步自动测试）、`ClientFonts`（字体可用性 + `Style.withFont` 套用）、`ThemeFontMetrics`（主题字体度量） | 客户端 |
+| `com.gtsn.lib.ui.client` | 客户端接线：`/gtsnui` 客户端命令与自动测试开关、`ThemeResources`（资源重载加载主题）、`GtsnUiThemeEvents`（重载事件注册）、`GtsnUiScreens`（菜单屏幕注册）、`GtsnUiSyncAutotest`（数据同步自动测试）、`ClientFonts`（字体可用性 + `Style.withFont` 套用）、`ThemeFontMetrics`（主题字体度量）、`MachineStatusViewBinder`（GT 快照 → MC-free 机器视图，#24 F1-3） | 客户端 |
 
 ## 组件库（#17）
 
@@ -121,7 +121,9 @@ GTSN UI 文本可指定字体资源；默认主题使用随库打包的 **更纱
 
 - `ThemeTextStyle` 新增 `fontId`（`FontId`，如 `gtsnlib:sarasa_ui_sc`）；主题 JSON 的 `text.font` 声明，沿 `extends` 链继承；链上均未声明时回退 `FontId.VANILLA`（`minecraft:default`）。
 - 渲染路径：`RenderContext` 新增字体感知重载（`text` / `textWidth` / `centeredText` 的 `FontId` 参数；`null` = 原版默认）。
-  `GuiGraphicsRenderContext` 把字体经 `Style.withFont(fontId)` 套用；`TextMetrics.width(text, fontId)` 用同一字体度量，保证换行 / 固有尺寸与实际渲染宽度一致（客户端实现 `ThemeFontMetrics`，布局与渲染共用）。
+`GuiGraphicsRenderContext` 把字体经 `Style.withFont(fontId)` 套用；`TextMetrics.width(text, fontId)` 用同一字体度量，保证换行 / 固有尺寸与实际渲染宽度一致。
+- **度量接缝（#24 F2-1）**：客户端 `ThemeFontMetrics` 绑定**本屏生效主题**（`GtsnScreen#textMetrics()`，含 `setTheme` 覆盖）解析出的字体，经 MC-free 的 `ThemedTextMetrics` 度量——不再逐次读全局 `ThemeContext.active()`；
+  屏幕覆盖主题字体时，度量 / 换行与 `GuiGraphicsRenderContext` 的渲染字体保持同一字体。单参 `ThemeFontMetrics(Font)` 保留「跟随全局主题」的默认路径。
 - 逐控件覆盖：`TextWidget.font(FontId)`（指定字体）、`.vanillaFont()`（强制原版）、`.useThemeFont()`（恢复跟随主题）；覆盖同时驱动度量与渲染。
 - 逐样式覆盖：任何主题可写 `"text": { "font": "gtsnlib:sarasa_ui_sc" }`；第三方字体只要放进 `assets/<ns>/font/` 即可被主题引用。
 - **安全回退**：`ClientFonts.ready` 校验字体定义、`ttf` 引用文件（按 `font/` 前缀）与 sfnt magic；任何一步失败都回退原版字体（不套 `Style.withFont`），避免 `FontManager` 落到 missing 字体集渲染豆腐块。
@@ -170,9 +172,18 @@ GTSN UI 文本可指定字体资源；默认主题使用随库打包的 **更纱
 - 布局 / 输入 / 渲染接口 / 控件 / 演示装配为**纯 Java**（不引用 `net.minecraft`），专职服务端与 GameTest 可安全加载。
 - `ui.screen.GtsnScreen`、`ui.screen.GtsnUiTestScreen`、`ui.render.GuiGraphicsRenderContext`、`ui.render.ItemStackIcon`、`ui.client.GtsnUiClient` 仅在客户端加载；
   `GtsnUiClient` 以 `@Mod.EventBusSubscriber(value = Dist.CLIENT)` 注册事件，专职服务端扫描时不会加载该类。
-- 字体接线同样保持无 MC 依赖内核：`FontId` / `ThemeTextStyle.fontId` / `RenderContext` 字体重载 / `TextMetrics.width(text, font)` 均为纯 Java；
+- 字体接线同样保持无 MC 依赖内核：`FontId` / `ThemeTextStyle.fontId` / `RenderContext` 字体重载 / `TextMetrics.width(text, font)` / `ThemedTextMetrics` 均为纯 Java；
   `ClientFonts` / `ThemeFontMetrics`（`ui.client`）与 `GuiGraphicsRenderContext` 仅客户端加载。
+- 机器面板同守无 MC 依赖（#24 F1-3）：`MachineStatusView` / `MachineStatusPanel` / `MachineSlotsPanel` 位于 `ui.widget` 且不引用 `net.minecraft`；
+  `ItemStack` / `FluidStack` → 视图模型的翻译只在 `ui.client.MachineStatusViewBinder`（测试无需 `MinecraftTestBootstrap`）。
 - common / 服务端代码不得引用上述客户端类（`runServer` 日志为证）。
+
+### 字体后续事项（#24 DEFER，仅记录）
+
+- **F2-2**：`GuiGraphicsRenderContext` 每帧为每段文本构造 `Component.withStyle` 会产生临时分配；当前文本规模可接受（见代码 TODO），
+  方案 B / 大量仪表盘文本时需按 `(text, fontId)` 缓存。
+- **F2-4**：第三方字体的定义 / ttf 只做存在性、`providers` 结构、`font/` 路径解析与 sfnt magic 校验，不做深度表校验；损坏字体由 MC `FontManager` 兜底。
+- **F2-5**：随包字体（Sarasa）的 OFL 许可在 `assets/gtsnlib/font/`，仓库顶层暂无第三方资源 NOTICE；后续补顶层 NOTICE 汇总。
 
 ## 开发测试界面
 

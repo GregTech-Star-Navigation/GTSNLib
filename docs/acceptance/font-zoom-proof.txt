@@ -7,10 +7,13 @@
   gtsnlib-ui-font-theme.png    字体按钮显示「字体: 主题」→ 样例行使用 gtsnlib:sarasa_ui_sc
   gtsnlib-ui-font-vanilla.png  点击字体按钮后显示「字体: 原版」→ 样例行使用 minecraft:default
 
-放大裁剪（>=4x，最近邻，区域 x=636..1036 / y=56..84，覆盖「字体」按钮 + 中英混排样例）：
+放大裁剪（>=4x，最近邻，区域 x=800..1030 / y=56..84，**仅覆盖字体样例行，不含左侧「字体: 主题/原版」按钮标签**）：
   docs/acceptance/screenshots/font-zoom-theme-4x.png    主题字体 4x
   docs/acceptance/screenshots/font-zoom-vanilla-4x.png  原版字体 4x
   docs/acceptance/screenshots/font-zoom-compare-4x.png  两者上下堆叠 + 标注（单图自证）
+
+> 裁剪区域修正（#22 评审 F2-3）：旧区域 x=636..1036 含切换按钮，其标签在「主题/原版」两态间必然
+> 不同，会稀释「同一段样例文本」的字形 diff；现裁到样例行（x≈800..1030），对照图只反映字库差异。
 
 人工查看结论（放大图 font-zoom-compare-4x.png）：
   - 上半「THEME FONT gtsnlib:sarasa_ui_sc」：笔画纤细均匀、曲线平滑、边缘有灰度抗锯齿，
@@ -22,9 +25,9 @@
 
 客观像素差（System.Drawing 直接读像素，非肉眼）：
   同一张 pair 的两张截图中：
-    - 标题区 (x20-230,  y10-38)  平均 |ΔRGB| = 0.00   —— 两张图逐像素一致
+    - 标题区 (x20-230,  y10-38)   平均 |ΔRGB| = 0.00   —— 两张图逐像素一致
     - 正文字段 (x20-300, y58-80)  平均 |ΔRGB| = 0.00   —— 两张图逐像素一致
-    - 字体样例行 (x800-1030,y58-80) 平均 |ΔRGB| = 110.32（最大 480）
+    - 字体样例行 (x800-1030, y56-84, 6440 px) 平均 |ΔRGB| = 86.68（最大 480）
   即：两张截图除字体样例行外完全一致，样例行差异巨大 → 字体按钮确实切换了字库，
   主题态样例确实是自定义字体而非原版像素字。
 

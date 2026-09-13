@@ -1,10 +1,13 @@
-# GTSNLib #23 字体放大对比证据生成脚本（Windows PowerShell / System.Drawing）
+﻿# GTSNLib #23 字体放大对比证据生成脚本（Windows PowerShell / System.Drawing）
 #
 # 从自动测试的两张截图里，截取「同一段中英混排样例文本」区域并放大 >=4x，
 # 生成可直接肉眼判别的字形对比证据：
 #   font-zoom-theme-4x.png    —— 主题字体（gtsnlib:sarasa_ui_sc，平滑现代无衬线）
 #   font-zoom-vanilla-4x.png  —— 原版字体（minecraft:default，块状像素字）
 #   font-zoom-compare-4x.png  —— 两者上下堆叠 + 标注，单图自证
+#
+# 裁剪区域只覆盖字体样例行（x≈800..1030），**不含**左侧「字体: 主题/原版」切换按钮的标签文字——
+# 该标签在两态之间必然不同，若裁进去会稀释/混淆「同一段样例文本」的字形 diff（#22 评审 F2-3）。
 #
 # 用法（仓库根目录）：
 #   powershell -NoProfile -ExecutionPolicy Bypass -File docs/acceptance/zoom-font-proof.ps1
@@ -15,9 +18,9 @@ param(
     [string]$ThemeShot = "docs/acceptance/screenshots/gtsnlib-ui-font-theme.png",
     [string]$VanillaShot = "docs/acceptance/screenshots/gtsnlib-ui-font-vanilla.png",
     [string]$OutDir = "docs/acceptance/screenshots",
-    [int]$X = 636,
+    [int]$X = 800,
     [int]$Y = 56,
-    [int]$W = 400,
+    [int]$W = 230,
     [int]$H = 28,
     [int]$Scale = 4
 )
@@ -49,10 +52,10 @@ Crop-Scale $ThemeShot $themeOut $X $Y $W $H $Scale
 Crop-Scale $VanillaShot $vanillaOut $X $Y $W $H $Scale
 
 # 堆叠成单张对照图（含标注），避免只看单图时误判。
-$theme = [System.Drawing.Bitmap]::new((Resolve-Path $themeOut).Path)
-$vanilla = [System.Drawing.Bitmap]::new((Resolve-Path $vanillaOut).Path)
+$theme = [System.Drawing.Image]::FromFile((Resolve-Path $themeOut).Path)
+$vanilla = [System.Drawing.Image]::FromFile((Resolve-Path $vanillaOut).Path)
 $labelH = 28
-$canvas = [System.Drawing.Bitmap]::new($theme.Width, (($theme.Height + $labelH) * 2))
+$canvas = [System.Drawing.Bitmap]::new([int]$theme.Width, [int](($theme.Height + $labelH) * 2))
 $g = [System.Drawing.Graphics]::FromImage($canvas)
 $g.Clear([System.Drawing.Color]::FromArgb(24, 28, 34))
 $brush = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::White)

@@ -26,9 +26,13 @@ All 40 required tests passed :)
 新增 `GtsnMachineBridgeGameTests`（2 项）：
 
 - `snapshotReadsPlacedGtMachine`：在结构内放置 `gtsnlib:test_machine`，经 `GtMachineSnapshots.at` 取快照，
-  断言机器 id = `gtsnlib:test_machine`、tier = 1、`energyCapacity() > 0`（机器继承 `TieredEnergyMachine`）、
-  `progress`/`maxProgress` 字段存在且非负、`status` 文本存在。
-- `snapshotAbsentForNonMachineBlock`：石头方块不产生快照、不被判定为 GT 机器。
+  断言精确机器 id = `gtsnlib:test_machine`、tier = 1、容量 = 2048、输入电压 = 32；无配方逻辑机器
+  `status == UNKNOWN`、进度 = 0；再经 `GtMachineDebug.charge` 服务端注入 512 EU，断言
+  `energyStored() == 512`（可失败；注入关闭时该断言 RED，见 `review-24-fixes.txt` §2）。
+- `snapshotAbsentForNonMachineBlock`：石头方块不产生快照、不被判定为 GT 机器，且 `charge` 返回 0。
+
+> 断言纪律修正（#24 F1-2）：旧版 `energyStored()>=0` / `inputVoltage()>=0` / `status` 非空等断言因
+> `GtMachineSnapshot` 钳制与 status 归一而永不失败；现改为上述精确 / 注入后可失败断言。
 
 ## 3. 专职服务端类加载纪律（`.\gradlew.bat runServer`）
 
@@ -46,18 +50,21 @@ Done (19.504s)! For help, type "help"
 
 ```
 [GTSNLib] machine autotest: placing gtsnlib:test_machine at BlockPos{x=-4, y=78, z=5}
-[GTSNLib] machine autotest: client snapshot id=gtsnlib:test_machine tier=1 energy=0/2048 status=UNKNOWN
-[GTSNLib] machine autotest PASS: screen shows gtsnlib:test_machine tier=1 energy=0/2048 status=UNKNOWN
+[GTSNLib] machine autotest: client mirror present (energy=512/2048), draining server-side to 0
+[GTSNLib] machine autotest: server executing 'gtsnlib debug charge -4 78 5 -1000000'
+[GTSNLib] machine autotest: client mirror reset to 0 EU, charging 512 EU server-side
+[GTSNLib] machine autotest: server executing 'gtsnlib debug charge -4 78 5 512'
+[GTSNLib] machine autotest: client received SYNCED energy 512/2048 (id=gtsnlib:test_machine tier=1 status=UNKNOWN)
+[GTSNLib] machine autotest PASS: screen shows gtsnlib:test_machine tier=1 energy=512/2048 status=UNKNOWN
 [GTSNLib] machine autotest grabbing screenshot gtsnlib-ui-machine-status.png (window=1280x720 target=1280x720)
 [GTSNLib] machine autotest finished (DONE), stopping client
 ```
 
 截图：`docs/acceptance/screenshots/gtsnlib-ui-machine-status.png`。
 
-**肉眼确认**：世界背景之上居中渲染一块暗色 GTSN 面板——标题 `gtsnlib:test_machine`、状态 `UNKNOWN`、
-带边框的能量条居中标签 `0/2048 EU`、灰色进度箭头旁 `0 / 0`、底部说明
-`GTSN UI · 只读机器状态 · -4, 78, 5`。即：GT 机器状态（id / tier 体现为容量 2048 / 状态 / 能量 / 进度）
-经**自研 GTSN UI** 渲染，未触碰 GT 的 LDLib 界面。
+**同步证据修正（#24 F1-1）**：能量容量 2048 是 tier 派生值、两端一致，**不能**证明 `@DescSynced`；
+测试改为服务端注入 512 EU 后客户端从 0 观测到非零（见 `review-24-fixes.txt` §1 的 RED→GREEN，其中 RED 为
+未触发客户端同步推送时客户端恒为 0、测试 FAIL）。
 
 ## 5. 边界检查
 

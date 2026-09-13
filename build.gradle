@@ -182,4 +182,22 @@ publishing {
             from components.java
         }
     }
+    repositories {
+        // GitHub Packages（组织 Maven registry）。
+        // 凭据只从环境变量 / 命令行属性读取，绝不写入仓库：
+        //   GITHUB_ACTOR = GitHub 用户名；GITHUB_TOKEN = 具备 write:packages 的 token
+        //   亦可用 -Pgpr.user / -Pgpr.key 覆盖。
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/GregTech-Star-Navigation/GTSNLib")
+            def ghUser = System.getenv("GITHUB_ACTOR") ?: (project.findProperty("gpr.user")?.toString())
+            def ghToken = System.getenv("GITHUB_TOKEN") ?: (project.findProperty("gpr.key")?.toString())
+            if (ghUser && ghToken) {
+                credentials {
+                    username = ghUser
+                    password = ghToken
+                }
+            }
+        }
+    }
 }

@@ -12,6 +12,23 @@ version = "${mod_version}"
 // ModDevGradle declares project-level repositories, which override the settings-level ones.
 // Declare the additional hard-dependency repositories here so they actually participate.
 repositories {
+    // 组织自维护的 GTCEu（GregTech-Modern fork，版本 7.5.4-patch01）发布在组织 GitHub Packages。
+    // 注意：GitHub Packages 的 Maven **读取也需要凭据**（read:packages）。
+    maven {
+        name = "GTSNGTMPackages"
+        url = uri("https://maven.pkg.github.com/GregTech-Star-Navigation/GregTech-Modern")
+        def gtmUser = System.getenv("GITHUB_ACTOR") ?: (project.findProperty("gpr.user")?.toString())
+        def gtmToken = System.getenv("GITHUB_TOKEN") ?: (project.findProperty("gpr.key")?.toString())
+        if (gtmUser && gtmToken) {
+            credentials {
+                username = gtmUser
+                password = gtmToken
+            }
+        } else {
+            logger.warn("[GTSNLib] 未检测到 GITHUB_ACTOR/GITHUB_TOKEN（或 -Pgpr.user/-Pgpr.key）：解析组织版 GTCEu（7.5.4-patch01）需要 read:packages 凭据，构建将失败。")
+        }
+    }
+
     mavenCentral()
     mavenLocal()
     maven { url = "https://maven.gtceu.com" }

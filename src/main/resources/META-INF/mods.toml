@@ -5,7 +5,7 @@ issueTrackerURL="https://github.com/GregTech-Star-Navigation/GTSNLib/issues"
 
 [[mods]]
 modId="gtsnlib"
-version="0.1.0"
+version="0.1.1"
 displayName="GTSNLib"
 authors="sanjiu2024"
 description='''
@@ -31,7 +31,7 @@ side="BOTH"
 [[dependencies.gtsnlib]]
 modId="gtceu"
 mandatory=true
-versionRange="[7.5.3,8.0.0)"
+  versionRange="[7.5.4-patch01,8.0.0)"
 ordering="AFTER"
 side="BOTH"
 

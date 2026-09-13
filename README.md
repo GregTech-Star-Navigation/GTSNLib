@@ -35,8 +35,8 @@ maven {
 
 ```groovy
 dependencies {
-    modImplementation("com.gtsn.lib:gtsnlib:0.1.0")   // ModDevGradle legacyforge
-    // 使用 ForgeGradle 6 的项目： implementation fg.deobf("com.gtsn.lib:gtsnlib:0.1.0")
+    modImplementation("com.gtsn.lib:gtsnlib:0.1.1")   // ModDevGradle legacyforge
+    // 使用 ForgeGradle 6 的项目： implementation fg.deobf("com.gtsn.lib:gtsnlib:0.1.1")
 }
 ```
 
@@ -48,7 +48,7 @@ dependencies {
 
 ```groovy
 repositories { mavenLocal() }
-dependencies { modImplementation("com.gtsn.lib:gtsnlib:0.1.0") }
+dependencies { modImplementation("com.gtsn.lib:gtsnlib:0.1.1") }
 ```
 
 > 提示：GTSNLib 是**独立前置 mod**，玩家侧需与依赖它的 mod 一同安装（`mods.toml` 已声明软/硬依赖关系）。
@@ -57,7 +57,7 @@ dependencies { modImplementation("com.gtsn.lib:gtsnlib:0.1.0") }
 
 ## 发布
 
-- 当前版本：`0.1.0`（框架期）
+- 当前版本：`0.1.1`（框架期）
 - **自动**：发布 GitHub Release（或手动触发 workflow）→ `.github/workflows/publish.yml` 自动构建并发布到 GitHub Packages
 - **手动**：
 

@@ -9,19 +9,19 @@
 
 ## 1. 平台与工具链
 
-| 项 | 约束 |
-|---|---|
-| Minecraft | **1.20.1**（不迁 1.21、不迁 NeoForge） |
-| Forge | **47.4.0**（mods.toml 硬依赖 `versionRange="[47,)"`） |
-| Java | **17**（toolchain；`gradle.properties` 的 `org.gradle.java.home` 指向本机 JDK17） |
-| Gradle | **8.14**（wrapper 入库；升级需先验证 ModDevGradle 兼容性） |
-| ModDevGradle | `net.neoforged.moddev.legacyforge` **2.0.86** |
-| Mappings | Parchment **2023.09.03** |
-| 构建仓库 | 额外 maven **必须**声明在**项目级** `build.gradle repositories`——ModDevGradle 声明了项目仓库，会覆盖 `settings.gradle` 的 `dependencyResolutionManagement` |
+| 项           | 约束                                                                                                                                                       |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Minecraft    | **1.20.1**（不迁 1.21、不迁 NeoForge）                                                                                                                     |
+| Forge        | **47.4.0**（mods.toml 硬依赖 `versionRange="[47,)"`）                                                                                                      |
+| Java         | **17**（toolchain；`gradle.properties` 的 `org.gradle.java.home` 指向本机 JDK17）                                                                          |
+| Gradle       | **8.14**（wrapper 入库；升级需先验证 ModDevGradle 兼容性）                                                                                                 |
+| ModDevGradle | `net.neoforged.moddev.legacyforge` **2.0.86**                                                                                                              |
+| Mappings     | Parchment **2023.09.03**                                                                                                                                   |
+| 构建仓库     | 额外 maven **必须**声明在**项目级** `build.gradle repositories`——ModDevGradle 声明了项目仓库，会覆盖 `settings.gradle` 的 `dependencyResolutionManagement` |
 
 ## 2. 依赖约束
 
-- **GTCEu 硬依赖**：`com.gregtechceu.gtceu:gtceu-1.20.1:7.5.3:slim`（`transitive = false`）；mods.toml `versionRange="[7.5.3,8.0.0)"`（**8.0 移除 `materialManager`/`MaterialRegistryEvent`/`registerRegistrate`**）
+- **GTCEu 硬依赖（组织 fork）**：`com.gregtechceu.gtceu:gtceu-1.20.1:7.5.4-patch01:slim`（`transitive = false`），来源为组织 GitHub Packages `https://maven.pkg.github.com/GregTech-Star-Navigation/GregTech-Modern`（**Maven 读取也需 `read:packages` 凭据**）；mods.toml `versionRange="[7.5.4-patch01,8.0.0)"`（**8.0 移除 `materialManager`/`MaterialRegistryEvent`/`registerRegistrate`**）
 - 配套硬依赖 `ldlib` / `configuration`：mods.toml 使用**版本区间**——**空串 `""` 会被 Forge 判定为不满足而拒载**
 - **Registrate 不是 mod**（其 jar 无 `mods.toml`）→ 仅作库依赖，**不得**写入 mods.toml 依赖
 - **软依赖（6 个联动目标）**：`mandatory=false` + `versionRange="[0,)"`（**空串会拒载**）+ `ordering="AFTER"`；dev 侧 `modCompileOnly { transitive = false }`，**不得**进入运行时
@@ -45,6 +45,7 @@
 
 ## 5. 发布与消费约束
 
+- **构建期需凭据**：解析组织版 GTCEu（`7.5.4-patch01`）需要 `GITHUB_ACTOR`/`GITHUB_TOKEN`（`read:packages`）或 `-Pgpr.user/-Pgpr.key`；缺失时 `build.gradle` 会在配置期输出警示日志、解析随后失败
 - **版本不可覆盖**：GitHub Packages 同版本重复发布 → `409 Conflict`；重发**必须先提升** `mod_version`（`gradle.properties`）
 - **消费端读取需凭据**（`read:packages`）——GitHub Packages 机制使然
 - **凭据仅走环境变量**（`GITHUB_ACTOR`/`GITHUB_TOKEN`）或 `-Pgpr.user/-Pgpr.key`；**严禁**写入仓库

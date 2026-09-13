@@ -55,6 +55,27 @@ dependencies { modImplementation("com.gtsn.lib:gtsnlib:0.1.1") }
 
 ---
 
+## GTCEu 依赖来源（重要）
+
+GTSNLib 的编译目标是**组织自维护的 GTCEu fork**（`GregTech-Star-Navigation/GregTech-Modern`）版本 **`7.5.4-patch01`**，经组织 GitHub Packages 分发：
+
+```groovy
+maven {
+    url = uri("https://maven.pkg.github.com/GregTech-Star-Navigation/GregTech-Modern")
+    credentials {
+        username = System.getenv("GITHUB_ACTOR")
+        password = System.getenv("GITHUB_TOKEN")   // 需 read:packages
+    }
+}
+```
+
+```groovy
+modImplementation("com.gregtechceu.gtceu:gtceu-1.20.1:7.5.4-patch01:slim") { transitive = false }
+```
+
+> 构建 GTSNLib、以及使用它的下游 mod，都必须能解析该包（`mods.toml` 要求 `gtceu ∈ [7.5.4-patch01,8.0.0)`）。
+> 该包同样**需要 `read:packages` 凭据**（GitHub Packages 的 Maven 不支持匿名读取）。
+
 ## 发布
 
 - 当前版本：`0.1.1`（框架期）

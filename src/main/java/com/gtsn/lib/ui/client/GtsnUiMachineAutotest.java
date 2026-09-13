@@ -30,9 +30,11 @@ import java.util.UUID;
  * <ol>
  *   <li>在标题界面创建 / 载入固定存档 {@value #LEVEL_NAME}（集成服务端）；</li>
  *   <li>服务端线程经 {@code setblock} 在玩家旁放置 {@value #MACHINE_ID}；</li>
- *   <li>等待客户端镜像机器同步到能量容量（证明 {@code @DescSynced} 客户端读取），打开
- *       {@link MachineStatusScreen}；</li>
- *   <li>校验界面快照的机器 id / tier / 能量字段，抓取截图
+ *   <li>等待客户端出现镜像机器快照后，经集成服务端执行 {@code /gtsnlib debug charge …} 注入
+ *       {@value #CHARGE_EU} EU，再在客户端轮询 {@link GtMachineSnapshots#at} 直到
+ *       {@code energyStored() > 0}（证明 {@code @DescSynced} 客户端读取，能量容量为 tier 派生值，
+ *       不能作为证据），超时即 FAIL；</li>
+ *   <li>打开 {@link MachineStatusScreen}，校验界面快照的机器 id / tier / 非零能量，抓取截图
  *       {@code run/screenshots/}{@value #SCREENSHOT_NAME} 并退出客户端。</li>
  * </ol>
  *
@@ -46,14 +48,19 @@ final class GtsnUiMachineAutotest {
     private static final String LEVEL_NAME = "gtsnlib-machine-autotest";
     private static final String SCREENSHOT_NAME = "gtsnlib-ui-machine-status.png";
     private static final String MACHINE_ID = "gtsnlib:test_machine";
+    /** 服务端注入能量，保证客户端读到非零同步值（容量 2048，足够容纳）。 */
+    private static final int CHARGE_EU = 512;
+    /** 注入前先把服务端能量排空（远大于容量即可钳制到 0），保证 0 → N 是真实同步跃迁。 */
+    private static final int DRAIN_EU = -1_000_000;
     private static final int WORLD_TIMEOUT_TICKS = 3600;
     private static final int STAGE_TIMEOUT_TICKS = 400;
-    private static final int SYNC_WAIT_TICKS = 80;
+    /** 客户端等待同步值跃迁的上限（tick）；超时即判定未收到同步值。 */
+    private static final int ENERGY_SYNC_WAIT_TICKS = 100;
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private enum Stage {
-        TITLE, WORLD, PLACED, SCREEN, GRAB, DONE, FAILED
+        TITLE, WORLD, PLACED, RESET, SYNC, SCREEN, GRAB, DONE, FAILED
     }
 
     private static Stage stage = Stage.TITLE;
@@ -70,6 +77,8 @@ final class GtsnUiMachineAutotest {
             case TITLE -> tickTitle(minecraft);
             case WORLD -> tickWorld(minecraft);
             case PLACED -> tickPlaced(minecraft);
+            case RESET -> tickReset(minecraft);
+            case SYNC -> tickSync(minecraft);
             case SCREEN -> tickScreen(minecraft);
             case GRAB -> tickGrab(minecraft);
             case DONE, FAILED -> tickStop(minecraft);
@@ -108,20 +117,61 @@ final class GtsnUiMachineAutotest {
                 ? Optional.empty()
                 : GtMachineSnapshots.at(level, target);
         if (resolved.isPresent()) {
-            GtMachineSnapshot snapshot = resolved.get();
-            boolean energySynced = snapshot.energyCapacity() > 0L;
-            if (energySynced || ticks > SYNC_WAIT_TICKS) {
-                LOGGER.info("[GTSNLib] machine autotest: client snapshot id={} tier={} energy={}/{} status={}",
-                        snapshot.machineId(), snapshot.tier(), snapshot.energyStored(),
-                        snapshot.energyCapacity(), snapshot.status());
-                minecraft.setScreen(new MachineStatusScreen(target));
-                stage = Stage.SCREEN;
-                ticks = 0;
-                return;
-            }
+            LOGGER.info("[GTSNLib] machine autotest: client mirror present (energy={}/{}), draining server-side to 0",
+                    resolved.get().energyStored(), resolved.get().energyCapacity());
+            chargeMachine(minecraft, target, DRAIN_EU);
+            stage = Stage.RESET;
+            ticks = 0;
+            return;
         }
         if (ticks > STAGE_TIMEOUT_TICKS) {
             fail(minecraft, "client-side machine snapshot never appeared at " + target);
+        }
+    }
+
+    /** 等待客户端镜像观察到排空后的 0 能量（可重复：清除复用存档里的历史值）。 */
+    private static void tickReset(Minecraft minecraft) {
+        Level level = minecraft.level;
+        Optional<GtMachineSnapshot> resolved = level == null
+                ? Optional.empty()
+                : GtMachineSnapshots.at(level, target);
+        if (resolved.isPresent() && resolved.get().energyCapacity() > 0L && resolved.get().energyStored() == 0L) {
+            LOGGER.info("[GTSNLib] machine autotest: client mirror reset to 0 EU, charging {} EU server-side", CHARGE_EU);
+            chargeMachine(minecraft, target, CHARGE_EU);
+            stage = Stage.SYNC;
+            ticks = 0;
+            return;
+        }
+        if (ticks > ENERGY_SYNC_WAIT_TICKS) {
+            fail(minecraft, "client mirror never reset to 0 EU at " + target + " (client energyStored="
+                    + resolved.map(GtMachineSnapshot::energyStored).map(Object::toString).orElse("<no snapshot>") + ")");
+        }
+    }
+
+    /**
+     * 等待客户端从 LDLib {@code @DescSynced} 镜像读到非零能量。能量容量（2048）是 tier 派生值、两端一致，
+     * 只有这个「服务端注入后客户端从 0 变为非零」的跃迁才真正证明同步链路——收不到即 FAIL。
+     */
+    private static void tickSync(Minecraft minecraft) {
+        Level level = minecraft.level;
+        Optional<GtMachineSnapshot> resolved = level == null
+                ? Optional.empty()
+                : GtMachineSnapshots.at(level, target);
+        if (resolved.isPresent() && resolved.get().energyStored() > 0L) {
+            GtMachineSnapshot snapshot = resolved.get();
+            LOGGER.info("[GTSNLib] machine autotest: client received SYNCED energy {}/{} (id={} tier={} status={})",
+                    snapshot.energyStored(), snapshot.energyCapacity(), snapshot.machineId(),
+                    snapshot.tier(), snapshot.status());
+            minecraft.setScreen(new MachineStatusScreen(target));
+            stage = Stage.SCREEN;
+            ticks = 0;
+            return;
+        }
+        if (ticks > ENERGY_SYNC_WAIT_TICKS) {
+            fail(minecraft, "client never received the synced energy value at " + target
+                    + " (server injected " + CHARGE_EU + " EU after reset; client energyStored="
+                    + resolved.map(GtMachineSnapshot::energyStored).map(Object::toString).orElse("<no snapshot>")
+                    + ") -- @DescSynced mirror read NOT proven");
         }
     }
 
@@ -137,9 +187,10 @@ final class GtsnUiMachineAutotest {
             fail(minecraft, "screen snapshot machine id was " + snapshot.machineId());
             return;
         }
-        if (snapshot.tier() != 1 || snapshot.energyCapacity() <= 0L) {
+        if (snapshot.tier() != 1 || snapshot.energyCapacity() <= 0L || snapshot.energyStored() <= 0L) {
             if (ticks > STAGE_TIMEOUT_TICKS) {
                 fail(minecraft, "screen snapshot incomplete: tier=" + snapshot.tier()
+                        + " energyStored=" + snapshot.energyStored()
                         + " energyCapacity=" + snapshot.energyCapacity());
             }
             return;
@@ -205,6 +256,29 @@ final class GtsnUiMachineAutotest {
             }
             String command = "setblock " + target.getX() + " " + target.getY() + " " + target.getZ()
                     + " " + MACHINE_ID;
+            server.getCommands().performPrefixedCommand(
+                    server.createCommandSourceStack().withSuppressedOutput(), command);
+        });
+    }
+
+    /**
+     * 服务端线程执行 {@code /gtsnlib debug charge <x> <y> <z> <eu>}，向机器能量容器注入能量，
+     * 作为「服务端权威写」的一侧；客户端随后以镜像读到非零值为同步证据。
+     */
+    private static void chargeMachine(Minecraft minecraft, BlockPos target, int eu) {
+        IntegratedServer server = minecraft.getSingleplayerServer();
+        if (server == null) {
+            return;
+        }
+        UUID uuid = minecraft.player.getUUID();
+        server.execute(() -> {
+            ServerPlayer player = server.getPlayerList().getPlayer(uuid);
+            if (player == null) {
+                return;
+            }
+            String command = "gtsnlib debug charge " + target.getX() + " " + target.getY() + " "
+                    + target.getZ() + " " + eu;
+            LOGGER.info("[GTSNLib] machine autotest: server executing '{}'", command);
             server.getCommands().performPrefixedCommand(
                     server.createCommandSourceStack().withSuppressedOutput(), command);
         });

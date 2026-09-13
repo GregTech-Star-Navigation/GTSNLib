@@ -12,6 +12,7 @@ import com.gtsn.lib.gt.adapter.GtAdapterReport;
 import com.gtsn.lib.gt.adapter.GtContentStatus;
 import com.gtsn.lib.gt.adapter.GtFluidReport;
 import com.gtsn.lib.gt.adapter.GtFluidStatus;
+import com.gtsn.lib.gt.adapter.GtMachineDebug;
 import com.gtsn.lib.gt.adapter.GtPartStatus;
 import com.gtsn.lib.gt.adapter.GtQueryResult;
 import com.gtsn.lib.gt.adapter.GtRegistrationReport;
@@ -24,11 +25,14 @@ import com.gtsn.lib.gt.registration.RegistrationKind;
 import com.gtsn.lib.ui.demo.DemoMenu;
 import com.gtsn.lib.ui.demo.DemoMenus;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -76,7 +80,26 @@ public final class GtsnCommand {
                                 .then(Commands.argument("id", StringArgumentType.greedyString())
                                         .executes(GtsnCommand::executeMekChemical))))
                 .then(Commands.literal("ui")
-                        .executes(GtsnCommand::executeUi)));
+                        .executes(GtsnCommand::executeUi))
+                .then(Commands.literal("debug")
+                        .requires(source -> source.hasPermission(2))
+                        .then(Commands.literal("charge")
+                                .then(Commands.argument("pos", BlockPosArgument.blockPos())
+                                        .then(Commands.argument("eu", IntegerArgumentType.integer())
+                                                .executes(GtsnCommand::executeDebugCharge))))));
+    }
+
+    /**
+     * {@code /gtsnlib debug charge <x> <y> <z> <eu>}：向坐标处 GT 机器的能量容器注入（或移除）能量，
+     * 仅供开发调试与自动测试驱动「服务端写入 → {@code @DescSynced} 客户端镜像」的同步证据（#22 F1-1）。
+     */
+    private static int executeDebugCharge(CommandContext<CommandSourceStack> context) {
+        BlockPos pos = BlockPosArgument.getBlockPos(context, "pos");
+        int eu = IntegerArgumentType.getInteger(context, "eu");
+        long changed = GtMachineDebug.charge(context.getSource().getLevel(), pos, eu);
+        context.getSource().sendSuccess(() -> Component.literal(
+                "[GTSNLib] debug charge " + pos.toShortString() + " -> " + changed + " EU"), false);
+        return changed == 0L ? 0 : 1;
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {

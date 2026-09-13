@@ -68,6 +68,9 @@ dependencies { modImplementation("com.gtsn.lib:gtsnlib:0.1.0") }
 
   凭据仅从环境变量或 `-Pgpr.user/-Pgpr.key` 读取，**不会写入仓库**。
 
+> ⚠️ **版本不可覆盖**：GitHub Packages 的 Maven 版本一旦发布即不可变，重复发布同一版本会返回 `409 Conflict`。需要重发时请先提升 `mod_version`（`gradle.properties`）。
+> ⚠️ 消费端读取同样需要凭据（`read:packages`）。
+
 ## 构建（开发者）
 
 见 `AGENTS.md`「常用命令」（`build` / `test` / `runClient` / `runServer` / `runData` / `runGameTestServer` / `publishToMavenLocal`）。
